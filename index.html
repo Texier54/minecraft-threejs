@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voxel Game</title>
+</head>
+<body>
+<script type="importmap">
+    {
+        "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+    }
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.js"></script>
+<script type="module" src="main.js"></script>
+<div id="fps" class="fps"></div>
+<div id="crosshair"></div>
+<div id="player-position"></div>
+
+<div id="item-bar">
+    <div class="item" data-id="1" id="1">Item 1</div>
+    <div class="item" data-id="2" id="2">Item 2</div>
+    <div class="item" data-id="3" id="3">Item 3</div>
+</div>
+</body>
+</html>
+
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .fps {
+        position: fixed;
+        color: white;
+        z-index: 100;
+        background-color: rgba(0, 0, 0, 0.7);
+        border-radius: 5px;
+        padding: 5px 10px;
+        font-family: Arial, sans-serif;
+        margin-top: 5px;
+        margin-left: 5px;
+        font-size: 12px;
+    }
+
+    #crosshair {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        pointer-events: none; /* Évite d'interférer avec les clics */
+    }
+
+    #crosshair::before,
+    #crosshair::after {
+        content: '';
+        position: absolute;
+        background: white;
+    }
+
+    #crosshair::before {
+        width: 2px;
+        height: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #crosshair::after {
+        height: 2px;
+        width: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    #item-bar {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 10px;
+    }
+
+    .item {
+        width: 60px;
+        height: 60px;
+        background: #ccc;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 12px;
+        color: #000;
+        border: 2px solid transparent;
+        cursor: pointer;
+        border-radius: 5px;
+        user-select: none;
+    }
+
+    .item.selected {
+        border-color: yellow;
+        background: #eee;
+    }
+
+    #player-position {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        color: gray;
+    }
+</style>
