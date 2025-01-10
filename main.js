@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { Player } from './player.js';
 import { World } from './world.js';
 import {blocks} from "./block.js";
+import {Physics} from "./physics.js";
 
 const world = new World();
 
@@ -24,6 +25,8 @@ const fpsDisplay = document.getElementById('fps');
 
 
 const player = new Player(scene, world);
+const physics = new Physics();
+
 
 
 /*
@@ -77,8 +80,6 @@ const textures = [side, side, top, side, side, side];  // Ordre des faces pour l
 const grassMaterial = textures.map(texture => new THREE.MeshBasicMaterial({ map: texture }));
 const stoneMaterial = new THREE.MeshBasicMaterial({ map: stone });
 
-console.log(grassMaterial);
-console.log(blocks.grass.material);
 
 
 // Ajouter de la lumière
@@ -131,25 +132,21 @@ document.body.addEventListener('click', () => {
     controls.lock();
 });
 
-window.addEventListener('keydown', (event) => {
-    if (event.key === 'e') controls.unlock();
-});
-
 
  */
 
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'e') player.controls.unlock();
+});
+
+
+
+
 // Fonction de gestion du mouvement du joueur
 let velocity = new THREE.Vector3(0, 0, 0);
-const gravity = -0.1;
-const playerHeight = 1.8;
 const groundCheckDistance = 0.1;
 let isOnGround = false;
 
-// Créer un objet pour représenter le pointeur de la souris dans l'espace 3D
-const pointerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
-const pointerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const pointer = new THREE.Mesh(pointerGeometry, pointerMaterial);
-scene.add(pointer);
 
 // Gestion des clics (ajouter ou supprimer des blocs)
 const raycaster = new THREE.Raycaster();
@@ -160,13 +157,16 @@ const mouse = new THREE.Vector2();
 
 window.addEventListener('mousedown', (event) => {
     // Mettre à jour le raycaster en fonction de la position de la souris
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.setFromCamera(mouse, player.camera);
 
     // Vérifier les intersections
     // Intersecter uniquement les chunks visibles
     const visibleChunks = Array.from(chunks.values());
-    const intersects = raycaster.intersectObjects(visibleChunks.flatMap(chunk => chunk.children), true);
+    //const intersects = raycaster.intersectObjects(visibleChunks.flatMap(chunk => chunk.children), true);
 
+    const intersects = raycaster.intersectObjects(scene, true);
+
+console.log(intersects);
     if (intersects.length > 0) {
         const intersected = intersects[0];
 
@@ -182,7 +182,7 @@ window.addEventListener('mousedown', (event) => {
         selectedCoords.applyMatrix4(blockMatrix);
         //const selectedCoords = new THREE.Vector3().applyMatrix4(blockMatrix);
 
-
+console.log(selectedCoords);
         // si clic droit
         if (event.button == 2) {
             addBlock(intersected, selectedCoords);
@@ -288,21 +288,8 @@ function checkHorizontalCollisions() {
         velocity.x = 0;
 }
 
-// Déplacement
-const keys = {
-    forward: false,
-    backward: false,
-    left: false,
-    right: false,
-    jump: false,
-    speed: false,
-};
 
 
-
-// Variables pour la position de la souris
-let mouseX = 0;
-let mouseY = 0;
 
 // Gestion des mouvements de la souris pour la caméra et la rotation du personnage
 document.addEventListener('mousemove', (event) => {
@@ -317,40 +304,23 @@ scene.background = new THREE.Color( 0x6EB1FF );
 var prevTime = performance.now();
 var fps = 0;
 var frameCount = 0;
+var prevTimeNew = 0;
 
 // Fonction d'animation
 function animate() {
 
     const now = performance.now();
 
-    // si le joueur bouge
-    if (velocity.x != 0 || velocity.z != 0 || velocity.y != 0 || keys.jump || !isOnGround) {
 
-        checkGroundCollision();
-        checkHorizontalCollisions();
+        //checkGroundCollision();
+        //checkHorizontalCollisions();
 
-        if (!isOnGround)
-            velocity.y += gravity;
-        else
-            velocity.y = 0;
+    let dt = (now - prevTimeNew)/1000;
 
-        if (velocity.y < -1.2)
-            velocity.y = -1.2;
+    player.applyInputs(dt);
+    //physics.update(dt, player, world);
+    prevTimeNew = now;
 
-        if (keys.jump) velocity.y = 0.2;
-
-        player.position.add(velocity);
-        velocity.x = 0;
-        velocity.z = 0;
-        velocity.y = 0;
-
-        updateCameraPosition();
-
-
-        //controls.update(); // Met à jour les contrôles
-    }
-
-    player.applyInputs((now - prevTime) /100000);
 
     frameCount++;
     // Met à jour l'affichage FPS toutes les secondes
@@ -360,7 +330,7 @@ function animate() {
         prevTime = now;
         frameCount = 0;
         updateChunkLOD();
-        checkCreateChunk();
+        //checkCreateChunk();
     }
 
     renderer.render(scene, player.camera);
@@ -368,7 +338,7 @@ function animate() {
 }
 
 animate();
-updateCameraPosition();
+
 checkCreateChunk();
 setupLights();
 
@@ -391,7 +361,7 @@ window.addEventListener('keydown', (event) => {
 function updateChunkLOD() {
     chunks.forEach((chunk, key) => {
         const distance = player.position.distanceTo(chunk.position);
-        if (distance > 64) {
+        if (distance > 128) {
             chunk.visible = false; // Masquer les chunks éloignés
         } else {
             chunk.visible = true;
@@ -399,19 +369,110 @@ function updateChunkLOD() {
     });
 }
 
-function updateCameraPosition() {
-    // Mettre à jour la position de la caméra pour qu'elle suive le joueur
-    //const cameraOffset = new THREE.Vector3(0, playerHeight, 0);  // Décalage de la caméra par rapport au joueur
-    //camera.position.copy(player.position).add(cameraOffset);
-}
+
 
 function checkCreateChunk() {
-    const playerChunkX = Math.floor(player.position.x / 16);
+    world.generate(0, 0, chunks, scene);
+    const playerChunkX = Math.floor(player.position.x / 4);
     const playerChunkZ = Math.floor(player.position.z / 16);
 
-    for (let dx = -1; dx <= 4; dx++) {
-        for (let dz = -1; dz <= 4; dz++) {
-            world.createChunk(playerChunkX + dx, playerChunkZ + dz, chunks, grassMaterial, scene);
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dz = -1; dz <= 1; dz++) {
+            //world.generate(playerChunkX + dx, playerChunkZ + dz, chunks, grassMaterial, scene);
         }
     }
 }
+
+const inventory = [
+    { type: 'stone', quantity: 64, icon: 'images/stone.png' },
+    { type: 'wood', quantity: 32, icon: 'images/grass.png' },
+    { type: 'cobble', quantity: 42, icon: 'images/grass.png' },
+    { type: null, quantity: 0, icon: null }, // Slot vide
+];
+
+function renderInventory() {
+    const inventoryElement = document.getElementById('inventory');
+    inventoryElement.innerHTML = ''; // Efface le contenu actuel
+
+    inventory.forEach((item, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.dataset.slot = index;
+
+        // Rendre le slot "draggable"
+        slot.draggable = true;
+        slot.addEventListener('dragstart', onDragStart);
+        slot.addEventListener('dragover', onDragOver);
+        slot.addEventListener('drop', onDrop);
+
+        if (item.type) {
+            const img = document.createElement('img');
+            img.src = `${item.icon}`;
+            slot.appendChild(img);
+
+            const quantity = document.createElement('span');
+            quantity.innerText = item.quantity;
+            quantity.style.position = 'absolute';
+            quantity.style.bottom = '5px';
+            quantity.style.right = '5px';
+            slot.appendChild(quantity);
+        }
+
+        inventoryElement.appendChild(slot);
+    });
+}
+
+let draggedSlotIndex = null;
+
+function onDragStart(event) {
+    draggedSlotIndex = event.target.dataset.slot;
+    event.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(event) {
+    event.preventDefault();
+    const slot = event.target.closest('.slot');
+    if (slot) slot.classList.add('drag-over');
+}
+
+function onDrop(event) {
+    event.preventDefault();
+    const slot = event.target.closest('.slot');
+    if (slot) slot.classList.remove('drag-over');
+
+    const targetSlotIndex = event.target.closest('.slot').dataset.slot;
+
+    if (draggedSlotIndex !== null && targetSlotIndex !== null) {
+        // Échanger les objets entre les slots
+        const temp = inventory[draggedSlotIndex];
+        inventory[draggedSlotIndex] = inventory[targetSlotIndex];
+        inventory[targetSlotIndex] = temp;
+
+        // Réinitialiser l'index de l'objet en cours de déplacement
+        draggedSlotIndex = null;
+
+        // Rafraîchir l'inventaire
+        renderInventory();
+    }
+}
+
+function onDragLeave(event) {
+    const slot = event.target.closest('.slot');
+    if (slot) slot.classList.remove('drag-over');
+}
+
+// Initialiser l'affichage de l'inventaire
+renderInventory();
+
+document.getElementById('inventory').addEventListener('click', (e) => {
+    const slot = e.target.closest('.slot');
+    if (!slot) return;
+
+    const slotIndex = parseInt(slot.dataset.slot, 10);
+    const item = inventory[slotIndex];
+
+    if (item && item.type) {
+        console.log(`Vous avez cliqué sur ${item.type} (quantité : ${item.quantity})`);
+    }
+});
+

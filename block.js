@@ -11,7 +11,7 @@ function loadTexture(path) {
 }
 
 const textures = {
-    dirt: loadTexture('images/grass_block_side.png'),
+    dirt: loadTexture('images/dirt.png'),
     grass: loadTexture('images/grass.png'),
     grassSide: loadTexture('images/grass_block_side.png'),
     stone: loadTexture('images/stone.png'),
@@ -43,6 +43,13 @@ export const blocks = {
     stone: {
         id: 3,
         name: 'stone',
+        material: new THREE.MeshLambertMaterial({ map: textures.stone }),
+        scale: { x: 30, y: 30, z: 30 },
+        scarcity: 0.8
+    },
+    bedrock: {
+        id: 6,
+        name: 'bedrock',
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8

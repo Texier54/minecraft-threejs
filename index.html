@@ -18,6 +18,16 @@
 <script type="module" src="main.js"></script>
 <div id="fps" class="fps"></div>
 <div id="crosshair"></div>
+
+<div id="inventory">
+    <div class="slot" data-slot="1"></div>
+    <div class="slot" data-slot="2"></div>
+    <div class="slot" data-slot="3"></div>
+    <div class="slot" data-slot="4"></div>
+    <div class="slot" data-slot="5"></div>
+    <!-- Ajoutez autant de slots que nécessaire -->
+</div>
+
 <div id="player-position"></div>
 
 <div id="item-bar">
@@ -122,5 +132,38 @@
         right: 0;
         bottom: 0;
         color: gray;
+    }
+
+    #inventory {
+        display: grid;
+        grid-template-columns: repeat(5, 50px); /* 5 colonnes */
+        gap: 5px;
+        position: absolute;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        border: 2px solid white;
+        border-radius: 5px;
+    }
+
+    .slot {
+        width: 50px;
+        height: 50px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 1px solid gray;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .slot img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .slot.drag-over {
+        border: 2px dashed #00ff00;
     }
 </style>
