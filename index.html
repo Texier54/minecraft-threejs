@@ -15,26 +15,18 @@
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.js"></script>
+
 <script type="module" src="main.js"></script>
 <div id="fps" class="fps"></div>
 <div id="crosshair"></div>
 
-<div id="inventory">
-    <div class="slot" data-slot="1"></div>
-    <div class="slot" data-slot="2"></div>
-    <div class="slot" data-slot="3"></div>
-    <div class="slot" data-slot="4"></div>
-    <div class="slot" data-slot="5"></div>
-    <!-- Ajoutez autant de slots que nécessaire -->
-</div>
+<div class="inventory" id="inventory"></div>
+<img id="held-item" src="" alt="Held Item">
+
+<div class="bar" id="bar"></div>
 
 <div id="player-position"></div>
 
-<div id="item-bar">
-    <div class="item" data-id="1" id="1">Grass</div>
-    <div class="item" data-id="2" id="2">Stone</div>
-    <div class="item" data-id="3" id="3">Item 3</div>
-</div>
 </body>
 </html>
 
@@ -134,36 +126,55 @@
         color: gray;
     }
 
-    #inventory {
-        display: grid;
-        grid-template-columns: repeat(5, 50px); /* 5 colonnes */
-        gap: 5px;
-        position: absolute;
-        bottom: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(0, 0, 0, 0.5);
-        padding: 10px;
-        border: 2px solid white;
-        border-radius: 5px;
-    }
 
+    .inventory {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        position: absolute;
+        display: grid;
+        grid-template-columns: repeat(9, 50px);
+        grid-gap: 5px;
+        background-color: #555;
+        padding: 10px;
+        border: 2px solid #333;
+    }
     .slot {
         width: 50px;
         height: 50px;
-        background-color: rgba(255, 255, 255, 0.2);
-        border: 1px solid gray;
+        background-color: #777;
+        border: 1px solid #444;
         display: flex;
         justify-content: center;
         align-items: center;
+        cursor: pointer;
     }
-
     .slot img {
-        max-width: 100%;
-        max-height: 100%;
+        max-width: 40px;
+        max-height: 40px;
+    }
+    #held-item {
+        position: absolute;
+        pointer-events: none; /* L'élément ne bloque pas les clics */
+        z-index: 1000;
+        width: 40px;
+        height: 40px;
+        display: none; /* Caché tant qu'aucun item n'est tenu */
     }
 
-    .slot.drag-over {
-        border: 2px dashed #00ff00;
+    .bar {
+        top: 90%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        position: absolute;
+        display: grid;
+        grid-template-columns: repeat(9, 50px);
+        grid-gap: 5px;
+        background-color: #555;
+        padding: 10px;
+        border: 2px solid #333;
+    }
+    .selected {
+        border: 2px black solid;
     }
 </style>

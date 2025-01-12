@@ -37,9 +37,12 @@ export class Player {
         )
         scene.add(this.boundsHelper);
 
+        /*
         document.body.addEventListener('click', () => {
             this.controls.lock();
         });
+
+         */
     }
 
     get worldVelocity() {

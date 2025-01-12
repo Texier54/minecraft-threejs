@@ -6,10 +6,15 @@ import { Player } from './player.js';
 import { World } from './world.js';
 import {blocks} from "./block.js";
 import {Physics} from "./physics.js";
+import {Inventory} from "./inventory.js";
 
-const world = new World();
 
 const scene = new THREE.Scene();
+
+const world = new World(45678);
+world.generate();
+
+scene.add(world)
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -26,6 +31,7 @@ const fpsDisplay = document.getElementById('fps');
 
 const player = new Player(scene, world);
 const physics = new Physics(scene);
+const inventory = new Inventory();
 
 
 
@@ -136,7 +142,17 @@ document.body.addEventListener('click', () => {
  */
 
 window.addEventListener('keydown', (event) => {
-    if (event.key === 'e') player.controls.unlock();
+    if (event.key === 'e') {
+        if (player.controls.isLocked) {
+            player.controls.unlock();
+            inventory.show();
+        }
+        else {
+            player.controls.lock();
+            inventory.hide();
+        }
+
+    }
 });
 
 
@@ -171,11 +187,13 @@ window.addEventListener('mousedown', (event) => {
     const visibleChunks = Array.from(chunks.values());
     //const intersects = raycaster.intersectObjects(visibleChunks.flatMap(chunk => chunk.children), true);
 
-    const objects = Object.values(world.meshs);
-console.log(world.meshs);
-    const intersects = raycaster.intersectObjects(objects, true);
 
-console.log(intersects);
+    //console.log(world.children);
+
+
+    const intersects = raycaster.intersectObjects(world.children, true);
+
+//console.log(intersects);
     if (intersects.length > 0) {
         const intersected = intersects[0];
 
@@ -191,7 +209,7 @@ console.log(intersects);
         selectedCoords.applyMatrix4(blockMatrix);
         //const selectedCoords = new THREE.Vector3().applyMatrix4(blockMatrix);
 
-console.log(selectedCoords);
+//console.log(selectedCoords);
         // si clic droit
         if (event.button == 2) {
             addBlock(intersected, selectedCoords);
@@ -212,9 +230,12 @@ console.log(selectedCoords);
 
 function addBlock(intersected, selectedCoords) {
 
+
+
     //prend les coordonée de la face pointé
     selectedCoords.add(intersected.normal);
-
+    world.addBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z, blocks.crafting_table.id);
+/*
     // Get the mesh and instance id of the block
     const mesh = intersected.object;
     const instanceId = mesh.count++;
@@ -228,6 +249,8 @@ function addBlock(intersected, selectedCoords) {
     mesh.computeBoundingSphere();
 
     world.setBlockInstanceId(selectedCoords.x, selectedCoords.y, selectedCoords.z, blocks.grass.id);
+
+     */
 }
 
 function deleteBlock(intersected, selectedCoords) {
@@ -360,14 +383,19 @@ window.addEventListener('keydown', (event) => {
 
     document.querySelectorAll('.item').forEach(el => el.classList.remove('selected'));
     let id = null;
-    if (event.key === '&') id = 1;
-    if (event.key === 'é') id = 2;
-    if (event.key === '"') id = 3;
+    if (event.key === '&') id = 27;
+    if (event.key === 'é') id = 28;
+    if (event.key === '"') id = 29;
 
     if (id) {
-        document.getElementById(id).classList.add('selected');
-        selectedItemId = id;
+        const slot = document.querySelector('.slot[data-index_bar="'+id+'"]');
+        console.log(slot);
+        if (slot) {
+            slot.classList.add('selected');
+            selectedItemId = id;
+        }
     }
+
 });
 
 function updateChunkLOD() {
@@ -384,7 +412,7 @@ function updateChunkLOD() {
 
 
 function checkCreateChunk() {
-    world.generate(0, 0, chunks, scene);
+    //world.generate(0, 0, chunks, scene);
     const playerChunkX = Math.floor(player.position.x / 4);
     const playerChunkZ = Math.floor(player.position.z / 16);
 
@@ -395,96 +423,4 @@ function checkCreateChunk() {
     }
 }
 
-const inventory = [
-    { type: 'stone', quantity: 64, icon: 'images/stone.png' },
-    { type: 'wood', quantity: 32, icon: 'images/grass.png' },
-    { type: 'cobble', quantity: 42, icon: 'images/grass.png' },
-    { type: null, quantity: 0, icon: null }, // Slot vide
-];
-
-function renderInventory() {
-    const inventoryElement = document.getElementById('inventory');
-    inventoryElement.innerHTML = ''; // Efface le contenu actuel
-
-    inventory.forEach((item, index) => {
-        const slot = document.createElement('div');
-        slot.className = 'slot';
-        slot.dataset.slot = index;
-
-        // Rendre le slot "draggable"
-        slot.draggable = true;
-        slot.addEventListener('dragstart', onDragStart);
-        slot.addEventListener('dragover', onDragOver);
-        slot.addEventListener('drop', onDrop);
-
-        if (item.type) {
-            const img = document.createElement('img');
-            img.src = `${item.icon}`;
-            slot.appendChild(img);
-
-            const quantity = document.createElement('span');
-            quantity.innerText = item.quantity;
-            quantity.style.position = 'absolute';
-            quantity.style.bottom = '5px';
-            quantity.style.right = '5px';
-            slot.appendChild(quantity);
-        }
-
-        inventoryElement.appendChild(slot);
-    });
-}
-
-let draggedSlotIndex = null;
-
-function onDragStart(event) {
-    draggedSlotIndex = event.target.dataset.slot;
-    event.dataTransfer.effectAllowed = 'move';
-}
-
-function onDragOver(event) {
-    event.preventDefault();
-    const slot = event.target.closest('.slot');
-    if (slot) slot.classList.add('drag-over');
-}
-
-function onDrop(event) {
-    event.preventDefault();
-    const slot = event.target.closest('.slot');
-    if (slot) slot.classList.remove('drag-over');
-
-    const targetSlotIndex = event.target.closest('.slot').dataset.slot;
-
-    if (draggedSlotIndex !== null && targetSlotIndex !== null) {
-        // Échanger les objets entre les slots
-        const temp = inventory[draggedSlotIndex];
-        inventory[draggedSlotIndex] = inventory[targetSlotIndex];
-        inventory[targetSlotIndex] = temp;
-
-        // Réinitialiser l'index de l'objet en cours de déplacement
-        draggedSlotIndex = null;
-
-        // Rafraîchir l'inventaire
-        renderInventory();
-    }
-}
-
-function onDragLeave(event) {
-    const slot = event.target.closest('.slot');
-    if (slot) slot.classList.remove('drag-over');
-}
-
-// Initialiser l'affichage de l'inventaire
-renderInventory();
-
-document.getElementById('inventory').addEventListener('click', (e) => {
-    const slot = e.target.closest('.slot');
-    if (!slot) return;
-
-    const slotIndex = parseInt(slot.dataset.slot, 10);
-    const item = inventory[slotIndex];
-
-    if (item && item.type) {
-        console.log(`Vous avez cliqué sur ${item.type} (quantité : ${item.quantity})`);
-    }
-});
 

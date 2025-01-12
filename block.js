@@ -17,6 +17,9 @@ const textures = {
     stone: loadTexture('images/stone.png'),
     coalOre: loadTexture('images/coal_ore.png'),
     ironOre: loadTexture('images/iron_ore.png'),
+    crafting_table_top: loadTexture('images/crafting_table_top.png'),
+    crafting_table_front: loadTexture('images/crafting_table_front.png'),
+    crafting_table_side: loadTexture('images/crafting_table_side.png'),
 };
 
 export const blocks = {
@@ -35,7 +38,8 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.dirt }), // bottom
             new THREE.MeshLambertMaterial({ map: textures.grassSide }), // front
             new THREE.MeshLambertMaterial({ map: textures.grassSide })  // back
-        ]
+        ],
+        item: 'images/grass.png'
     },
     dirt: {
         id: 2,
@@ -47,7 +51,8 @@ export const blocks = {
         name: 'stone',
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
-        scarcity: 0.8 //rareté
+        scarcity: 0.8, //rareté
+        item: 'images/stone.png'
     },
     coalOre: {
         id: 4,
@@ -69,6 +74,19 @@ export const blocks = {
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8
+    },
+    crafting_table: {
+        id: 58,
+        name: 'Crafting Table',
+        material: [
+            new THREE.MeshLambertMaterial({ map: textures.crafting_table_side }), // right
+            new THREE.MeshLambertMaterial({ map: textures.crafting_table_side }), // left
+            new THREE.MeshLambertMaterial({ map: textures.crafting_table_top }), // top
+            new THREE.MeshLambertMaterial({ map: textures.crafting_table_side }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.crafting_table_front }), // front
+            new THREE.MeshLambertMaterial({ map: textures.crafting_table_side })  // back
+        ],
+        item: 'images/crafting_table_top.png'
     },
 };
 
