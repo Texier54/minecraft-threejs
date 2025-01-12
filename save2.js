@@ -159,23 +159,14 @@ window.addEventListener('mousedown', (event) => {
     // Mettre à jour le raycaster en fonction de la position de la souris
     raycaster.setFromCamera(mouse, player.camera);
 
-
-
-
-
-
-
-
     // Vérifier les intersections
     // Intersecter uniquement les chunks visibles
     const visibleChunks = Array.from(chunks.values());
     //const intersects = raycaster.intersectObjects(visibleChunks.flatMap(chunk => chunk.children), true);
 
-    const objects = Object.values(world.meshs);
-console.log(world.meshs);
-    const intersects = raycaster.intersectObjects(objects, true);
+    const intersects = raycaster.intersectObjects(scene, true);
 
-console.log(intersects);
+    console.log(intersects);
     if (intersects.length > 0) {
         const intersected = intersects[0];
 
@@ -191,7 +182,7 @@ console.log(intersects);
         selectedCoords.applyMatrix4(blockMatrix);
         //const selectedCoords = new THREE.Vector3().applyMatrix4(blockMatrix);
 
-console.log(selectedCoords);
+        console.log(selectedCoords);
         // si clic droit
         if (event.button == 2) {
             addBlock(intersected, selectedCoords);
@@ -203,7 +194,7 @@ console.log(selectedCoords);
             //newBlock.position.copy(intersectedObject.position).add(normal.multiplyScalar(blockSize));
             //intersectedBlock.parent.add(newBlock);
         } else {
-            deleteBlock(intersected, selectedCoords);
+            deleteBlock(intersected);
             // Supprimer le bloc intercepté
             //intersectedBlock.parent.remove(intersectedBlock);
         }
@@ -226,11 +217,9 @@ function addBlock(intersected, selectedCoords) {
     mesh.setMatrixAt(instanceId, matrix);
     mesh.instanceMatrix.needsUpdate = true;
     mesh.computeBoundingSphere();
-
-    world.setBlockInstanceId(selectedCoords.x, selectedCoords.y, selectedCoords.z, blocks.grass.id);
 }
 
-function deleteBlock(intersected, selectedCoords) {
+function deleteBlock(intersected) {
 
     const lastMatrix = new THREE.Matrix4();
     intersected.object.getMatrixAt(intersected.object.count -1, lastMatrix);
@@ -247,8 +236,6 @@ function deleteBlock(intersected, selectedCoords) {
     intersected.object.instanceMatrix.needsUpdate = true;
     intersected.object.computeBoundingSphere();
     console.log(intersected.object.count);
-
-    world.setBlockInstanceId(selectedCoords.x, selectedCoords.y, selectedCoords.z, null);
 }
 
 
@@ -325,8 +312,8 @@ function animate() {
     const now = performance.now();
 
 
-        //checkGroundCollision();
-        //checkHorizontalCollisions();
+    //checkGroundCollision();
+    //checkHorizontalCollisions();
 
     let dt = (now - prevTimeNew)/1000;
 

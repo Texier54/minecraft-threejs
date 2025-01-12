@@ -15,6 +15,8 @@ const textures = {
     grass: loadTexture('images/grass.png'),
     grassSide: loadTexture('images/grass_block_side.png'),
     stone: loadTexture('images/stone.png'),
+    coalOre: loadTexture('images/coal_ore.png'),
+    ironOre: loadTexture('images/iron_ore.png'),
 };
 
 export const blocks = {
@@ -45,7 +47,21 @@ export const blocks = {
         name: 'stone',
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
+        scarcity: 0.8 //rareté
+    },
+    coalOre: {
+        id: 4,
+        name: 'coal_ore',
+        material: new THREE.MeshLambertMaterial({ map: textures.coalOre }),
+        scale: { x: 20, y: 20, z: 20 },
         scarcity: 0.8
+    },
+    ironOre: {
+        id: 5,
+        name: 'iron_ore',
+        material: new THREE.MeshLambertMaterial({ map: textures.ironOre }),
+        scale: { x: 40, y: 40, z: 40 },
+        scarcity: 0.9
     },
     bedrock: {
         id: 6,

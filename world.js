@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 
-import { blocks } from './block.js';
+import { blocks, resources } from './block.js';
 
-export class World {
+export class World extends THREE.Group {
 
     chunks;
     chunkSize;
     geometry;
     height;
+    meshs;
 
     data = [];
 
@@ -20,6 +21,7 @@ export class World {
     }
 
     constructor() {
+        super();
         this.chunks = new Map(); // Contiendra les chunks générés
         this.chunkSize = 64; // Taille d'un chunk (en blocs)
         this.height = 30;
@@ -49,11 +51,29 @@ export class World {
     }
 
     generate(chunkX, chunkZ, chunks, scene) {
-        this.generateTerrain(chunkX, chunkZ, chunks, scene);
+        this.generateResources();
+        this.generateTerrain();
         this.generateMesh(chunkX, chunkZ, chunks, scene);
     }
 
-    generateTerrain(chunkX, chunkZ, chunks, scene) {
+    generateResources() {
+
+        const simplex = new SimplexNoise();
+        resources.forEach(resource => {
+            for (let x = 0; x < this.chunkSize; x++) {
+                for (let y = 0; y < this.height; y++) {
+                    for (let z = 0; z < this.chunkSize; z++) {
+                        const value = simplex.noise3D(x / resource.scale.x, y / resource.scale.y, z / resource.scale.z);
+                        if (value > resource.scarcity)
+                            this.setBlockId(x, y, z, resource.id);
+                    }
+                }
+            }
+        })
+
+    }
+
+    generateTerrain() {
 
         const simplex = new SimplexNoise();
 
@@ -71,12 +91,12 @@ export class World {
                 height = Math.max(1, Math.min(height, this.height -1));
 
 
-                for (let y = 0; y <= height; y++) {
-                    if (y < height)
-                        this.setBlockId(x, y, z, blocks.stone.id);
+                for (let y = 0; y < this.height; y++) {
+                    if (y < height && this.getBlock(x, y, z)?.id === blocks.empty.id)
+                        this.setBlockId(x, y, z, blocks.dirt.id);
                     else if (y == height)
                         this.setBlockId(x, y, z, blocks.grass.id);
-                    else
+                    else if (y > height)
                         this.setBlockId(x, y, z, blocks.empty.id);
                 }
             }
@@ -101,11 +121,19 @@ console.log(this.getBlock(0,0,0));
 */
         const maxBlock = this.chunkSize * this.chunkSize * 40;
 
-        const meshGrass = new THREE.InstancedMesh(this.geometry, blocks.grass.material, maxBlock);
-        const meshStone = new THREE.InstancedMesh(this.geometry, blocks.stone.material, maxBlock);
-        meshGrass.name = blocks.grass.name;
-        meshGrass.count = 0;
-        meshStone.count = 0;
+        // Creating a lookup table where the key is the block id
+        const meshes = {};
+        Object.values(blocks)
+            .filter(blockType => blockType.id !== blocks.empty.id)
+            .forEach(blockType => {
+                const mesh = new THREE.InstancedMesh(this.geometry, blockType.material, maxBlock);
+                mesh.name = blockType.id;
+                mesh.count = 0;
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                meshes[blockType.id] = mesh;
+            });
+
         const matrix = new THREE.Matrix4();
         for (let x = 0; x < this.chunkSize; x++) {
             for (let z = 0; z < this.chunkSize; z++) {
@@ -115,20 +143,15 @@ console.log(this.getBlock(0,0,0));
 
                     if (!this.isBlockObscured(x, y, z) && this.getBlock(x, y, z) != null && this.getBlock(x, y, z).id != blocks.empty.id) {
                         matrix.setPosition(x, y, z);
-
-                        if (this.getBlock(x, y, z).id == 1)
-                            meshGrass.setMatrixAt(meshGrass.count++, matrix)
-                        else if (this.getBlock(x, y, z).id == 3)
-                            meshStone.setMatrixAt(meshStone.count++, matrix)
+                        meshes[this.getBlock(x, y, z).id].setMatrixAt(meshes[this.getBlock(x, y, z).id].count++, matrix)
 
                     }
                 }
                 //chunk.add(mesh);
             }
         }
-
-        scene.add(meshGrass);
-        scene.add(meshStone);
+this.meshs = meshes;
+        scene.add(...Object.values(meshes));
 
 
     }
@@ -147,6 +170,31 @@ console.log(this.getBlock(0,0,0));
         if (x > 0 && x < this.chunkSize && z > 0 && z < this.chunkSize && y > 0 && y < this.height)
             return true;
         return false;
+    }
+
+    setBlockInstanceId(x, y, z, instanceId) {
+        if (this.inBounds(x, y, z)) {
+            this.data[x][y][z].instanceId = instanceId;
+        }
+    }
+
+    /**
+     * Reveals the block at (x,y,z) by adding a new mesh instance
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    revealBlock(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk) {
+            chunk.addBlockInstance(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z
+            )
+        }
     }
 
     isBlockObscured(x, y ,z) {
