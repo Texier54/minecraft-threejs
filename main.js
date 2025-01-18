@@ -10,8 +10,9 @@ import {Inventory} from "./inventory.js";
 
 
 const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x80a0e0, 50, 100);
 
-const world = new World(45678);
+const world = new World();
 world.generate();
 
 scene.add(world)
@@ -172,8 +173,10 @@ const mouse = new THREE.Vector2();
 
 
 window.addEventListener('mousedown', (event) => {
-    // Mettre à jour le raycaster en fonction de la position de la souris
-    raycaster.setFromCamera(mouse, player.camera);
+
+    if (player.controls.isLocked) {
+        // Mettre à jour le raycaster en fonction de la position de la souris
+        raycaster.setFromCamera(mouse, player.camera);
 
 
 
@@ -182,50 +185,52 @@ window.addEventListener('mousedown', (event) => {
 
 
 
-    // Vérifier les intersections
-    // Intersecter uniquement les chunks visibles
-    const visibleChunks = Array.from(chunks.values());
-    //const intersects = raycaster.intersectObjects(visibleChunks.flatMap(chunk => chunk.children), true);
+        // Vérifier les intersections
+        // Intersecter uniquement les chunks visibles
+        const visibleChunks = Array.from(chunks.values());
+        //const intersects = raycaster.intersectObjects(visibleChunks.flatMap(chunk => chunk.children), true);
 
 
-    //console.log(world.children);
+        //console.log(world.children);
 
 
-    const intersects = raycaster.intersectObjects(world.children, true);
+        const intersects = raycaster.intersectObjects(world.children, true);
 
 //console.log(intersects);
-    if (intersects.length > 0) {
-        const intersected = intersects[0];
+        if (intersects.length > 0) {
+            const intersected = intersects[0];
 
-        //récupére la position du chunk parent du bloc
-        const chunk = intersected.object.parent;
+            //récupére la position du chunk parent du bloc
+            const chunk = intersected.object.parent;
 
-        // récupére transformation matrix du bloc intercepté
-        const blockMatrix = new THREE.Matrix4();
-        intersected.object.getMatrixAt(intersected.instanceId, blockMatrix);
+            // récupére transformation matrix du bloc intercepté
+            const blockMatrix = new THREE.Matrix4();
+            intersected.object.getMatrixAt(intersected.instanceId, blockMatrix);
 
-        // extrait la position du bloc transformation matrix et le met dans coords
-        const selectedCoords = chunk.position.clone();
-        selectedCoords.applyMatrix4(blockMatrix);
-        //const selectedCoords = new THREE.Vector3().applyMatrix4(blockMatrix);
+            // extrait la position du bloc transformation matrix et le met dans coords
+            const selectedCoords = chunk.position.clone();
+            selectedCoords.applyMatrix4(blockMatrix);
+            //const selectedCoords = new THREE.Vector3().applyMatrix4(blockMatrix);
 
 //console.log(selectedCoords);
-        // si clic droit
-        if (event.button == 2) {
-            addBlock(intersected, selectedCoords);
-            // Récupérer la normale de la face cliquée
-            const normal = intersected.face.normal.clone();
+            // si clic droit
+            if (event.button == 2) {
+                addBlock(intersected, selectedCoords);
+                // Récupérer la normale de la face cliquée
+                const normal = intersected.face.normal.clone();
 
-            // Calculer la position du nouveau bloc
-            //const newBlock = new THREE.Mesh(geometry, getMaterialForItem(selectedItemId));
-            //newBlock.position.copy(intersectedObject.position).add(normal.multiplyScalar(blockSize));
-            //intersectedBlock.parent.add(newBlock);
-        } else {
-            deleteBlock(intersected, selectedCoords);
-            // Supprimer le bloc intercepté
-            //intersectedBlock.parent.remove(intersectedBlock);
+                // Calculer la position du nouveau bloc
+                //const newBlock = new THREE.Mesh(geometry, getMaterialForItem(selectedItemId));
+                //newBlock.position.copy(intersectedObject.position).add(normal.multiplyScalar(blockSize));
+                //intersectedBlock.parent.add(newBlock);
+            } else {
+                deleteBlock(intersected, selectedCoords);
+                // Supprimer le bloc intercepté
+                //intersectedBlock.parent.remove(intersectedBlock);
+            }
         }
     }
+
 });
 
 function addBlock(intersected, selectedCoords) {
@@ -234,7 +239,9 @@ function addBlock(intersected, selectedCoords) {
 
     //prend les coordonée de la face pointé
     selectedCoords.add(intersected.normal);
-    world.addBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z, blocks.crafting_table.id);
+
+    if (inventory.getSelectedItem()?.block.id !== undefined)
+        world.addBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z, inventory.getSelectedItem().block.id);
 /*
     // Get the mesh and instance id of the block
     const mesh = intersected.object;
@@ -255,6 +262,10 @@ function addBlock(intersected, selectedCoords) {
 
 function deleteBlock(intersected, selectedCoords) {
 
+    world.removeBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
+
+    /*
+
     const lastMatrix = new THREE.Matrix4();
     intersected.object.getMatrixAt(intersected.object.count -1, lastMatrix);
 
@@ -272,6 +283,8 @@ function deleteBlock(intersected, selectedCoords) {
     console.log(intersected.object.count);
 
     world.setBlockInstanceId(selectedCoords.x, selectedCoords.y, selectedCoords.z, null);
+
+     */
 }
 
 
@@ -327,12 +340,6 @@ function checkHorizontalCollisions() {
 
 
 
-// Gestion des mouvements de la souris pour la caméra et la rotation du personnage
-document.addEventListener('mousemove', (event) => {
-    if (player.controls.isLocked) {
-
-    }
-});
 
 // couleur du ciel
 scene.background = new THREE.Color( 0x6EB1FF );
@@ -354,6 +361,7 @@ function animate() {
     let dt = (now - prevTimeNew)/1000;
 
     physics.update(dt, player, world);
+    world.update(player);
     prevTimeNew = now;
 
 
@@ -386,15 +394,15 @@ window.addEventListener('keydown', (event) => {
     if (event.key === '&') id = 27;
     if (event.key === 'é') id = 28;
     if (event.key === '"') id = 29;
+    if (event.key === "'") id = 30;
+    if (event.key === '(') id = 31;
+    if (event.key === '§') id = 32;
+    if (event.key === 'è') id = 33;
+    if (event.key === '!') id = 34;
+    if (event.key === 'ç') id = 35;
 
-    if (id) {
-        const slot = document.querySelector('.slot[data-index_bar="'+id+'"]');
-        console.log(slot);
-        if (slot) {
-            slot.classList.add('selected');
-            selectedItemId = id;
-        }
-    }
+    if (id)
+        inventory.selectItem(id);
 
 });
 

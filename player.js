@@ -23,7 +23,7 @@ export class Player {
     constructor(scene) {
 
         //this.player.position.set(0, 5, 0);
-        this.position.set(10, 20, 10);
+        this.position.set(10, 80, 10);
         scene.add(this.camera);
 
 
@@ -35,14 +35,7 @@ export class Player {
             new THREE.CylinderGeometry(this.radius, this.radius, this.height, 16),
             new THREE.MeshBasicMaterial({ wireframe: true})
         )
-        scene.add(this.boundsHelper);
-
-        /*
-        document.body.addEventListener('click', () => {
-            this.controls.lock();
-        });
-
-         */
+        //scene.add(this.boundsHelper);
     }
 
     get worldVelocity() {

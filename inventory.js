@@ -7,11 +7,15 @@ export class Inventory {
     inventoryContainer = document.getElementById('inventory');
     bar = document.getElementById('bar');
 
+    selectedItemId = 27;
+
     // Configuration des items
     items = [
         { block: blocks.grass, quantity: 20 }, // grass
         { block: blocks.stone, quantity: 20 }, // Table de craft
-        { block: blocks.crafting_table, quantity: 20 }, // Table de craft
+        { block: blocks.craftingTable, quantity: 20 }, // Table de craft
+        { block: blocks.planks, quantity: 10 }, // Planks
+        { block: blocks.log, quantity: 10 }, // Log
     ];
 
 
@@ -23,9 +27,11 @@ export class Inventory {
     heldItemElement = document.getElementById('held-item'); // Élément qui suit la souris
 
     constructor() {
-        this.inventory[0] = this.items[0]; // Table de craft au premier slot
+        this.inventory[0] = this.items[2]; // Table de craft au premier slot
         this.inventory[1] = this.items[1]; // Table de craft au premier slot
-        this.inventory[2] = this.items[2]; // Table de craft au premier slot
+        this.inventory[27] = this.items[0]; // Table de craft au premier slot
+        this.inventory[28] = this.items[3]; // Table de craft au premier slot
+        this.inventory[29] = this.items[4]; // Table de craft au premier slot
         this.renderInventory();
         this.renderBar();
         // Gestion du mouvement de la souris pour suivre le curseur
@@ -46,6 +52,26 @@ export class Inventory {
         this.bar.style.display = 'grid';
     }
 
+    getBlock(position) {
+        return this.inventory[position];
+    }
+
+    getSelectedItem() {
+        return this.inventory[this.selectedItemId];
+    }
+
+    selectItem(id) {
+        if (id) {
+            const slot = document.querySelector('.slot[data-index_bar="'+id+'"]');
+            console.log(this.getBlock(id));
+            console.log(slot);
+            if (slot) {
+                slot.classList.add('selected');
+                this.selectedItemId = id;
+            }
+        }
+    }
+
     // Création des slots dans le DOM
     renderInventory() {
         this.inventoryContainer.innerHTML = ''; // Réinitialise le conteneur
@@ -61,7 +87,10 @@ export class Inventory {
                     const div = document.createElement('div');
                     img.src = item.block.item;
                     img.alt = item.block.id;
+                    img.width = 200;
                     div.innerHTML = item.quantity;
+                    div.style.marginBottom = '-20px';
+                    div.style.float = 'right';
                     slot.appendChild(img);
                     slot.appendChild(div);
                 }
@@ -80,6 +109,8 @@ export class Inventory {
                 const slot = document.createElement('div');
                 slot.classList.add('slot');
                 slot.dataset.index_bar = index;
+                if (index == this.selectedItemId)
+                    slot.classList.add('selected');
 
                 // Ajout de l'item dans le slot
                 if (item) {

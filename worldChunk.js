@@ -43,28 +43,24 @@ export class WorldChunk extends THREE.Group {
         }
     }
 
-    generate(seed) {
-        this.generateResources(seed);
-        this.generateTerrain(seed);
+    generate() {
+        this.generateResources(this.params.seed);
+        this.generateTerrain(this.params.seed);
         this.generateMesh();
     }
 
-    generateResources(seed) {
+    generateResources(seed, x, y, z) {
 
         const simplex = new SimplexNoise(seed);
         resources.forEach(resource => {
-            for (let x = 0; x < this.chunkSize; x++) {
-                for (let y = 0; y < this.height; y++) {
-                    for (let z = 0; z < this.chunkSize; z++) {
-                        const value = simplex.noise3D(
-                            (this.position.x + x) / resource.scale.x,
-                            (this.position.y + y) / resource.scale.y,
-                            (this.position.z + z) / resource.scale.z);
-                        if (value > resource.scarcity)
-                            this.setBlockId(x, y, z, resource.id);
-                    }
-                }
-            }
+
+            const value = simplex.noise3D(
+                (this.position.x + x) / resource.scale.x,
+                (this.position.y + y) / resource.scale.y,
+                (this.position.z + z) / resource.scale.z);
+            if (value > resource.scarcity)
+                this.setBlockId(x, y, z, resource.id);
+
         })
 
     }
@@ -90,18 +86,76 @@ export class WorldChunk extends THREE.Group {
 
                 for (let y = 0; y < this.height; y++) {
 
-                    if (y < height && this.getBlock(x, y, z)?.id === blocks.empty.id)
+                    if (y < height && y > height-3 && this.getBlock(x, y, z)?.id === blocks.empty.id)
                         this.setBlockId(x, y, z, blocks.dirt.id);
-                    else if (y == height)
+                    if (y < height && this.getBlock(x, y, z)?.id === blocks.empty.id) {
+                        this.setBlockId(x, y, z, blocks.stone.id);
+                        this.generateResources(simplex, x, y, z);
+                    } else if (y == height) {
                         this.setBlockId(x, y, z, blocks.grass.id);
+                        // Randomly generate a tree
+                        if (Math.random() < this.params.trees.frequency) {
+                            this.generateTree(seed, 1, x, height + 1, z);
+                        }
+                    }
+                    /*
                     else if (y > height)
                         this.setBlockId(x, y, z, blocks.empty.id);
+
+                     */
                 }
             }
         }
-        this.setBlockId(0, 1, 0, blocks.dirt.id);
 
 
+
+    }
+
+    /**
+     * Creates a tree appropriate for the biome at (x, y, z)
+     * @param {string} biome
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    generateTree(seed, biome, x, y, z) {
+        const minH = this.params.trees.trunk.minHeight;
+        const maxH = this.params.trees.trunk.maxHeight;
+        const h = Math.round(minH + (maxH - minH) * Math.random() +1);
+
+        for (let treeY = y; treeY < y + h; treeY++) {
+            this.setBlockId(x, treeY, z, blocks.log.id);
+        }
+
+        this.generateTreeCanopy(biome, x, y + h, z, seed);
+
+
+    }
+
+    generateTreeCanopy(biome, centerX, centerY, centerZ, seed) {
+        const minR = this.params.trees.canopy.minRadius;
+        const maxR = this.params.trees.canopy.maxRadius;
+        const r = Math.round(minR + (maxR - minR) * Math.random());
+
+
+        for (let x = -r; x <= r; x++) {
+            for (let y = -r; y <= r; y++) {
+                for (let z = -r; z <= r; z++) {
+                    const n = Math.random();
+
+                    // Make sure the block is within the canopy radius
+                    if (x * x + y * y + z * z > r * r) continue;
+                    // Don't overwrite an existing block
+                    const block = this.getBlock(centerX + x, centerY + y, centerZ + z);
+                    if (block && block.id !== blocks.empty.id) continue;
+                    // Fill in the tree canopy with leaves based on the density parameter
+                    if (n < this.params.trees.canopy.density) {
+                        if (this.getBlock(centerX + x, centerY + y, centerZ + z) !== null)
+                            this.setBlockId(centerX + x, centerY + y, centerZ + z, blocks.leaves.id);
+                    }
+                }
+            }
+        }
     }
 
     generateMesh() {
@@ -141,8 +195,11 @@ export class WorldChunk extends THREE.Group {
 
                     if (!this.isBlockObscured(x, y, z) && this.getBlock(x, y, z) != null && this.getBlock(x, y, z).id != blocks.empty.id) {
                         matrix.setPosition(x, y, z);
-                        meshes[this.getBlock(x, y, z).id].setMatrixAt(meshes[this.getBlock(x, y, z).id].count++, matrix)
-
+                        meshes[this.getBlock(x, y, z).id].setMatrixAt(meshes[this.getBlock(x, y, z).id].count, matrix);
+                        const mesh = meshes[this.getBlock(x, y, z).id];
+                        const instanceId = mesh.count;
+                        this.setBlockInstanceId(x, y, z, instanceId);
+                        meshes[this.getBlock(x, y, z).id].count++;
                     }
                 }
                 //chunk.add(mesh);
@@ -220,7 +277,7 @@ export class WorldChunk extends THREE.Group {
         }
     }
 
-    diposeInstances() {
+    disposeInstances() {
         //parcour tous les enfants du chunk, instanceMesg
         this.traverse((obj) => {
             // si ils ont la methode dispose on l'appel
@@ -268,5 +325,61 @@ export class WorldChunk extends THREE.Group {
             mesh.instanceMatrix.needsUpdate = true;
             mesh.computeBoundingSphere();
         }
+    }
+
+    /**
+     * Removes the block at (x, y, z)
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    removeBlock(x, y, z) {
+        const block = this.getBlock(x, y, z);
+        if (block && block.id !== blocks.empty.id) {
+            this.deleteBlockInstance(x, y, z);
+            this.setBlockId(x, y, z, blocks.empty.id);
+            //this.dataStore.set(this.position.x, this.position.z, x, y, z, blocks.empty.id);
+        }
+    }
+
+    /**
+     * Removes the mesh instance associated with `block` by swapping it
+     * with the last instance and decrementing the instance count.
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    deleteBlockInstance(x, y, z) {
+        const block = this.getBlock(x, y, z);
+console.log(block);
+        if (block.id === blocks.empty.id || block.instanceId === null) return;
+
+        // Get the mesh and instance id of the block
+        const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
+        const instanceId = block.instanceId;
+
+        // Swapping the transformation matrix of the block in the last position
+        // with the block that we are going to remove
+        const lastMatrix = new THREE.Matrix4();
+        mesh.getMatrixAt(mesh.count - 1, lastMatrix);
+
+        // Updating the instance id of the block in the last position to its new instance id
+        const v = new THREE.Vector3();
+        v.applyMatrix4(lastMatrix);
+        this.setBlockInstanceId(v.x, v.y, v.z, instanceId);
+
+        // Swapping the transformation matrices
+        mesh.setMatrixAt(instanceId, lastMatrix);
+
+        // This effectively removes the last instance from the scene
+        mesh.count--;
+
+        // Notify the instanced mesh we updated the instance matrix
+        // Also re-compute the bounding sphere so raycasting works
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingSphere();
+
+        // Remove the instance associated with the block and update the data model
+        this.setBlockInstanceId(x, y, z, null);
     }
 }

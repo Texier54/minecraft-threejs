@@ -20,6 +20,10 @@ const textures = {
     crafting_table_top: loadTexture('images/crafting_table_top.png'),
     crafting_table_front: loadTexture('images/crafting_table_front.png'),
     crafting_table_side: loadTexture('images/crafting_table_side.png'),
+    planks: loadTexture('images/planks_oak.png'),
+    log_top: loadTexture('images/log_oak_top.png'),
+    log: loadTexture('images/log_oak.png'),
+    leaves: loadTexture('images/leaves.png'),
 };
 
 export const blocks = {
@@ -68,14 +72,39 @@ export const blocks = {
         scale: { x: 40, y: 40, z: 40 },
         scarcity: 0.9
     },
-    bedrock: {
+    planks: {
         id: 6,
+        name: 'planks',
+        material: new THREE.MeshLambertMaterial({ map: textures.planks }),
+        item: 'images/planks_oak.png'
+    },
+    bedrock: {
+        id: 7,
         name: 'bedrock',
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8
     },
-    crafting_table: {
+    log: {
+        id: 17,
+        name: 'log',
+        material:  [
+            new THREE.MeshLambertMaterial({ map: textures.log }), // right
+            new THREE.MeshLambertMaterial({ map: textures.log }), // left
+            new THREE.MeshLambertMaterial({ map: textures.log_top }), // top
+            new THREE.MeshLambertMaterial({ map: textures.log_top }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.log }), // front
+            new THREE.MeshLambertMaterial({ map: textures.log })  // back
+        ],
+        item: 'images/log_oak.png'
+    },
+    leaves: {
+        id: 18,
+        name: 'leaves',
+        material: new THREE.MeshLambertMaterial({ map: textures.leaves }),
+        item: 'images/leaves.png'
+    },
+    craftingTable: {
         id: 58,
         name: 'Crafting Table',
         material: [
@@ -91,7 +120,6 @@ export const blocks = {
 };
 
 export const resources = [
-    blocks.stone,
     blocks.coalOre,
     blocks.ironOre
 ];
