@@ -5,6 +5,9 @@ import { blocks, resources } from './block.js';
 export class Inventory {
 
     inventoryContainer = document.getElementById('inventory');
+    inventoryStockage = document.getElementById('stockage');
+    inventoryCrafter = document.getElementById('crafter');
+    inventoryOutput = document.getElementById('output');
     bar = document.getElementById('bar');
 
     selectedItemId = 27;
@@ -20,7 +23,7 @@ export class Inventory {
 
 
     // État de l'inventaire
-    inventory = Array(36).fill(null); // 27 slots
+    inventory = Array(41).fill(null); // 27 slots
 
 
     heldItem = null; // L'objet actuellement tenu
@@ -43,7 +46,7 @@ export class Inventory {
         });
     }
     show() {
-        this.inventoryContainer.style.display = 'grid';
+        this.inventoryContainer.style.display = 'block';
         this.bar.style.display = 'none';
     }
 
@@ -74,8 +77,12 @@ export class Inventory {
 
     // Création des slots dans le DOM
     renderInventory() {
-        this.inventoryContainer.innerHTML = ''; // Réinitialise le conteneur
+        this.inventoryStockage.innerHTML = ''; // Réinitialise le conteneur
+        this.inventoryCrafter.innerHTML = ''; // Réinitialise le conteneur
+        this.inventoryOutput.innerHTML = '';
         this.inventory.forEach((item, index) => {
+
+
 
                 const slot = document.createElement('div');
                 slot.classList.add('slot');
@@ -97,7 +104,17 @@ export class Inventory {
 
                 // Gestion du clic
                 slot.addEventListener('click', () => this.handleSlotClick(index));
-                this.inventoryContainer.appendChild(slot);
+
+                if (index < 36)
+                    this.inventoryStockage.appendChild(slot);
+                else if (index < 40)
+                    this.inventoryCrafter.appendChild(slot);
+                else
+                    this.inventoryOutput.appendChild(slot);
+
+
+
+
 
         });
     }
@@ -105,7 +122,7 @@ export class Inventory {
     renderBar() {
         this.bar.innerHTML = ''; // Réinitialise le conteneur
         this.inventory.forEach((item, index) => {
-            if (index >= 27) {
+            if (index >= 27 && index < 36) {
                 const slot = document.createElement('div');
                 slot.classList.add('slot');
                 slot.dataset.index_bar = index;

@@ -7,10 +7,11 @@ import { World } from './world.js';
 import {blocks} from "./block.js";
 import {Physics} from "./physics.js";
 import {Inventory} from "./inventory.js";
+import {Menu} from "./menu.js";
 
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x80a0e0, 50, 100);
+scene.fog = new THREE.Fog(0x80a0e0, 50, 50);
 
 const world = new World();
 world.generate();
@@ -33,6 +34,7 @@ const fpsDisplay = document.getElementById('fps');
 const player = new Player(scene, world);
 const physics = new Physics(scene);
 const inventory = new Inventory();
+const menu = new Menu(world, player);
 
 
 

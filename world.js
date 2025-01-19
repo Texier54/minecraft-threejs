@@ -3,13 +3,15 @@ import * as THREE from 'three';
 import { blocks, resources } from './block.js';
 import { WorldChunk } from './worldChunk.js';
 
+import { DataStore } from './dataStore.js';
+
 export class World extends THREE.Group {
 
     asyncLoading = true;
 
-    drawDistance = 3;
+    drawDistance = 1;
 
-    chunkSize = { width: 32, height: 80 };
+    chunkSize = { width: 16, height: 80 };
 
     params = {
         seed: 45678,
@@ -32,8 +34,62 @@ export class World extends THREE.Group {
         }
     }
 
+    dataStore = new DataStore();
+
     constructor() {
         super();
+
+        document.addEventListener('keydown', (ev) => {
+            switch (ev.code) {
+                case 'F1':
+                    this.save();
+                    break;
+                case 'F2':
+                    this.load();
+                    break;
+            }
+        });
+    }
+
+    /**
+     * Saves the world data to local storage
+     */
+    save() {
+
+
+// Exemple d'utilisation
+        (async () => {
+            const dataSize = new Blob([JSON.stringify(this.dataStore.getData())]).size; // Taille en octets
+            console.log(`Taille des données : ${dataSize} octets`);
+            console.log(this.dataStore.getData());
+            const minecraftData = this.dataStore.getData();
+            await storeData(minecraftData);
+        })();
+
+        //localStorage.setItem('minecraft_params', JSON.stringify(this.params));
+        //localStorage.setItem('minecraft_data', JSON.stringify(this.dataStore.getData()));
+        //document.getElementById('status').innerHTML = 'GAME SAVED';
+        //setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
+    }
+
+    /**
+     * Loads the game from disk
+     */
+    load() {
+
+        (async () => {
+            const retrievedData = await getData();
+            console.log('Données récupérées :', retrievedData);
+            this.dataStore.setData(retrievedData);
+            console.log(this.dataStore.getData());
+            this.generate();
+        })();
+
+        //this.params = JSON.parse(localStorage.getItem('minecraft_params'));
+        //this.dataStore.setData(JSON.parse(localStorage.getItem('minecraft_data')));
+        //document.getElementById('status').innerHTML = 'GAME LOADED';
+        //setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
+
     }
 
     generate() {
@@ -41,7 +97,7 @@ export class World extends THREE.Group {
 
         for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
             for (let z = -this.drawDistance; z <= this.drawDistance; z++) {
-                const chunk = new WorldChunk(this.chunkSize, this.params);
+                const chunk = new WorldChunk(this.chunkSize, this.params, this.dataStore);
                 chunk.position.set(x * this.chunkSize.width, 0,z * this.chunkSize.width)
                 chunk.generate();
                 chunk.userData = {x, z};
@@ -132,7 +188,7 @@ export class World extends THREE.Group {
      * @param {number} z
      */
     generateChunk(x, z) {
-        const chunk = new WorldChunk(this.chunkSize, this.params);
+        const chunk = new WorldChunk(this.chunkSize, this.params, this.dataStore);
         chunk.position.set(
             x * this.chunkSize.width,
             0,
@@ -141,7 +197,7 @@ export class World extends THREE.Group {
 
         if (this.asyncLoading) {
             //pour garantir la valeur de this on doit bind chunk parce que la fonction est appelé plus tard
-            requestIdleCallback(chunk.generate.bind(chunk), { timeout: 5000 });
+            requestIdleCallback(chunk.generate.bind(chunk), { timeout: 2000 });
         } else {
             chunk.generate();
         }
@@ -281,4 +337,49 @@ export class World extends THREE.Group {
             )
         }
     }
+}
+
+const dbName = 'minecraftDB';
+const storeName = 'minecraftData';
+
+// Initialiser IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = function (event) {
+            const db = event.target.result;
+            db.createObjectStore(storeName, { keyPath: 'id' });
+        };
+        request.onsuccess = function (event) {
+            resolve(event.target.result);
+        };
+        request.onerror = function (event) {
+            reject(event.target.error);
+        };
+    });
+}
+
+// Stocker des données
+async function storeData(data) {
+    const db = await initDB();
+    const transaction = db.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    store.put({ id: 'minecraft_data', data });
+    return transaction.complete;
+}
+
+// Lire des données
+async function getData() {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        const request = store.get('minecraft_data');
+        request.onsuccess = function () {
+            resolve(request.result?.data || null);
+        };
+        request.onerror = function (event) {
+            reject(event.target.error);
+        };
+    });
 }

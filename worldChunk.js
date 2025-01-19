@@ -12,17 +12,21 @@ export class WorldChunk extends THREE.Group {
 
     data = [];
 
-    constructor(size, params) {
+    constructor(size, params, dataStore) {
         super();
         this.chunks = new Map(); // Contiendra les chunks générés
         this.chunkSize = size.width;
         this.height = size.height;
         this.params = params;
+        this.dataStore = dataStore;
 
         // Créer le terrain
         const blockSize = 1;
         this.geometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
-        this.initializeTerrain();
+        //this.initializeTerrain();
+
+
+
     }
 
     initializeTerrain() {
@@ -44,9 +48,54 @@ export class WorldChunk extends THREE.Group {
     }
 
     generate() {
-        this.generateResources(this.params.seed);
-        this.generateTerrain(this.params.seed);
+
+/*
+        // Créer un Worker pour déporter la génération
+        const worker = new Worker('chunkWorker.js', { type: 'module' });
+
+        // Gestion du retour de données depuis le Worker
+        worker.onmessage = (event) => {
+            const { chunkData } = event.data;
+
+            this.data = event.data.data;
+            this.generateResources(this.params.seed);
+            this.generateTerrain(this.params.seed);
+            this.generateMesh();
+
+            this.dataStore.set(this.position.x, this.position.z, data)
+            worker.terminate();
+        };
+
+        worker.onerror = (e) => {
+            console.error(e);
+            worker.terminate();
+        };
+
+        worker.onmessageerror = (e) => {
+            console.error('Message error in Worker:', e);
+        };
+
+
+        // Envoyer les données nécessaires au Worker
+        worker.postMessage({
+            chunkSize: this.chunkSize,
+            chunkHeight: this.height,
+            params: this.params,
+        });
+*/
+
+        this.initializeTerrain();
+        if (this.dataStore.contains(this.position.x, this.position.z))
+            this.data = this.dataStore.get(this.position.x, this.position.z)
+        else {
+            this.generateResources(this.params.seed);
+            this.generateTerrain(this.params.seed);
+            this.dataStore.set(this.position.x, this.position.z, this.data)
+        }
+
         this.generateMesh();
+
+
     }
 
     generateResources(seed, x, y, z) {
@@ -106,9 +155,6 @@ export class WorldChunk extends THREE.Group {
                 }
             }
         }
-
-
-
     }
 
     /**
@@ -216,7 +262,7 @@ export class WorldChunk extends THREE.Group {
     }
 
     getBlock(x, y, z) {
-        if (this.inBounds(x, y, z))
+        if (this.inBounds(x, y, z) && typeof this.data[x] !== "undefined")
             return this.data[x][y][z];
         return null;
     }
@@ -299,6 +345,7 @@ export class WorldChunk extends THREE.Group {
             this.setBlockId(x, y, z, blockId);
             this.addBlockInstance(x, y, z);
             //this.dataStore.set(this.position.x, this.position.z, x, y, z, blockId);
+            this.dataStore.set(this.position.x, this.position.z, this.data)
         }
     }
 
@@ -339,6 +386,7 @@ export class WorldChunk extends THREE.Group {
             this.deleteBlockInstance(x, y, z);
             this.setBlockId(x, y, z, blocks.empty.id);
             //this.dataStore.set(this.position.x, this.position.z, x, y, z, blocks.empty.id);
+            this.dataStore.set(this.position.x, this.position.z, this.data)
         }
     }
 
