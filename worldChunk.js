@@ -38,7 +38,8 @@ export class WorldChunk extends THREE.Group {
                 for (let z = 0; z < this.chunkSize; z++) {
                     row.push({
                         id: blocks.empty.id,
-                        instanceId: null
+                        instanceId: null,
+                        inventory: null
                     });
                 }
                 slice.push(row);

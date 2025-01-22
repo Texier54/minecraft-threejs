@@ -1,6 +1,7 @@
 
 
 import { blocks, resources } from './block.js';
+import { Crafts } from './crafts.js';
 
 export class Inventory {
 
@@ -14,11 +15,14 @@ export class Inventory {
 
     // Configuration des items
     items = [
-        { block: blocks.grass, quantity: 20 }, // grass
-        { block: blocks.stone, quantity: 20 }, // Table de craft
-        { block: blocks.craftingTable, quantity: 20 }, // Table de craft
-        { block: blocks.planks, quantity: 10 }, // Planks
-        { block: blocks.log, quantity: 10 }, // Log
+        { block: blocks.grass.id, quantity: 20 }, // grass
+        { block: blocks.stone.id, quantity: 20 }, // Table de craft
+        { block: blocks.craftingTable.id, quantity: 20 }, // Table de craft
+        { block: blocks.planks.id, quantity: 1 }, // Planks
+        { block: blocks.log.id, quantity: 10 }, // Log
+        { block: blocks.furnace.id, quantity: 10 }, // Log
+        { block: blocks.chest.id, quantity: 4 }, // Log
+        { block: blocks.glass.id, quantity: 40 }, // Log
     ];
 
 
@@ -35,6 +39,9 @@ export class Inventory {
         this.inventory[27] = this.items[0]; // Table de craft au premier slot
         this.inventory[28] = this.items[3]; // Table de craft au premier slot
         this.inventory[29] = this.items[4]; // Table de craft au premier slot
+        this.inventory[30] = this.items[5]; // Table de craft au premier slot
+        this.inventory[31] = this.items[6]; // Table de craft au premier slot
+        this.inventory[32] = this.items[7]; // Table de craft au premier slot
         this.renderInventory();
         this.renderBar();
         // Gestion du mouvement de la souris pour suivre le curseur
@@ -44,10 +51,13 @@ export class Inventory {
                 this.heldItemElement.style.top = `${event.pageY - 20}px`;
             }
         });
+
+        this.crafts = new Crafts();
     }
     show() {
         this.inventoryContainer.style.display = 'block';
         this.bar.style.display = 'none';
+        this.renderInventory();
     }
 
     hide() {
@@ -65,6 +75,13 @@ export class Inventory {
 
     selectItem(id) {
         if (id) {
+            // Sélectionne tous les éléments avec la classe 'slot'
+            const slots = document.querySelectorAll('.slot');
+
+// Parcourt chaque élément et enlève la classe 'selected'
+            slots.forEach(slot => {
+                slot.classList.remove('selected');
+            });
             const slot = document.querySelector('.slot[data-index_bar="'+id+'"]');
             console.log(this.getBlock(id));
             console.log(slot);
@@ -92,12 +109,12 @@ export class Inventory {
                 if (item) {
                     const img = document.createElement('img');
                     const div = document.createElement('div');
-                    img.src = item.block.item;
-                    img.alt = item.block.id;
+                    const blockObject = Object.values(blocks).find(block => block.id === item.block)
+                    img.src = blockObject.item;
+                    img.alt = item.block;
                     img.width = 200;
                     div.innerHTML = item.quantity;
-                    div.style.marginBottom = '-20px';
-                    div.style.float = 'right';
+                    div.classList.add('slot-quantity');
                     slot.appendChild(img);
                     slot.appendChild(div);
                 }
@@ -133,9 +150,12 @@ export class Inventory {
                 if (item) {
                     const img = document.createElement('img');
                     const div = document.createElement('div');
-                    img.src = item.block.item;
-                    img.alt = item.block.id;
+                    const blockObject = Object.values(blocks).find(block => block.id === item.block)
+                    img.src = blockObject.item;
+                    img.alt = item.block;
+                    img.width = 200;
                     div.innerHTML = item.quantity;
+                    div.classList.add('slot-quantity');
                     slot.appendChild(img);
                     slot.appendChild(div);
                 }
@@ -149,7 +169,7 @@ export class Inventory {
     handleSlotClick(index) {
         const selectedItem = this.inventory[index];
 
-        if (this.heldItem) {
+        if (this.heldItem && index != 40) {
             // Si un objet est tenu, le poser
             if (!selectedItem) {
                 // Slot vide : déplacer l'item
@@ -157,21 +177,144 @@ export class Inventory {
                 this.heldItem = null;
                 this.heldItemElement.style.display = 'none';
             } else {
-                // Slot occupé : échanger les items
-                [this.inventory[index], this.heldItem] = [this.heldItem, this.inventory[index]];
+
+                if (this.inventory[index].block.id == this.heldItem.block.id) {
+                    this.inventory[index].quantity += this.heldItem.quantity;
+                    this.heldItem = null;
+                    this.heldItemElement.style.display = 'none';
+                } else {
+                    // Slot occupé : échanger les items
+                    [this.inventory[index], this.heldItem] = [this.heldItem, this.inventory[index]];
+                    this.heldItemElement.src = this.heldItem.block.item; // Affiche l'image de l'item tenu
+                }
+
+
             }
         } else if (selectedItem) {
             // Si aucun objet n'est tenu, prendre l'item du slot
             this.heldItem = this.inventory[index];
             this.inventory[index] = null;
-            this.heldItemElement.src = this.heldItem.block.item; // Affiche l'image de l'item tenu
+            const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
+            this.heldItemElement.src = blockObject.item; // Affiche l'image de l'item tenu
             this.heldItemElement.style.display = 'block';
         }
 
+        //vérifie recettes
+        const gain = this.crafts.checkRecipe(this.inventory[36]);
+        if (gain)
+            this.inventory[40] = { block : gain, quantity : 1};
+        else
+            this.inventory[40] = null;
+
         this.renderInventory();
         this.renderBar();
-        console.log(this.inventory);
     }
+
+    addBlock(blockToAdd) {
+        let saved = false;
+        this.inventory.forEach((item, index) => {
+            if (index < 36) {
+                if (item?.block == blockToAdd.id) {
+                    item.quantity += 1;
+                    saved = true;
+                }
+            }
+        });
+        if (!saved) {
+            this.inventory.forEach((item, index) => {
+                if (index < 36 && !saved) {
+                    if (item == null) {
+                        console.log(blockToAdd.id);
+                        this.inventory[index] = { quantity: 1, block: blockToAdd.id };
+                        saved = true;
+                    }
+                }
+            });
+        }
+        this.renderBar();
+    }
+
+    removeBlock(block) {
+        this.inventory.forEach((item, index) => {
+            if (index < 36) {
+                if (item?.block == block) {
+                    item.quantity -= 1;
+                    if (item.quantity <= 0)
+                        this.inventory[index] = null;
+                }
+            }
+        });
+        this.renderBar();
+    }
+
+    save() {
+        (async () => {
+            const dataSize = new Blob([JSON.stringify(this.inventory)]).size; // Taille en octets
+            //console.log(`Taille des données : ${dataSize} octets`);
+            //console.log(this.inventory);
+            const minecraftData = this.inventory;
+            await storeData(minecraftData);
+        })();
+    }
+
+    /**
+     * Loads the game from disk
+     */
+    load() {
+
+        (async () => {
+            const retrievedData = await getData();
+            //console.log('Données récupérées :', retrievedData);
+            this.inventory = retrievedData;
+            //console.log(this.inventory);
+            this.renderBar();
+        })();
+    }
+}
+
+const dbName = 'minecraftDB';
+const storeName = 'minecraftData';
+
+// Initialiser IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = function (event) {
+            const db = event.target.result;
+            db.createObjectStore(storeName, { keyPath: 'id' });
+        };
+        request.onsuccess = function (event) {
+            resolve(event.target.result);
+        };
+        request.onerror = function (event) {
+            reject(event.target.error);
+        };
+    });
+}
+
+// Stocker des données
+async function storeData(data) {
+    const db = await initDB();
+    const transaction = db.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    store.put({ id: 'minecraft_inventory', data });
+    return transaction.complete;
+}
+
+// Lire des données
+async function getData() {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        const request = store.get('minecraft_inventory');
+        request.onsuccess = function () {
+            resolve(request.result?.data || null);
+        };
+        request.onerror = function (event) {
+            reject(event.target.error);
+        };
+    });
 }
 
 

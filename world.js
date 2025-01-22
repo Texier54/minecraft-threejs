@@ -9,7 +9,7 @@ export class World extends THREE.Group {
 
     asyncLoading = true;
 
-    drawDistance = 1;
+    drawDistance = 2;
 
     chunkSize = { width: 16, height: 80 };
 
@@ -38,17 +38,6 @@ export class World extends THREE.Group {
 
     constructor() {
         super();
-
-        document.addEventListener('keydown', (ev) => {
-            switch (ev.code) {
-                case 'F1':
-                    this.save();
-                    break;
-                case 'F2':
-                    this.load();
-                    break;
-            }
-        });
     }
 
     /**
@@ -60,8 +49,8 @@ export class World extends THREE.Group {
 // Exemple d'utilisation
         (async () => {
             const dataSize = new Blob([JSON.stringify(this.dataStore.getData())]).size; // Taille en octets
-            console.log(`Taille des données : ${dataSize} octets`);
-            console.log(this.dataStore.getData());
+            //console.log(`Taille des données : ${dataSize} octets`);
+            //console.log(this.dataStore.getData());
             const minecraftData = this.dataStore.getData();
             await storeData(minecraftData);
         })();
@@ -79,9 +68,9 @@ export class World extends THREE.Group {
 
         (async () => {
             const retrievedData = await getData();
-            console.log('Données récupérées :', retrievedData);
+            //console.log('Données récupérées :', retrievedData);
             this.dataStore.setData(retrievedData);
-            console.log(this.dataStore.getData());
+            //console.log(this.dataStore.getData());
             this.generate();
         })();
 

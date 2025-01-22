@@ -1,3 +1,5 @@
+import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise'
+
 const blocks = {
     empty: { id: 0, name: 'empty', visible: false },
     grass: { id: 1, name: 'grass' },
@@ -19,8 +21,8 @@ let data = [];
 let params = [];
 self.onmessage = function (event) {
     const { chunkData, chunkSize, chunkHeight, params } = event.data;
-    const simplex = new SimplexNoise()
-    console.log(simplex.noise2D(1,1));
+
+
     // Simule la génération d'un chunk (remplacez par votre logique réelle)
     const generatedData = initializeTerrain(chunkSize, chunkHeight, params);
     //const generatedTerrain = generateTerrain(chunkSize, chunkHeight, params);

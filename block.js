@@ -24,6 +24,13 @@ const textures = {
     log_top: loadTexture('images/log_oak_top.png'),
     log: loadTexture('images/log_oak.png'),
     leaves: loadTexture('images/leaves.png'),
+    glass: loadTexture('images/glass.png'),
+    furnace_top: loadTexture('images/furnace_top.png'),
+    furnace_side: loadTexture('images/furnace_side.png'),
+    furnace_front: loadTexture('images/furnace_front_off.png'),
+    chest_top: loadTexture('images/chest_top.png'),
+    chest_side: loadTexture('images/chest_side.png'),
+    chest_front: loadTexture('images/chest_front.png'),
 };
 
 export const blocks = {
@@ -43,12 +50,13 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.grassSide }), // front
             new THREE.MeshLambertMaterial({ map: textures.grassSide })  // back
         ],
-        item: 'images/grass.png'
+        item: 'images/block-icon/grass.png'
     },
     dirt: {
         id: 2,
         name: 'dirt',
-        material: new THREE.MeshLambertMaterial({ map: textures.dirt })
+        material: new THREE.MeshLambertMaterial({ map: textures.dirt }),
+        item: 'images/block-icon/dirt.webp'
     },
     stone: {
         id: 3,
@@ -56,7 +64,7 @@ export const blocks = {
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8, //rareté
-        item: 'images/stone.png'
+        item: 'images/block-icon/stone.png'
     },
     coalOre: {
         id: 4,
@@ -76,7 +84,7 @@ export const blocks = {
         id: 6,
         name: 'planks',
         material: new THREE.MeshLambertMaterial({ map: textures.planks }),
-        item: 'images/planks_oak.png'
+        item: 'images/block-icon/wood.png'
     },
     bedrock: {
         id: 7,
@@ -96,13 +104,33 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.log }), // front
             new THREE.MeshLambertMaterial({ map: textures.log })  // back
         ],
-        item: 'images/log_oak.png'
+        item: 'images/block-icon/log.png'
     },
     leaves: {
         id: 18,
         name: 'leaves',
         material: new THREE.MeshLambertMaterial({ map: textures.leaves }),
         item: 'images/leaves.png'
+    },
+    glass: {
+        id: 20,
+        name: 'glass',
+        material: new THREE.MeshLambertMaterial({ map: textures.glass }),
+        item: 'images/block-icon/glass.webp'
+    },
+    chest: {
+        id: 54,
+        name: 'chest',
+        material: [
+            new THREE.MeshLambertMaterial({ map: textures.chest_side }), // right
+            new THREE.MeshLambertMaterial({ map: textures.chest_side }), // left
+            new THREE.MeshLambertMaterial({ map: textures.chest_top }), // top
+            new THREE.MeshLambertMaterial({ map: textures.chest_side }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.chest_front }), // front
+            new THREE.MeshLambertMaterial({ map: textures.chest_side })  // back
+        ],
+        item: 'images/chest_front.png',
+        interface: true
     },
     craftingTable: {
         id: 58,
@@ -115,9 +143,32 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_front }), // front
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_side })  // back
         ],
-        item: 'images/crafting_table_top.png'
+        item: 'images/block-icon/crafting_table.webp'
+    },
+    furnace: {
+        id: 61,
+        name: 'Furnace',
+        material: [
+            new THREE.MeshLambertMaterial({ map: textures.furnace_side }), // right
+            new THREE.MeshLambertMaterial({ map: textures.furnace_side }), // left
+            new THREE.MeshLambertMaterial({ map: textures.furnace_top }), // top
+            new THREE.MeshLambertMaterial({ map: textures.furnace_side }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.furnace_front }), // front
+            new THREE.MeshLambertMaterial({ map: textures.furnace_side })  // back
+        ],
+        item: 'images/block-icon/furnace.webp'
     },
 };
+
+// Générer un index par ID
+const blockById = Object.fromEntries(
+    Object.values(blocks).map(block => [block.id, block])
+);
+
+// Fonction pour récupérer un bloc par ID
+export function getBlockByIdFast(id) {
+    return blockById[id] || null; // Retourne null si l'ID n'existe pas
+}
 
 export const resources = [
     blocks.coalOre,

@@ -95,4 +95,79 @@ export class Player {
         return str;
     }
 
+    save() {
+        (async () => {
+            const dataSize = new Blob([JSON.stringify(this.position)]).size; // Taille en octets
+            console.log(`Taille des données : ${dataSize} octets`);
+            console.log(this.position);
+            const minecraftData = this.position;
+            await storeData(minecraftData);
+        })();
+    }
+
+    /**
+     * Loads the game from disk
+     */
+    load() {
+
+        (async () => {
+            const retrievedData = await getData();
+            console.log('Données récupérées :', retrievedData);
+            this.position.set(retrievedData.x, retrievedData.y, retrievedData.z);
+            console.log(this.position);
+        })();
+    }
+
 }
+
+const dbName = 'minecraftDB';
+const storeName = 'minecraftData';
+
+// Initialiser IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = function (event) {
+            const db = event.target.result;
+            db.createObjectStore(storeName, { keyPath: 'id' });
+        };
+        request.onsuccess = function (event) {
+            resolve(event.target.result);
+        };
+        request.onerror = function (event) {
+            reject(event.target.error);
+        };
+    });
+}
+
+// Stocker des données
+async function storeData(data) {
+    const db = await initDB();
+    const transaction = db.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    store.put({ id: 'minecraft_player_position', data });
+    return transaction.complete;
+}
+
+// Lire des données
+async function getData() {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        const request = store.get('minecraft_player_position');
+        request.onsuccess = function () {
+            resolve(request.result?.data || null);
+        };
+        request.onerror = function (event) {
+            reject(event.target.error);
+        };
+    });
+}
+
+
+
+
+
+
+

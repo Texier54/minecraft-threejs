@@ -4,7 +4,7 @@ import * as THREE from 'three';
 
 import { Player } from './player.js';
 import { World } from './world.js';
-import {blocks} from "./block.js";
+import {blocks, getBlockByIdFast} from "./block.js";
 import {Physics} from "./physics.js";
 import {Inventory} from "./inventory.js";
 import {Menu} from "./menu.js";
@@ -14,8 +14,8 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x80a0e0, 50, 50);
 
 const world = new World();
-world.generate();
-
+//world.generate();
+world.load();
 scene.add(world)
 
 const renderer = new THREE.WebGLRenderer();
@@ -34,8 +34,11 @@ const fpsDisplay = document.getElementById('fps');
 const player = new Player(scene, world);
 const physics = new Physics(scene);
 const inventory = new Inventory();
-const menu = new Menu(world, player);
+const menu = new Menu(world, player, inventory);
 
+//DEBUG
+player.load();
+inventory.load();
 
 
 /*
@@ -238,12 +241,28 @@ window.addEventListener('mousedown', (event) => {
 function addBlock(intersected, selectedCoords) {
 
 
+    const selectedBlock = world.getBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
 
     //prend les coordonée de la face pointé
     selectedCoords.add(intersected.normal);
 
-    if (inventory.getSelectedItem()?.block.id !== undefined)
-        world.addBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z, inventory.getSelectedItem().block.id);
+    /*
+    // Ajouter une lumière ponctuelle pour simuler l'émission
+    const pointLight = new THREE.PointLight(0xfff933, 4, 10); // Couleur, intensité, distance
+    pointLight.position.set(selectedCoords.x, selectedCoords.y, selectedCoords.z); // Positionner la lumière au centre du cube
+    scene.add(pointLight);
+
+     */
+    if (inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true) {
+        world.addBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z, inventory.getSelectedItem().block);
+        inventory.removeBlock(inventory.getSelectedItem().block);
+        var audio = new Audio('audio/dirt1.ogg');
+        audio.play();
+
+    } else if (getBlockByIdFast(selectedBlock.id).interface !== true) {
+
+    }
+
 /*
     // Get the mesh and instance id of the block
     const mesh = intersected.object;
@@ -264,7 +283,13 @@ function addBlock(intersected, selectedCoords) {
 
 function deleteBlock(intersected, selectedCoords) {
 
+    const blockToRemove = world.getBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
+    inventory.addBlock(blockToRemove);
     world.removeBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
+
+    var audio = new Audio('audio/dirt1.ogg');
+    audio.play();
+
 
     /*
 
