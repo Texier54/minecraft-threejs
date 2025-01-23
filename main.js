@@ -5,18 +5,22 @@ import * as THREE from 'three';
 import { Player } from './player.js';
 import { World } from './world.js';
 import {blocks, getBlockByIdFast} from "./block.js";
+import {Pig} from "./pig.js";
 import {Physics} from "./physics.js";
 import {Inventory} from "./inventory.js";
 import {Menu} from "./menu.js";
+import {UI} from "./ui.js";
 
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x80a0e0, 50, 50);
+
 
 const world = new World();
 //world.generate();
 world.load();
 scene.add(world)
+
+scene.fog = new THREE.Fog(0x80a0e0, world.chunkSize.width*world.drawDistance*0.9, world.chunkSize.width*world.drawDistance);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -35,10 +39,17 @@ const player = new Player(scene, world);
 const physics = new Physics(scene);
 const inventory = new Inventory();
 const menu = new Menu(world, player, inventory);
+const ui = new UI();
 
 //DEBUG
 player.load();
 inventory.load();
+
+
+const pig = new Pig();
+scene.add(pig);
+
+
 
 
 /*
@@ -184,12 +195,6 @@ window.addEventListener('mousedown', (event) => {
         raycaster.setFromCamera(mouse, player.camera);
 
 
-
-
-
-
-
-
         // Vérifier les intersections
         // Intersecter uniquement les chunks visibles
         const visibleChunks = Array.from(chunks.values());
@@ -259,8 +264,8 @@ function addBlock(intersected, selectedCoords) {
         var audio = new Audio('audio/dirt1.ogg');
         audio.play();
 
-    } else if (getBlockByIdFast(selectedBlock.id).interface !== true) {
-
+    } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
+        ui.open(selectedBlock.id);
     }
 
 /*
@@ -375,13 +380,14 @@ var prevTime = performance.now();
 var fps = 0;
 var frameCount = 0;
 var prevTimeNew = 0;
+const clock = new THREE.Clock(); // Gérer le temps pour un mouvement fluide
 
 // Fonction d'animation
 function animate() {
 
     const now = performance.now();
 
-
+    const deltaTime = clock.getDelta(); // Temps écoulé depuis la dernière frame
         //checkGroundCollision();
         //checkHorizontalCollisions();
 
@@ -402,6 +408,10 @@ function animate() {
         updateChunkLOD();
         //checkCreateChunk();
     }
+
+
+    pig.movePig(deltaTime, world); // Déplacer le cochon
+
 
     renderer.render(scene, player.camera);
     requestAnimationFrame(animate);

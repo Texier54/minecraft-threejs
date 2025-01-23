@@ -9,7 +9,7 @@ export class World extends THREE.Group {
 
     asyncLoading = true;
 
-    drawDistance = 2;
+    drawDistance = 5;
 
     chunkSize = { width: 16, height: 80 };
 
@@ -45,20 +45,14 @@ export class World extends THREE.Group {
      */
     save() {
 
-
-// Exemple d'utilisation
         (async () => {
             const dataSize = new Blob([JSON.stringify(this.dataStore.getData())]).size; // Taille en octets
-            //console.log(`Taille des données : ${dataSize} octets`);
+            console.log(`Taille des données : ${dataSize} octets`);
             //console.log(this.dataStore.getData());
             const minecraftData = this.dataStore.getData();
+            console.log(minecraftData);
             await storeData(minecraftData);
         })();
-
-        //localStorage.setItem('minecraft_params', JSON.stringify(this.params));
-        //localStorage.setItem('minecraft_data', JSON.stringify(this.dataStore.getData()));
-        //document.getElementById('status').innerHTML = 'GAME SAVED';
-        //setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
     }
 
     /**
@@ -73,11 +67,6 @@ export class World extends THREE.Group {
             //console.log(this.dataStore.getData());
             this.generate();
         })();
-
-        //this.params = JSON.parse(localStorage.getItem('minecraft_params'));
-        //this.dataStore.setData(JSON.parse(localStorage.getItem('minecraft_data')));
-        //document.getElementById('status').innerHTML = 'GAME LOADED';
-        //setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
 
     }
 

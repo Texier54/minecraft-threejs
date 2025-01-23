@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 import { blocks, resources } from './block.js';
+import { RNG } from './rng.js';
 
 export class WorldChunk extends THREE.Group {
 
@@ -23,9 +24,7 @@ export class WorldChunk extends THREE.Group {
         // Créer le terrain
         const blockSize = 1;
         this.geometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
-        //this.initializeTerrain();
-
-
+        this.rng = new RNG(this.params.seed);
 
     }
 
@@ -50,41 +49,46 @@ export class WorldChunk extends THREE.Group {
 
     generate() {
 
-/*
-        // Créer un Worker pour déporter la génération
-        const worker = new Worker('chunkWorker.js', { type: 'module' });
-
-        // Gestion du retour de données depuis le Worker
-        worker.onmessage = (event) => {
-            const { chunkData } = event.data;
-
-            this.data = event.data.data;
-            this.generateResources(this.params.seed);
-            this.generateTerrain(this.params.seed);
+        if (this.dataStore.contains(this.position.x, this.position.z)) {
+            this.data = this.dataStore.get(this.position.x, this.position.z)
             this.generateMesh();
+        } else {
+            // Créer un Worker pour déporter la génération
+            const worker = new Worker('chunkWorker.js', { type: 'module' });
 
-            this.dataStore.set(this.position.x, this.position.z, data)
-            worker.terminate();
-        };
+            // Gestion du retour de données depuis le Worker
+            worker.onmessage = (event) => {
+                const { data } = event.data;
 
-        worker.onerror = (e) => {
-            console.error(e);
-            worker.terminate();
-        };
+                this.data = event.data.data;
+                this.dataStore.set(this.position.x, this.position.z, this.data)
+                this.generateMesh();
 
-        worker.onmessageerror = (e) => {
-            console.error('Message error in Worker:', e);
-        };
+                worker.terminate();
+            };
+
+            worker.onerror = (e) => {
+                console.error(e);
+                worker.terminate();
+            };
+
+            worker.onmessageerror = (e) => {
+                console.error('Message error in Worker:', e);
+            };
 
 
-        // Envoyer les données nécessaires au Worker
-        worker.postMessage({
-            chunkSize: this.chunkSize,
-            chunkHeight: this.height,
-            params: this.params,
-        });
-*/
+            // Envoyer les données nécessaires au Worker
+            worker.postMessage({
+                chunkSize: this.chunkSize,
+                chunkHeight: this.height,
+                params: this.params,
+                position: this.position,
+                rng: this.rng
+            });
+        }
 
+
+/*
         this.initializeTerrain();
         if (this.dataStore.contains(this.position.x, this.position.z))
             this.data = this.dataStore.get(this.position.x, this.position.z)
@@ -96,6 +100,8 @@ export class WorldChunk extends THREE.Group {
 
         this.generateMesh();
 
+
+ */
 
     }
 
@@ -230,6 +236,7 @@ export class WorldChunk extends THREE.Group {
                 mesh.count = 0;
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
+                mesh.e
                 meshes[blockType.id] = mesh;
             });
 

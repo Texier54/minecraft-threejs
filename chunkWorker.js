@@ -1,4 +1,6 @@
-import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise'
+import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
+import {RNG} from "./rng.js";
+
 
 const blocks = {
     empty: { id: 0, name: 'empty', visible: false },
@@ -13,19 +15,19 @@ const blocks = {
 };
 
 const resources = [
-    { id: 4, name: 'coal_ore', scarcity: 0.8 },
-    { id: 5, name: 'iron_ore', scarcity: 0.9 },
+    blocks.coalOre,
+    blocks.ironOre
 ];
 
 let data = [];
 let params = [];
 self.onmessage = function (event) {
-    const { chunkData, chunkSize, chunkHeight, params } = event.data;
+    const { chunkData, chunkSize, chunkHeight, params, position } = event.data;
 
-
+    const rng = new RNG(params.seed);
     // Simule la génération d'un chunk (remplacez par votre logique réelle)
     const generatedData = initializeTerrain(chunkSize, chunkHeight, params);
-    //const generatedTerrain = generateTerrain(chunkSize, chunkHeight, params);
+    const generatedTerrain = generateTerrain(chunkSize, chunkHeight, params, rng, position);
 
     // Envoyer les données générées au thread principal
     self.postMessage({ data: data });
@@ -50,28 +52,22 @@ function initializeTerrain(chunkSize, chunkHeight, params) {
     }
 }
 
-function generateTerrain(chunkSize, chunkHeight, params) {
+function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
 
-    //import SimplexNoise from "https://cdn.jsdelivr.net/npm/simplex-noise@4.0.0/simplex-noise.min.js";
-
-
-    //const simplex = new SimplexNoise(params.seed);
+    const simplex = new SimplexNoise(rng);
 
     for (let x = 0; x < chunkSize; x++) {
         for (let z = 0; z < chunkSize; z++) {
-/*
-            const noiseValue = simplex.noise2D(
-                (x) / params.terrain.scale,
-                (z) / params.terrain.scale
+
+            const noiseValue = simplex.noise(
+                (position.x + x) / params.terrain.scale,
+                (position.z + z) / params.terrain.scale
             );
 
             const scaledNoise = params.terrain.offset + params.terrain.magnitude * noiseValue;
-
             let height = Math.floor(scaledNoise*chunkHeight); // Hauteur basée sur le bruit
-
             height = Math.max(1, Math.min(height, chunkHeight -1));
-*/
-            let height = 10;
+
 
             for (let y = 0; y < chunkHeight; y++) {
 
@@ -79,7 +75,7 @@ function generateTerrain(chunkSize, chunkHeight, params) {
                     setBlockId(x, y, z, blocks.dirt.id);
                 if (y < height && getBlock(x, y, z)?.id === blocks.empty.id) {
                     setBlockId(x, y, z, blocks.stone.id);
-                    //this.generateResources(simplex, x, y, z);
+                    generateResources(rng, x, y, z, position);
                 } else if (y == height) {
                     setBlockId(x, y, z, blocks.grass.id);
                     // Randomly generate a tree
@@ -152,4 +148,20 @@ function generateTreeCanopy(biome, centerX, centerY, centerZ, params) {
             }
         }
     }
+}
+
+function generateResources(seed, x, y, z, position) {
+
+    const simplex = new SimplexNoise(seed);
+    resources.forEach(resource => {
+
+        const value = simplex.noise(
+            (position.x + x) / resource.scale.x,
+            (position.y + y) / resource.scale.y,
+            (position.z + z) / resource.scale.z);
+        if (value > resource.scarcity)
+            setBlockId(x, y, z, resource.id);
+
+    })
+
 }

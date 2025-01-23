@@ -71,14 +71,16 @@ export const blocks = {
         name: 'coal_ore',
         material: new THREE.MeshLambertMaterial({ map: textures.coalOre }),
         scale: { x: 20, y: 20, z: 20 },
-        scarcity: 0.8
+        scarcity: 0.8,
+        item: 'images/block-icon/coal_ore.png'
     },
     ironOre: {
         id: 5,
         name: 'iron_ore',
         material: new THREE.MeshLambertMaterial({ map: textures.ironOre }),
         scale: { x: 40, y: 40, z: 40 },
-        scarcity: 0.9
+        scarcity: 0.9,
+        item: 'images/block-icon/iron_ore.png'
     },
     planks: {
         id: 6,
@@ -129,7 +131,7 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.chest_front }), // front
             new THREE.MeshLambertMaterial({ map: textures.chest_side })  // back
         ],
-        item: 'images/chest_front.png',
+        item: 'images/block-icon/chest.webp',
         interface: true
     },
     craftingTable: {
@@ -156,7 +158,8 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.furnace_front }), // front
             new THREE.MeshLambertMaterial({ map: textures.furnace_side })  // back
         ],
-        item: 'images/block-icon/furnace.webp'
+        item: 'images/block-icon/furnace.webp',
+        interface: true
     },
 };
 

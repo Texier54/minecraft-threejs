@@ -7,7 +7,7 @@
 </head>
 <body>
 <!-- sudo npm install -g serve
-serve -->
+serve
 <script type="importmap">
   {
       "imports": {
@@ -16,6 +16,7 @@ serve -->
   }
   }
 </script>
+-->
 <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.js"></script>
 
 <script type="module" src="main.js"></script>
@@ -30,6 +31,13 @@ serve -->
 
   <button class="mc-button title full" type="button" >Save &amp; Quit</button>
 </div>
+
+<div id="61" style="display: none;" class="furnace-ui">
+  <div class="slot" id="furnace_input"></div>
+  <div class="slot" id="furnace_fuel"></div>
+  <div class="slot" id="furnace_output"></div>
+</div>
+
 
 <div class="inventory" id="inventory" style="display: none;">
   <div class="top" style="display: flex;">
@@ -221,7 +229,17 @@ serve -->
     color: gray;
   }
 
-
+  .furnace-ui {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    display: block;
+    grid-template-columns: repeat(9, 50px);
+    grid-gap: 5px;
+    padding: 10px;
+    border: 2px solid #333;
+  }
   .inventory {
     top: 50%;
     left: 50%;
