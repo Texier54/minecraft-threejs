@@ -42,6 +42,7 @@ export const blocks = {
     grass: {
         id: 1,
         name: 'grass',
+        type: 'block',
         material: [
             new THREE.MeshLambertMaterial({ map: textures.grassSide }), // right
             new THREE.MeshLambertMaterial({ map: textures.grassSide }), // left
@@ -50,47 +51,53 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.grassSide }), // front
             new THREE.MeshLambertMaterial({ map: textures.grassSide })  // back
         ],
-        item: 'images/block-icon/grass.png'
+        icon: 'images/block-icon/grass.png'
     },
     dirt: {
         id: 2,
         name: 'dirt',
+        type: 'block',
         material: new THREE.MeshLambertMaterial({ map: textures.dirt }),
-        item: 'images/block-icon/dirt.webp'
+        icon: 'images/block-icon/dirt.webp'
     },
     stone: {
         id: 3,
         name: 'stone',
+        type: 'block',
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8, //rareté
-        item: 'images/block-icon/stone.png'
+        icon: 'images/block-icon/stone.png'
     },
     coalOre: {
         id: 4,
         name: 'coal_ore',
+        type: 'block',
         material: new THREE.MeshLambertMaterial({ map: textures.coalOre }),
         scale: { x: 20, y: 20, z: 20 },
         scarcity: 0.8,
-        item: 'images/block-icon/coal_ore.png'
+        icon: 'images/block-icon/coal_ore.png'
     },
     ironOre: {
         id: 5,
         name: 'iron_ore',
+        type: 'block',
         material: new THREE.MeshLambertMaterial({ map: textures.ironOre }),
         scale: { x: 40, y: 40, z: 40 },
         scarcity: 0.9,
-        item: 'images/block-icon/iron_ore.png'
+        icon: 'images/block-icon/iron_ore.png'
     },
     planks: {
         id: 6,
         name: 'planks',
+        type: 'block',
         material: new THREE.MeshLambertMaterial({ map: textures.planks }),
-        item: 'images/block-icon/wood.png'
+        icon: 'images/block-icon/wood.png'
     },
     bedrock: {
         id: 7,
         name: 'bedrock',
+        type: 'block',
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8
@@ -98,6 +105,7 @@ export const blocks = {
     log: {
         id: 17,
         name: 'log',
+        type: 'block',
         material:  [
             new THREE.MeshLambertMaterial({ map: textures.log }), // right
             new THREE.MeshLambertMaterial({ map: textures.log }), // left
@@ -106,23 +114,26 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.log }), // front
             new THREE.MeshLambertMaterial({ map: textures.log })  // back
         ],
-        item: 'images/block-icon/log.png'
+        icon: 'images/block-icon/log.png'
     },
     leaves: {
         id: 18,
         name: 'leaves',
+        type: 'block',
         material: new THREE.MeshLambertMaterial({ map: textures.leaves }),
-        item: 'images/leaves.png'
+        icon: 'images/block-icon/leaves.webp'
     },
     glass: {
         id: 20,
         name: 'glass',
+        type: 'block',
         material: new THREE.MeshLambertMaterial({ map: textures.glass }),
-        item: 'images/block-icon/glass.webp'
+        icon: 'images/block-icon/glass.webp'
     },
     chest: {
         id: 54,
         name: 'chest',
+        type: 'block',
         material: [
             new THREE.MeshLambertMaterial({ map: textures.chest_side }), // right
             new THREE.MeshLambertMaterial({ map: textures.chest_side }), // left
@@ -131,12 +142,13 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.chest_front }), // front
             new THREE.MeshLambertMaterial({ map: textures.chest_side })  // back
         ],
-        item: 'images/block-icon/chest.webp',
+        icon: 'images/block-icon/chest.webp',
         interface: true
     },
     craftingTable: {
         id: 58,
         name: 'Crafting Table',
+        type: 'block',
         material: [
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_side }), // right
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_side }), // left
@@ -145,11 +157,13 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_front }), // front
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_side })  // back
         ],
-        item: 'images/block-icon/crafting_table.webp'
+        icon: 'images/block-icon/crafting_table.webp',
+        interface: true
     },
     furnace: {
         id: 61,
         name: 'Furnace',
+        type: 'block',
         material: [
             new THREE.MeshLambertMaterial({ map: textures.furnace_side }), // right
             new THREE.MeshLambertMaterial({ map: textures.furnace_side }), // left
@@ -158,8 +172,14 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.furnace_front }), // front
             new THREE.MeshLambertMaterial({ map: textures.furnace_side })  // back
         ],
-        item: 'images/block-icon/furnace.webp',
+        icon: 'images/block-icon/furnace.webp',
         interface: true
+    },
+    stick: {
+        id: 320,
+        name: 'Stick',
+        type: 'item',
+        icon: 'images/block-icon/stick.webp',
     },
 };
 

@@ -229,7 +229,7 @@ export class WorldChunk extends THREE.Group {
         // Creating a lookup table where the key is the block id
         const meshes = {};
         Object.values(blocks)
-            .filter(blockType => blockType.id !== blocks.empty.id)
+            .filter(blockType => blockType.id !== blocks.empty.id && blockType.type === 'block')
             .forEach(blockType => {
                 const mesh = new THREE.InstancedMesh(this.geometry, blockType.material, maxBlock);
                 mesh.name = blockType.id;

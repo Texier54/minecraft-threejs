@@ -17,7 +17,8 @@ export class Player {
 
     // Contrôle en première personne avec "PointerLockControls"
     controls = new PointerLockControls(this.camera, document.body);
-
+    selectedCoords = null;
+    selectedCoordsNormal = null;
 
 
     constructor(scene) {
@@ -36,6 +37,149 @@ export class Player {
             new THREE.MeshBasicMaterial({ wireframe: true})
         )
         //scene.add(this.boundsHelper);
+
+
+        const handGeometry = new THREE.BoxGeometry(0.10, 0.10, 0.3); // Taille de la main
+        const handTexture = new THREE.TextureLoader().load('images/hand.png'); // Texture pixelisée
+        handTexture.colorSpace = THREE.SRGBColorSpace;
+        handTexture.magFilter = THREE.NearestFilter;
+        handTexture.minFilter = THREE.NearestFilter;
+        const handMaterial = new THREE.MeshBasicMaterial({ map: handTexture });
+        this.handMesh = new THREE.Mesh(handGeometry, handMaterial);
+
+// Positionne la main dans le champ de vision du joueur
+        this.handMesh.position.set(0.4, -0.25, -0.4); // Ajuste les coordonnées pour la perspective
+        this.handMesh.rotation.x = 0.6;
+        this.handMesh.rotation.z = -0.4;
+        this.handMesh.rotation.y = -0.5;
+
+        scene.add(this.handMesh);
+        this.punchDirection = 1;
+        this.camera.add(this.handMesh); // Attacher la main à la caméra
+
+/*
+        // Helper used to highlight the currently active block
+        const selectionMaterial = new THREE.MeshBasicMaterial({
+            color: 0x000000, // Couleur du cube (noir ou autre)
+            transparent: true, // Permet la transparence
+            opacity: 0.1, // Niveau de transparence
+
+        });
+
+*/
+        const texture = new THREE.TextureLoader().load('images/break.png' );
+        const selectionMaterial = new THREE.MeshLambertMaterial({ map: texture, transparent: true });
+
+
+
+        const selectionGeometry = new THREE.BoxGeometry(1.01, 1.01, 1.01);
+        this.selectionHelper = new THREE.Mesh(selectionGeometry, selectionMaterial);
+        scene.add(this.selectionHelper);
+
+        // Gestion des clics (ajouter ou supprimer des blocs)
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+        this.raycaster.far = 5; // Limite la portée à 10 unités
+    }
+
+
+    animateHand() {
+        this.handMesh.position.y += this.punchDirection * 0.02; // Monte et descend la main
+        if (this.handMesh.position.y > -0.4 || this.handMesh.position.y < -0.6) {
+            this.punchDirection *= -1; // Inverse la direction
+        }
+    }
+
+    /**
+     * Updates the state of the player
+     * @param {World} world
+     */
+    update(world) {
+        this.updateRaycaster(world);
+
+        /*
+        if (this.tool.animate) {
+            this.updateToolAnimation();
+        }*/
+    }
+
+    /**
+     * Updates the raycaster used for block selection
+     * @param {World} world
+     */
+    updateRaycaster(world) {
+        const intersects = this.raycaster.intersectObjects(world.children, true);
+
+        if (this.controls.isLocked) {
+
+            // Mettre à jour le raycaster en fonction de la position de la souris
+            this.raycaster.setFromCamera(this.mouse, this.camera);
+            if (intersects.length > 0) {
+                const intersected = intersects[0];
+
+                //récupére la position du chunk parent du bloc
+                const chunk = intersected.object.parent;
+
+                // récupére transformation matrix du bloc intercepté
+                const blockMatrix = new THREE.Matrix4();
+                intersected.object.getMatrixAt(intersected.instanceId, blockMatrix);
+
+                // extrait la position du bloc transformation matrix et le met dans coords
+                this.selectedCoords = chunk.position.clone();
+                this.selectedCoordsNormal = chunk.position.clone();
+                this.selectedCoords.applyMatrix4(blockMatrix);
+                this.selectedCoordsNormal.applyMatrix4(blockMatrix);
+
+                //si on ajoute un bloc
+                this.selectedCoordsNormal.add(intersected.normal);
+
+                this.selectionHelper.position.copy(this.selectedCoords);
+                this.selectionHelper.visible = true;
+
+
+
+
+
+            } else {
+                this.selectedCoords = null;
+                //this.selectionHelper.visible = false;
+            }
+        }
+    }
+
+    animateBlockBreaking(duration) {
+        const steps = 6; // Nombre d'étapes dans la grille de "cassure"
+        const interval = duration / steps; // Temps entre chaque étape
+        let step = 0;
+
+        this.nextStep(interval, step); // Démarrer l'animation
+    }
+
+    nextStep(interval, step) {
+        const columns = 2; // Nombre de colonnes dans la texture
+        const rows = 3;    // Nombre de lignes dans la texture
+
+        //console.log(step);
+        if (step <= 6) {
+            // Calculer l'offset dans la texture
+
+            const column = step % columns;
+            const row = Math.floor(step / columns);
+
+
+
+            console.log( row / rows);
+            // Appliquer l'offset (UV mapping) pour afficher la bonne partie
+            this.selectionHelper.material.map.offset.set(column / columns, row / rows);
+            this.selectionHelper.material.map.repeat.set(1 / columns, 1 / rows);
+
+            step++;
+
+            // Appeler la prochaine étape après un délai
+            setTimeout(this.nextStep.bind(this), interval, interval, step);
+        } else {
+            // Supprimer le bloc ou appeler le callback une fois terminé
+        }
     }
 
     get worldVelocity() {

@@ -73,10 +73,10 @@ export class Pig extends THREE.Group {
         this.world = world;
 
         if (this.world.getBlock(Math.floor(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z))?.id == 0 ) {
-            console.log('down');
+            //console.log('down');
             this.pigVelocity.y -= 0.01;
         } else if (this.world.getBlock(Math.floor(this.position.x), Math.ceil(this.position.y), Math.floor(this.position.z))?.id > 0) {
-            console.log('up');
+            //console.log('up');
             this.pigVelocity.y += 0.05;
         } else
             this.pigVelocity.y = 0; // Annule la gravité si le cochon est sur un bloc

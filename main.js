@@ -16,8 +16,8 @@ const scene = new THREE.Scene();
 
 
 const world = new World();
-//world.generate();
-world.load();
+world.generate();
+//world.load();
 scene.add(world)
 
 scene.fog = new THREE.Fog(0x80a0e0, world.chunkSize.width*world.drawDistance*0.9, world.chunkSize.width*world.drawDistance);
@@ -39,11 +39,11 @@ const player = new Player(scene, world);
 const physics = new Physics(scene);
 const inventory = new Inventory();
 const menu = new Menu(world, player, inventory);
-const ui = new UI();
+const ui = new UI(player, inventory);
 
 //DEBUG
 player.load();
-inventory.load();
+//inventory.load();
 
 
 const pig = new Pig();
@@ -172,84 +172,38 @@ window.addEventListener('keydown', (event) => {
     }
 });
 
-
-
-
 // Fonction de gestion du mouvement du joueur
 let velocity = new THREE.Vector3(0, 0, 0);
 const groundCheckDistance = 0.1;
 let isOnGround = false;
 
 
-// Gestion des clics (ajouter ou supprimer des blocs)
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-
-
-
 window.addEventListener('mousedown', (event) => {
 
     if (player.controls.isLocked) {
-        // Mettre à jour le raycaster en fonction de la position de la souris
-        raycaster.setFromCamera(mouse, player.camera);
+        player.animateHand();
 
-
-        // Vérifier les intersections
-        // Intersecter uniquement les chunks visibles
-        const visibleChunks = Array.from(chunks.values());
-        //const intersects = raycaster.intersectObjects(visibleChunks.flatMap(chunk => chunk.children), true);
-
-
-        //console.log(world.children);
-
-
-        const intersects = raycaster.intersectObjects(world.children, true);
-
-//console.log(intersects);
-        if (intersects.length > 0) {
-            const intersected = intersects[0];
-
-            //récupére la position du chunk parent du bloc
-            const chunk = intersected.object.parent;
-
-            // récupére transformation matrix du bloc intercepté
-            const blockMatrix = new THREE.Matrix4();
-            intersected.object.getMatrixAt(intersected.instanceId, blockMatrix);
-
-            // extrait la position du bloc transformation matrix et le met dans coords
-            const selectedCoords = chunk.position.clone();
-            selectedCoords.applyMatrix4(blockMatrix);
-            //const selectedCoords = new THREE.Vector3().applyMatrix4(blockMatrix);
-
-//console.log(selectedCoords);
+        if (player.selectedCoords) {
             // si clic droit
             if (event.button == 2) {
-                addBlock(intersected, selectedCoords);
-                // Récupérer la normale de la face cliquée
-                const normal = intersected.face.normal.clone();
+                addBlock(player.selectedCoordsNormal);
 
-                // Calculer la position du nouveau bloc
-                //const newBlock = new THREE.Mesh(geometry, getMaterialForItem(selectedItemId));
-                //newBlock.position.copy(intersectedObject.position).add(normal.multiplyScalar(blockSize));
-                //intersectedBlock.parent.add(newBlock);
             } else {
-                deleteBlock(intersected, selectedCoords);
-                // Supprimer le bloc intercepté
-                //intersectedBlock.parent.remove(intersectedBlock);
+                deleteBlock(player.selectedCoords);
             }
         }
+
     }
 
 });
 
-function addBlock(intersected, selectedCoords) {
+function addBlock(selectedCoords) {
 
 
     const selectedBlock = world.getBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
 
     //prend les coordonée de la face pointé
-    selectedCoords.add(intersected.normal);
+
 
     /*
     // Ajouter une lumière ponctuelle pour simuler l'émission
@@ -258,7 +212,8 @@ function addBlock(intersected, selectedCoords) {
     scene.add(pointLight);
 
      */
-    if (inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true) {
+
+    if (inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && getBlockByIdFast(inventory.getSelectedItem()?.block).type === 'block') {
         world.addBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z, inventory.getSelectedItem().block);
         inventory.removeBlock(inventory.getSelectedItem().block);
         var audio = new Audio('audio/dirt1.ogg');
@@ -286,11 +241,14 @@ function addBlock(intersected, selectedCoords) {
      */
 }
 
-function deleteBlock(intersected, selectedCoords) {
+function deleteBlock(selectedCoords) {
 
     const blockToRemove = world.getBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
     inventory.addBlock(blockToRemove);
     world.removeBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
+
+    player.animateBlockBreaking( 2000);
+
 
     var audio = new Audio('audio/dirt1.ogg');
     audio.play();
@@ -395,6 +353,7 @@ function animate() {
 
     physics.update(dt, player, world);
     world.update(player);
+    player.update(world);
     prevTimeNew = now;
 
 
@@ -411,8 +370,6 @@ function animate() {
 
 
     pig.movePig(deltaTime, world); // Déplacer le cochon
-
-
     renderer.render(scene, player.camera);
     requestAnimationFrame(animate);
 }

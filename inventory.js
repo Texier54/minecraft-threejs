@@ -2,6 +2,7 @@
 
 import { blocks, resources } from './block.js';
 import { Crafts } from './crafts.js';
+import {UIList} from "./ui.js";
 
 export class Inventory {
 
@@ -13,6 +14,10 @@ export class Inventory {
 
     selectedItemId = 27;
 
+    UIID = 0;
+
+    output = 0;
+
     // Configuration des items
     items = [
         { block: blocks.grass.id, quantity: 20 }, // grass
@@ -23,11 +28,13 @@ export class Inventory {
         { block: blocks.furnace.id, quantity: 10 }, // Log
         { block: blocks.chest.id, quantity: 4 }, // Log
         { block: blocks.glass.id, quantity: 40 }, // Log
+        { block: blocks.stick.id, quantity: 40 }, // Log
     ];
 
 
     // État de l'inventaire
     inventory = Array(41).fill(null); // 27 slots
+    blockInventory = Array(41).fill(null); // 27 slots
 
 
     heldItem = null; // L'objet actuellement tenu
@@ -42,6 +49,7 @@ export class Inventory {
         this.inventory[30] = this.items[5]; // Table de craft au premier slot
         this.inventory[31] = this.items[6]; // Table de craft au premier slot
         this.inventory[32] = this.items[7]; // Table de craft au premier slot
+        this.inventory[33] = this.items[8]; // Table de craft au premier slot
         this.renderInventory();
         this.renderBar();
         // Gestion du mouvement de la souris pour suivre le curseur
@@ -54,15 +62,17 @@ export class Inventory {
 
         this.crafts = new Crafts();
     }
-    show() {
+    show(id = 0) {
         this.inventoryContainer.style.display = 'block';
         this.bar.style.display = 'none';
+        this.UIID = id;
         this.renderInventory();
     }
 
     hide() {
         this.inventoryContainer.style.display = 'none';
         this.bar.style.display = 'grid';
+        this.renderBar();
     }
 
     getBlock(position) {
@@ -110,7 +120,7 @@ export class Inventory {
                     const img = document.createElement('img');
                     const div = document.createElement('div');
                     const blockObject = Object.values(blocks).find(block => block.id === item.block)
-                    img.src = blockObject.item;
+                    img.src = blockObject.icon;
                     img.alt = item.block;
                     img.width = 200;
                     div.innerHTML = item.quantity;
@@ -124,16 +134,51 @@ export class Inventory {
 
                 if (index < 36)
                     this.inventoryStockage.appendChild(slot);
+                /*
                 else if (index < 40)
                     this.inventoryCrafter.appendChild(slot);
                 else
                     this.inventoryOutput.appendChild(slot);
-
-
-
-
+*/
 
         });
+
+        const slots = UIList[this.UIID]?.slot; // Récupère les slots de l'élément avec ID 61
+        const grid = UIList[this.UIID].grid;
+
+        this.inventoryCrafter.style.gridTemplateColumns = 'repeat('+grid+', 50px)';
+
+        for (const slotId in slots) {
+            if (slots.hasOwnProperty(slotId)) {
+                const slot = slots[slotId];
+                const slotDiv = document.createElement('div');
+                slotDiv.classList.add('slot');
+                slotDiv.dataset.index = slot.name;
+
+                if (this.blockInventory[slotId] !== null) {
+                    const img = document.createElement('img');
+                    const div = document.createElement('div');
+                    const blockObject = Object.values(blocks).find(block => block.id === this.blockInventory[slotId].block)
+                    img.src = blockObject.icon;
+                    img.alt = this.blockInventory[slotId].block;
+                    img.width = 200;
+                    div.innerHTML = this.blockInventory[slotId].quantity;
+                    div.classList.add('slot-quantity');
+                    slotDiv.appendChild(img);
+                    slotDiv.appendChild(div);
+                }
+
+                slotDiv.addEventListener('click', () => this.handleSlotBlockClick(slotId));
+
+                if (slots[slotId].type == 'input')
+                    this.inventoryCrafter.appendChild(slotDiv);
+                else {
+                    this.output = slotId;
+                    this.inventoryOutput.appendChild(slotDiv);
+                }
+
+            }
+        }
     }
 
     renderBar() {
@@ -151,7 +196,7 @@ export class Inventory {
                     const img = document.createElement('img');
                     const div = document.createElement('div');
                     const blockObject = Object.values(blocks).find(block => block.id === item.block)
-                    img.src = blockObject.item;
+                    img.src = blockObject.icon;
                     img.alt = item.block;
                     img.width = 200;
                     div.innerHTML = item.quantity;
@@ -167,9 +212,10 @@ export class Inventory {
 
     // Gestion du clic sur un slot
     handleSlotClick(index) {
+        console.log(index);
         const selectedItem = this.inventory[index];
 
-        if (this.heldItem && index != 40) {
+        if (this.heldItem) {
             // Si un objet est tenu, le poser
             if (!selectedItem) {
                 // Slot vide : déplacer l'item
@@ -178,14 +224,15 @@ export class Inventory {
                 this.heldItemElement.style.display = 'none';
             } else {
 
-                if (this.inventory[index].block.id == this.heldItem.block.id) {
+                if (this.inventory[index].block == this.heldItem.block) {
                     this.inventory[index].quantity += this.heldItem.quantity;
                     this.heldItem = null;
                     this.heldItemElement.style.display = 'none';
                 } else {
                     // Slot occupé : échanger les items
                     [this.inventory[index], this.heldItem] = [this.heldItem, this.inventory[index]];
-                    this.heldItemElement.src = this.heldItem.block.item; // Affiche l'image de l'item tenu
+                    const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
+                    this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
                 }
 
 
@@ -195,19 +242,60 @@ export class Inventory {
             this.heldItem = this.inventory[index];
             this.inventory[index] = null;
             const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
-            this.heldItemElement.src = blockObject.item; // Affiche l'image de l'item tenu
+            this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
             this.heldItemElement.style.display = 'block';
         }
 
+        this.renderInventory();
+    }
+
+    handleSlotBlockClick(index) {
+        console.log(index);
+        const selectedItem = this.blockInventory[index];
+
+        if (this.heldItem) {
+            // Si un objet est tenu, le poser
+            if (!selectedItem) {
+                // Slot vide : déplacer l'item
+                this.blockInventory[index] = this.heldItem;
+                this.heldItem = null;
+                this.heldItemElement.style.display = 'none';
+            } else {
+
+                if (this.blockInventory[index].block == this.heldItem.block) {
+                    this.blockInventory[index].quantity += this.heldItem.quantity;
+                    this.heldItem = null;
+                    this.heldItemElement.style.display = 'none';
+                } else {
+                    // Slot occupé : échanger les items
+                    [this.blockInventory[index], this.heldItem] = [this.heldItem, this.blockInventory[index]];
+                    const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
+                    this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
+                }
+
+
+            }
+        } else if (selectedItem) {
+            // Si aucun objet n'est tenu, prendre l'item du slot
+            this.heldItem = this.blockInventory[index];
+            this.blockInventory[index] = null;
+            const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
+            this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
+            this.heldItemElement.style.display = 'block';
+        }
+
+
         //vérifie recettes
-        const gain = this.crafts.checkRecipe(this.inventory[36]);
+        const gain = this.crafts.checkRecipe(this.blockInventory[0]);
         if (gain)
-            this.inventory[40] = { block : gain, quantity : 1};
+            this.blockInventory[this.output] = { block : gain, quantity : 1};
         else
-            this.inventory[40] = null;
+            this.blockInventory[this.output] = null;
+
+
 
         this.renderInventory();
-        this.renderBar();
+
     }
 
     addBlock(blockToAdd) {
