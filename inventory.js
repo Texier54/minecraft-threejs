@@ -1,7 +1,7 @@
 
 
 import { blocks, resources } from './block.js';
-import { Crafts } from './crafts.js';
+import { Recipes } from './recipes.js';
 import {UIList} from "./ui.js";
 
 export class Inventory {
@@ -36,13 +36,17 @@ export class Inventory {
     inventory = Array(41).fill(null); // 27 slots
     blockInventory = Array(41).fill(null); // 27 slots
 
-
+    player = null;
     heldItem = null; // L'objet actuellement tenu
     heldItemElement = document.getElementById('held-item'); // Élément qui suit la souris
 
-    constructor() {
+    constructor(player) {
+        this.player = player;
         this.inventory[0] = this.items[2]; // Table de craft au premier slot
         this.inventory[1] = this.items[1]; // Table de craft au premier slot
+        this.inventory[3] = this.items[8]; // Table de craft au premier slot
+        this.inventory[4] = this.items[1]; // Table de craft au premier slot
+        this.inventory[5] = this.items[1]; // Table de craft au premier slot
         this.inventory[27] = this.items[0]; // Table de craft au premier slot
         this.inventory[28] = this.items[3]; // Table de craft au premier slot
         this.inventory[29] = this.items[4]; // Table de craft au premier slot
@@ -60,7 +64,7 @@ export class Inventory {
             }
         });
 
-        this.crafts = new Crafts();
+        this.recipes = new Recipes();
     }
     show(id = 0) {
         this.inventoryContainer.style.display = 'block';
@@ -93,12 +97,11 @@ export class Inventory {
                 slot.classList.remove('selected');
             });
             const slot = document.querySelector('.slot[data-index_bar="'+id+'"]');
-            console.log(this.getBlock(id));
-            console.log(slot);
             if (slot) {
                 slot.classList.add('selected');
                 this.selectedItemId = id;
             }
+            this.player.setBlockInHand(this.getBlock(id)?.block);
         }
     }
 
@@ -210,9 +213,39 @@ export class Inventory {
         });
     }
 
+    inventoryToGrid() {
+        const gridNumber = UIList[this.UIID].grid;
+        let grid = [];
+        for (let x = 0; x < gridNumber; x++) {
+            const slice = [];
+            for (let y = 0; y < gridNumber; y++) {
+                slice.push(null);
+            }
+            grid.push(slice);
+        }
+        const slots = UIList[this.UIID]?.slot; // Récupère les slots de l'élément avec ID 61
+
+        let x = 0;
+        let y = 0;
+        for (const slotId in slots) {
+            if (y >= gridNumber) {
+                y = 0;
+                x++;
+                if (x >= gridNumber)
+                    break;
+            }
+            console.log(x+'-'+y)
+            if (this.blockInventory[slotId]?.block)
+                grid[x][y] = this.blockInventory[slotId]?.block;
+            else
+                grid[x][y] = null;
+            y++;
+        };
+        return grid;
+    }
+
     // Gestion du clic sur un slot
     handleSlotClick(index) {
-        console.log(index);
         const selectedItem = this.inventory[index];
 
         if (this.heldItem) {
@@ -250,7 +283,6 @@ export class Inventory {
     }
 
     handleSlotBlockClick(index) {
-        console.log(index);
         const selectedItem = this.blockInventory[index];
 
         if (this.heldItem) {
@@ -285,8 +317,9 @@ export class Inventory {
         }
 
 
+
         //vérifie recettes
-        const gain = this.crafts.checkRecipe(this.blockInventory[0]);
+        const gain = this.recipes.checkRecipe(this.inventoryToGrid());
         if (gain)
             this.blockInventory[this.output] = { block : gain, quantity : 1};
         else

@@ -236,7 +236,6 @@ export class WorldChunk extends THREE.Group {
                 mesh.count = 0;
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
-                mesh.e
                 meshes[blockType.id] = mesh;
             });
 

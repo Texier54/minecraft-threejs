@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import {blocks, getBlockByIdFast} from "./block.js";
 
 export class Player {
 
@@ -27,6 +28,7 @@ export class Player {
         this.position.set(10, 80, 10);
         scene.add(this.camera);
 
+        this.scene = scene;
 
         window.addEventListener('keydown', this.onKeyDown.bind(this));
         window.addEventListener('keyup', this.onKeyUp.bind(this));
@@ -54,21 +56,20 @@ export class Player {
         this.handMesh.rotation.y = -0.5;
 
         scene.add(this.handMesh);
-        this.punchDirection = 1;
         this.camera.add(this.handMesh); // Attacher la main à la caméra
 
-/*
+
+        this.punchDirection = 1;
+
         // Helper used to highlight the currently active block
         const selectionMaterial = new THREE.MeshBasicMaterial({
             color: 0x000000, // Couleur du cube (noir ou autre)
             transparent: true, // Permet la transparence
-            opacity: 0.1, // Niveau de transparence
+            opacity: 0.2, // Niveau de transparence
 
         });
 
-*/
-        const texture = new THREE.TextureLoader().load('images/break.png' );
-        const selectionMaterial = new THREE.MeshLambertMaterial({ map: texture, transparent: true });
+
 
 
 
@@ -142,44 +143,34 @@ export class Player {
 
             } else {
                 this.selectedCoords = null;
-                //this.selectionHelper.visible = false;
+                this.selectionHelper.visible = false;
             }
         }
     }
 
-    animateBlockBreaking(duration) {
-        const steps = 6; // Nombre d'étapes dans la grille de "cassure"
-        const interval = duration / steps; // Temps entre chaque étape
-        let step = 0;
+    setBlockInHand(id) {
 
-        this.nextStep(interval, step); // Démarrer l'animation
-    }
-
-    nextStep(interval, step) {
-        const columns = 2; // Nombre de colonnes dans la texture
-        const rows = 3;    // Nombre de lignes dans la texture
-
-        //console.log(step);
-        if (step <= 6) {
-            // Calculer l'offset dans la texture
-
-            const column = step % columns;
-            const row = Math.floor(step / columns);
-
-
-
-            console.log( row / rows);
-            // Appliquer l'offset (UV mapping) pour afficher la bonne partie
-            this.selectionHelper.material.map.offset.set(column / columns, row / rows);
-            this.selectionHelper.material.map.repeat.set(1 / columns, 1 / rows);
-
-            step++;
-
-            // Appeler la prochaine étape après un délai
-            setTimeout(this.nextStep.bind(this), interval, interval, step);
+        if (getBlockByIdFast(id)?.material) {
+            this.scene.remove(this.meshHandItem);
+            this.camera.remove(this.meshHandItem);
+            const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+            this.meshHandItem = new THREE.Mesh(geometry, getBlockByIdFast(id).material);
+            //meshHand.name = blockType.id;
+            this.meshHandItem.count = 0;
+            this.meshHandItem.castShadow = true;
+            this.meshHandItem.receiveShadow = true;
+            this.meshHandItem.rotation.x = -0.2;
+            this.meshHandItem.rotation.z = 0;
+            this.meshHandItem.rotation.y = 0.6;
+            this.meshHandItem.position.set(0.55, -0.45, -0.5); // Ajuste les coordonnées pour la perspective
+            this.scene.add(this.meshHandItem);
+            this.camera.add(this.meshHandItem);
+            this.handMesh.visible = false;
         } else {
-            // Supprimer le bloc ou appeler le callback une fois terminé
+            this.meshHandItem.visible = false;
+            this.handMesh.visible = true;
         }
+
     }
 
     get worldVelocity() {

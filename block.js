@@ -175,6 +175,12 @@ export const blocks = {
         icon: 'images/block-icon/furnace.webp',
         interface: true
     },
+    stone_pickaxe: {
+        id: 314,
+        name: 'Stone Pickaxe',
+        type: 'item',
+        icon: 'images/block-icon/stone_pickaxe.webp',
+    },
     stick: {
         id: 320,
         name: 'Stick',

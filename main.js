@@ -37,7 +37,7 @@ const fpsDisplay = document.getElementById('fps');
 
 const player = new Player(scene, world);
 const physics = new Physics(scene);
-const inventory = new Inventory();
+const inventory = new Inventory(player);
 const menu = new Menu(world, player, inventory);
 const ui = new UI(player, inventory);
 
@@ -186,7 +186,7 @@ window.addEventListener('mousedown', (event) => {
         if (player.selectedCoords) {
             // si clic droit
             if (event.button == 2) {
-                addBlock(player.selectedCoordsNormal);
+                addBlock(player.selectedCoords, player.selectedCoordsNormal);
 
             } else {
                 deleteBlock(player.selectedCoords);
@@ -197,7 +197,7 @@ window.addEventListener('mousedown', (event) => {
 
 });
 
-function addBlock(selectedCoords) {
+function addBlock(selectedCoords, selectedCoordsNormal) {
 
 
     const selectedBlock = world.getBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
@@ -214,7 +214,7 @@ function addBlock(selectedCoords) {
      */
 
     if (inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && getBlockByIdFast(inventory.getSelectedItem()?.block).type === 'block') {
-        world.addBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z, inventory.getSelectedItem().block);
+        world.addBlock(selectedCoordsNormal.x, selectedCoordsNormal.y, selectedCoordsNormal.z, inventory.getSelectedItem().block);
         inventory.removeBlock(inventory.getSelectedItem().block);
         var audio = new Audio('audio/dirt1.ogg');
         audio.play();
@@ -247,7 +247,7 @@ function deleteBlock(selectedCoords) {
     inventory.addBlock(blockToRemove);
     world.removeBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
 
-    player.animateBlockBreaking( 2000);
+
 
 
     var audio = new Audio('audio/dirt1.ogg');
