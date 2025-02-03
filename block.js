@@ -127,7 +127,7 @@ export const blocks = {
         id: 20,
         name: 'glass',
         type: 'block',
-        material: new THREE.MeshLambertMaterial({ map: textures.glass }),
+        material: new THREE.MeshLambertMaterial({ map: textures.glass, transparent: true }),
         icon: 'images/block-icon/glass.webp'
     },
     chest: {

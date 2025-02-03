@@ -69,9 +69,11 @@ export class Player {
 
         });
 
-
-
-
+        const texture = new THREE.TextureLoader().load('images/break.png' );
+        const selectionBreakMaterial = new THREE.MeshLambertMaterial({ map: texture, transparent: true });
+        const selectionBreakGeometry = new THREE.BoxGeometry(1.01, 1.01, 1.01);
+        this.selectionBreakHelper = new THREE.Mesh(selectionBreakGeometry, selectionBreakMaterial);
+        this.scene.add(this.selectionBreakHelper);
 
         const selectionGeometry = new THREE.BoxGeometry(1.01, 1.01, 1.01);
         this.selectionHelper = new THREE.Mesh(selectionGeometry, selectionMaterial);
@@ -138,13 +140,52 @@ export class Player {
                 this.selectionHelper.visible = true;
 
 
-
-
-
             } else {
                 this.selectedCoords = null;
                 this.selectionHelper.visible = false;
             }
+        }
+    }
+
+    animateBlockBreaking(duration) {
+
+
+        this.selectionBreakHelper.position.copy(this.selectedCoords);
+        console.log(this.selectionBreakHelper);
+
+
+        const steps = 6; // Nombre d'étapes dans la grille de "cassure"
+        const interval = duration / steps; // Temps entre chaque étape
+        let step = 0;
+
+        this.nextStep(interval, step); // Démarrer l'animation
+    }
+
+    nextStep(interval, step) {
+        const columns = 2; // Nombre de colonnes dans la texture
+        const rows = 3;    // Nombre de lignes dans la texture
+
+        //console.log(step);
+        if (step <= 6) {
+            // Calculer l'offset dans la texture
+
+            const column = step % columns;
+            const row = Math.floor(step / columns);
+
+
+
+            console.log( row / rows);
+            // Appliquer l'offset (UV mapping) pour afficher la bonne partie
+            this.selectionBreakHelper.material.map.offset.set(column / columns, row / rows);
+            this.selectionBreakHelper.material.map.repeat.set(1 / columns, 1 / rows);
+
+            step++;
+
+            // Appeler la prochaine étape après un délai
+            setTimeout(this.nextStep.bind(this), interval, interval, step);
+        } else {
+            // Supprimer le bloc ou appeler le callback une fois terminé
+            //this.scene.remove(this.selectionHelper)
         }
     }
 

@@ -197,6 +197,14 @@ window.addEventListener('mousedown', (event) => {
 
 });
 
+// Écouteur de touche relâchée
+document.addEventListener("mouseup", (event) => {
+    if (event.button != 2) {
+        isDestroying = false;
+        clearInterval(destructionInterval);
+    }
+});
+
 function addBlock(selectedCoords, selectedCoordsNormal) {
 
 
@@ -222,59 +230,35 @@ function addBlock(selectedCoords, selectedCoordsNormal) {
     } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
         ui.open(selectedBlock.id);
     }
-
-/*
-    // Get the mesh and instance id of the block
-    const mesh = intersected.object;
-    const instanceId = mesh.count++;
-    //this.setBlockInstanceId(x, y, z, instanceId);
-
-    // Compute the transformation matrix for the new instance and update the instanced
-    const matrix = new THREE.Matrix4();
-    matrix.setPosition(selectedCoords.x - intersected.object.parent.position.x, selectedCoords.y, selectedCoords.z - intersected.object.parent.position.z);
-    mesh.setMatrixAt(instanceId, matrix);
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
-
-    world.setBlockInstanceId(selectedCoords.x, selectedCoords.y, selectedCoords.z, blocks.grass.id);
-
-     */
 }
 
+let isDestroying = false;
+let destructionProgress = 0;
+const destructionTime = 800; // Temps nécessaire (2 secondes) pour casser le bloc
+let destructionInterval = null;
+
 function deleteBlock(selectedCoords) {
-
-    const blockToRemove = world.getBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
-    inventory.addBlock(blockToRemove);
-    world.removeBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
+    player.animateBlockBreaking(800);
 
 
 
+    isDestroying = true;
+    destructionProgress = 0;
+    destructionInterval = setInterval(() => {
+        destructionProgress += 100; // Augmente la progression toutes les 100ms
 
-    var audio = new Audio('audio/dirt1.ogg');
-    audio.play();
-
-
-    /*
-
-    const lastMatrix = new THREE.Matrix4();
-    intersected.object.getMatrixAt(intersected.object.count -1, lastMatrix);
-
-    const v = new THREE.Vector3();
-    v.applyMatrix4(lastMatrix);
-
-    // inverse le dernier bloc et le séléctionné
-    intersected.object.setMatrixAt(intersected.instanceId, lastMatrix)
-
-    // informer instanced mesh ( intersected.object) que l'on a mis à jour l'instance matrix
-    // et re-compute the bounding sphere pour le raycasting fonctionne
-    intersected.object.count--;
-    intersected.object.instanceMatrix.needsUpdate = true;
-    intersected.object.computeBoundingSphere();
-    console.log(intersected.object.count);
-
-    world.setBlockInstanceId(selectedCoords.x, selectedCoords.y, selectedCoords.z, null);
-
-     */
+        // Si le temps de destruction est atteint, supprimer le bloc
+        if (destructionProgress >= destructionTime) {
+            const blockToRemove = world.getBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
+            inventory.addBlock(blockToRemove);
+            world.removeBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
+            clearInterval(destructionInterval);
+            var audio = new Audio('audio/dirt1.ogg');
+            audio.play();
+            isDestroying = false;
+            clearInterval(destructionInterval);
+        }
+    }, 100);
 }
 
 
@@ -425,4 +409,7 @@ function checkCreateChunk() {
     }
 }
 
+document.addEventListener("contextmenu", function(e){
+    e.preventDefault();
+}, false);
 
