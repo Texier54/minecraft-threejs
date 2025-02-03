@@ -23,7 +23,7 @@ export class Inventory {
         { block: blocks.grass.id, quantity: 20 }, // grass
         { block: blocks.stone.id, quantity: 20 }, // Table de craft
         { block: blocks.craftingTable.id, quantity: 20 }, // Table de craft
-        { block: blocks.planks.id, quantity: 1 }, // Planks
+        { block: blocks.planks.id, quantity: 10 }, // Planks
         { block: blocks.log.id, quantity: 10 }, // Log
         { block: blocks.furnace.id, quantity: 10 }, // Log
         { block: blocks.chest.id, quantity: 4 }, // Log
@@ -45,8 +45,6 @@ export class Inventory {
         this.inventory[0] = this.items[2]; // Table de craft au premier slot
         this.inventory[1] = this.items[1]; // Table de craft au premier slot
         this.inventory[3] = this.items[8]; // Table de craft au premier slot
-        this.inventory[4] = this.items[1]; // Table de craft au premier slot
-        this.inventory[5] = this.items[1]; // Table de craft au premier slot
         this.inventory[27] = this.items[0]; // Table de craft au premier slot
         this.inventory[28] = this.items[3]; // Table de craft au premier slot
         this.inventory[29] = this.items[4]; // Table de craft au premier slot
@@ -133,7 +131,7 @@ export class Inventory {
                 }
 
                 // Gestion du clic
-                slot.addEventListener('click', () => this.handleSlotClick(index));
+                slot.addEventListener('mousedown', (event) => this.handleSlotClick(index, event));
 
                 if (index < 36)
                     this.inventoryStockage.appendChild(slot);
@@ -171,7 +169,7 @@ export class Inventory {
                     slotDiv.appendChild(div);
                 }
 
-                slotDiv.addEventListener('click', () => this.handleSlotBlockClick(slotId));
+                slotDiv.addEventListener('mousedown', (event) => this.handleSlotBlockClick(slotId, event));
 
                 if (slots[slotId].type == 'input')
                     this.inventoryCrafter.appendChild(slotDiv);
@@ -245,16 +243,22 @@ export class Inventory {
     }
 
     // Gestion du clic sur un slot
-    handleSlotClick(index) {
+    handleSlotClick(index, event) {
         const selectedItem = this.inventory[index];
 
         if (this.heldItem) {
             // Si un objet est tenu, le poser
             if (!selectedItem) {
-                // Slot vide : déplacer l'item
-                this.inventory[index] = this.heldItem;
-                this.heldItem = null;
-                this.heldItemElement.style.display = 'none';
+                if (event.button == 0) {
+                    // Slot vide : déplacer l'item
+                    this.inventory[index] = this.heldItem;
+                    this.heldItem = null;
+                    this.heldItemElement.style.display = 'none';
+                } else {
+                    this.inventory[index] = { ...this.heldItem };
+                    this.inventory[index].quantity = 1;
+                    this.heldItem.quantity -= 1;
+                }
             } else {
 
                 if (this.inventory[index].block == this.heldItem.block) {
@@ -272,26 +276,44 @@ export class Inventory {
             }
         } else if (selectedItem) {
             // Si aucun objet n'est tenu, prendre l'item du slot
-            this.heldItem = this.inventory[index];
-            this.inventory[index] = null;
-            const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
-            this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
-            this.heldItemElement.style.display = 'block';
+            if (event.button == 0) {
+                // si clic gauche
+                this.heldItem = this.inventory[index];
+                this.inventory[index] = null;
+                const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
+                this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
+                this.heldItemElement.style.display = 'block';
+            } else {
+                //si clic droit
+                this.heldItem = { ...this.inventory[index] };
+                this.heldItem.quantity = Math.round(this.heldItem.quantity/2);
+                this.inventory[index].quantity = Math.floor(this.inventory[index].quantity/2);
+                const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
+                this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
+                this.heldItemElement.style.display = 'block';
+            }
+
         }
 
         this.renderInventory();
     }
 
-    handleSlotBlockClick(index) {
+    handleSlotBlockClick(index, event) {
         const selectedItem = this.blockInventory[index];
 
         if (this.heldItem) {
             // Si un objet est tenu, le poser
             if (!selectedItem) {
-                // Slot vide : déplacer l'item
-                this.blockInventory[index] = this.heldItem;
-                this.heldItem = null;
-                this.heldItemElement.style.display = 'none';
+                if (event.button == 0) {
+                    // Slot vide : déplacer l'item
+                    this.blockInventory[index] = this.heldItem;
+                    this.heldItem = null;
+                    this.heldItemElement.style.display = 'none';
+                } else {
+                    this.blockInventory[index] = { ...this.heldItem };
+                    this.blockInventory[index].quantity = 1;
+                    this.heldItem.quantity -= 1;
+                }
             } else {
 
                 if (this.blockInventory[index].block == this.heldItem.block) {
@@ -308,12 +330,22 @@ export class Inventory {
 
             }
         } else if (selectedItem) {
+            if (event.button == 0) {
             // Si aucun objet n'est tenu, prendre l'item du slot
-            this.heldItem = this.blockInventory[index];
-            this.blockInventory[index] = null;
-            const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
-            this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
-            this.heldItemElement.style.display = 'block';
+                this.heldItem = this.blockInventory[index];
+                this.blockInventory[index] = null;
+                const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
+                this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
+                this.heldItemElement.style.display = 'block';
+            } else {
+                //si clic droit
+                this.heldItem = { ...this.blockInventory[index] };
+                this.heldItem.quantity = Math.round(this.heldItem.quantity/2);
+                this.blockInventory[index].quantity = Math.floor(this.blockInventory[index].quantity/2);
+                const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
+                this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
+                this.heldItemElement.style.display = 'block';
+            }
         }
 
 
