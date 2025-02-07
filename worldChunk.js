@@ -406,7 +406,7 @@ export class WorldChunk extends THREE.Group {
      */
     deleteBlockInstance(x, y, z) {
         const block = this.getBlock(x, y, z);
-console.log(block);
+//console.log(block);
         if (block.id === blocks.empty.id || block.instanceId === null) return;
 
         // Get the mesh and instance id of the block

@@ -234,13 +234,16 @@ function addBlock(selectedCoords, selectedCoordsNormal) {
 
 let isDestroying = false;
 let destructionProgress = 0;
-const destructionTime = 800; // Temps nécessaire (2 secondes) pour casser le bloc
+let destructionTime = 900; // Temps nécessaire (2 secondes) pour casser le bloc
 let destructionInterval = null;
 
 function deleteBlock(selectedCoords) {
-    player.animateBlockBreaking(800);
 
+    const blockToRemove = world.getBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
+    console.log(selectedCoords);
+    destructionTime = getBlockByIdFast(blockToRemove.id).hardness * 1.5 * 1000;
 
+    player.animateBlockBreaking(destructionTime);
 
     isDestroying = true;
     destructionProgress = 0;
@@ -249,7 +252,7 @@ function deleteBlock(selectedCoords) {
 
         // Si le temps de destruction est atteint, supprimer le bloc
         if (destructionProgress >= destructionTime) {
-            const blockToRemove = world.getBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
+
             inventory.addBlock(blockToRemove);
             world.removeBlock(selectedCoords.x, selectedCoords.y, selectedCoords.z);
             clearInterval(destructionInterval);

@@ -151,7 +151,7 @@ export class Player {
 
 
         this.selectionBreakHelper.position.copy(this.selectedCoords);
-        console.log(this.selectionBreakHelper);
+        //console.log(this.selectionBreakHelper);
 
 
         const steps = 6; // Nombre d'étapes dans la grille de "cassure"
@@ -174,7 +174,7 @@ export class Player {
 
 
 
-            console.log( row / rows);
+            //console.log( row / rows);
             // Appliquer l'offset (UV mapping) pour afficher la bonne partie
             this.selectionBreakHelper.material.map.offset.set(column / columns, row / rows);
             this.selectionBreakHelper.material.map.repeat.set(1 / columns, 1 / rows);

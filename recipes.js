@@ -26,6 +26,14 @@ export const RecipesList = {
             [blocks.planks.id, blocks.planks.id, blocks.planks.id],
         ],
         output: blocks.chest.id,
+    },
+    stick: {
+        pattern: [
+            [blocks.planks.id, null, null],
+            [blocks.planks.id, null, null],
+            [null, null, null],
+        ],
+        output: blocks.stick.id,
     }
 }
 

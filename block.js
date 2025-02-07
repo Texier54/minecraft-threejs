@@ -43,6 +43,8 @@ export const blocks = {
         id: 1,
         name: 'grass',
         type: 'block',
+        stackable: true,
+        hardness: 0.6,
         material: [
             new THREE.MeshLambertMaterial({ map: textures.grassSide }), // right
             new THREE.MeshLambertMaterial({ map: textures.grassSide }), // left
@@ -57,6 +59,7 @@ export const blocks = {
         id: 2,
         name: 'dirt',
         type: 'block',
+        hardness: 0.5,
         material: new THREE.MeshLambertMaterial({ map: textures.dirt }),
         icon: 'images/block-icon/dirt.webp'
     },
@@ -64,6 +67,7 @@ export const blocks = {
         id: 3,
         name: 'stone',
         type: 'block',
+        hardness: 1.5,
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8, //rareté
@@ -91,6 +95,7 @@ export const blocks = {
         id: 6,
         name: 'planks',
         type: 'block',
+        hardness: 2,
         material: new THREE.MeshLambertMaterial({ map: textures.planks }),
         icon: 'images/block-icon/wood.png'
     },
@@ -106,6 +111,7 @@ export const blocks = {
         id: 17,
         name: 'log',
         type: 'block',
+        hardness: 2,
         material:  [
             new THREE.MeshLambertMaterial({ map: textures.log }), // right
             new THREE.MeshLambertMaterial({ map: textures.log }), // left
@@ -120,6 +126,7 @@ export const blocks = {
         id: 18,
         name: 'leaves',
         type: 'block',
+        hardness: 0.2,
         material: new THREE.MeshLambertMaterial({ map: textures.leaves }),
         icon: 'images/block-icon/leaves.webp'
     },
@@ -127,6 +134,7 @@ export const blocks = {
         id: 20,
         name: 'glass',
         type: 'block',
+        hardness: 0.3,
         material: new THREE.MeshLambertMaterial({ map: textures.glass, transparent: true }),
         icon: 'images/block-icon/glass.webp'
     },
@@ -134,6 +142,7 @@ export const blocks = {
         id: 54,
         name: 'chest',
         type: 'block',
+        hardness: 2.5,
         material: [
             new THREE.MeshLambertMaterial({ map: textures.chest_side }), // right
             new THREE.MeshLambertMaterial({ map: textures.chest_side }), // left
@@ -149,6 +158,7 @@ export const blocks = {
         id: 58,
         name: 'Crafting Table',
         type: 'block',
+        hardness: 2.5,
         material: [
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_side }), // right
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_side }), // left
@@ -164,6 +174,7 @@ export const blocks = {
         id: 61,
         name: 'Furnace',
         type: 'block',
+        hardness: 3.5,
         material: [
             new THREE.MeshLambertMaterial({ map: textures.furnace_side }), // right
             new THREE.MeshLambertMaterial({ map: textures.furnace_side }), // left

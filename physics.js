@@ -26,9 +26,10 @@ export class Physics {
     update(dt, player, world) {
         this.accumulator += dt;
         while (this.accumulator >= this.timestep) {
+            //console.log(world.getBlock(Math.round(player.position.x), 0, Math.round(player.position.z))?.id);
             player.velocity.y -= this.gravity * this.timestep;
             player.applyInputs(this.timestep);
-            //player.updateBoundsHelper();
+            player.updateBoundsHelper();
             this.detectCollisions(player, world);
             this.accumulator -= this.timestep;
         }
@@ -39,7 +40,6 @@ export class Physics {
     detectCollisions(player, world) {
 
         player.onGround = false;
-
         this.helpers.clear();
 
         const candidates = this.broadPhase(player, world);
@@ -134,7 +134,7 @@ export class Physics {
                     overlap
                 });
 
-                //this.addContactPointerHelper(closestPoint);
+                this.addContactPointerHelper(closestPoint);
             }
         }
 
