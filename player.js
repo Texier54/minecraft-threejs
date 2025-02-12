@@ -22,13 +22,14 @@ export class Player {
     selectedCoordsNormal = null;
 
 
-    constructor(scene) {
+    constructor(scene, world, inventory, ui) {
 
         //this.player.position.set(0, 5, 0);
         this.position.set(10, 80, 10);
         scene.add(this.camera);
 
         this.scene = scene;
+        this.world = world;
 
         window.addEventListener('keydown', this.onKeyDown.bind(this));
         window.addEventListener('keyup', this.onKeyUp.bind(this));
@@ -83,7 +84,83 @@ export class Player {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.raycaster.far = 5; // Limite la portée à 10 unités
+
+        document.addEventListener('mousedown', this.onMouseDown.bind(this));
+        document.addEventListener('mouseup', this.onMouseUp.bind(this));
+        this.isDestroying = false;
     }
+
+
+    onMouseDown(event) {
+        if (this.controls.isLocked) {
+            this.isMouseDown = true; // Marque le clic comme enfoncé
+            this.animateHand();
+
+            if (this.selectedCoords) {
+                if (event.button == 2) {
+                    const selectedBlock = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
+
+                    if (this.inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && getBlockByIdFast(this.inventory.getSelectedItem()?.block).type === 'block') {
+                        this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block);
+                        this.inventory.removeBlock(this.inventory.getSelectedItem().block);
+                        var audio = new Audio('audio/dirt1.ogg');
+                        audio.play();
+                    } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
+                        this.ui.open(selectedBlock.id);
+                    }
+                } else {
+                    console.log(event.button);
+                    this.startDestroyingBlock(event);
+                }
+            }
+        }
+    }
+
+    startDestroyingBlock(event) {
+        if (!this.isMouseDown) return; // Vérifie si le clic est toujours enfoncé
+
+        let destructionProgress = 0;
+        const blockToRemove = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
+        let destructionTime = getBlockByIdFast(blockToRemove.id).hardness * 1.5 * 1000;
+
+        this.isDestroying = true;
+        this.animateBlockBreaking(destructionTime);
+
+        this.destructionInterval = setInterval(() => {
+            if (!this.isMouseDown) { // Stoppe si le clic est relâché
+                clearInterval(this.destructionInterval);
+                this.isDestroying = false;
+                return;
+            }
+
+            destructionProgress += 100; // Augmente la progression toutes les 100ms
+
+            if (destructionProgress >= destructionTime) {
+                this.inventory.addBlock(blockToRemove);
+                this.world.removeBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
+                var audio = new Audio('audio/dirt1.ogg');
+                audio.play();
+                this.isDestroying = false;
+                clearInterval(this.destructionInterval);
+
+                // Relancer la destruction si le clic est toujours maintenu
+                setTimeout(() => {
+                    this.startDestroyingBlock(event);
+                }, 200);
+            }
+        }, 100);
+    }
+
+
+    onMouseUp(event) {
+        if (this.controls.isLocked) {
+            if (event.button != 2) {
+                this.isDestroying = false;
+                clearInterval(this.destructionInterval);
+                this.isMouseDown = false;
+            }
+        }
+    };
 
 
     animateHand() {
@@ -149,10 +226,9 @@ export class Player {
 
     animateBlockBreaking(duration) {
 
-
         this.selectionBreakHelper.position.copy(this.selectedCoords);
         //console.log(this.selectionBreakHelper);
-
+        this.selectionBreakHelper.visible = true;
 
         const steps = 6; // Nombre d'étapes dans la grille de "cassure"
         const interval = duration / steps; // Temps entre chaque étape
@@ -165,14 +241,10 @@ export class Player {
         const columns = 2; // Nombre de colonnes dans la texture
         const rows = 3;    // Nombre de lignes dans la texture
 
-        //console.log(step);
-        if (step <= 6) {
+        if (step <= 6 && this.isDestroying) {
             // Calculer l'offset dans la texture
-
             const column = step % columns;
             const row = Math.floor(step / columns);
-
-
 
             //console.log( row / rows);
             // Appliquer l'offset (UV mapping) pour afficher la bonne partie
@@ -184,8 +256,7 @@ export class Player {
             // Appeler la prochaine étape après un délai
             setTimeout(this.nextStep.bind(this), interval, interval, step);
         } else {
-            // Supprimer le bloc ou appeler le callback une fois terminé
-            //this.scene.remove(this.selectionHelper)
+            this.selectionBreakHelper.visible = false;
         }
     }
 
@@ -288,10 +359,17 @@ export class Player {
 
         (async () => {
             const retrievedData = await getData();
-            console.log('Données récupérées :', retrievedData);
+            //console.log('Données récupérées :', retrievedData);
             this.position.set(retrievedData.x, retrievedData.y, retrievedData.z);
-            console.log(this.position);
         })();
+    }
+
+    setInventory(inventory) {
+        this.inventory = inventory;
+    }
+
+    setUI(ui) {
+        this.ui = ui;
     }
 
 }
