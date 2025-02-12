@@ -127,7 +127,8 @@ export class Inventory {
                     div.innerHTML = item.quantity;
                     div.classList.add('slot-quantity');
                     slot.appendChild(img);
-                    slot.appendChild(div);
+                    if (blockObject.stackable)
+                        slot.appendChild(div);
                 }
 
                 // Gestion du clic
@@ -166,7 +167,8 @@ export class Inventory {
                     div.innerHTML = this.blockInventory[slotId].quantity;
                     div.classList.add('slot-quantity');
                     slotDiv.appendChild(img);
-                    slotDiv.appendChild(div);
+                    if (blockObject.stackable)
+                        slotDiv.appendChild(div);
                 }
 
                 slotDiv.addEventListener('mousedown', (event) => this.handleSlotBlockClick(slotId, event));
@@ -203,7 +205,8 @@ export class Inventory {
                     div.innerHTML = item.quantity;
                     div.classList.add('slot-quantity');
                     slot.appendChild(img);
-                    slot.appendChild(div);
+                    if (blockObject.stackable)
+                        slot.appendChild(div);
                 }
 
                 this.bar.appendChild(slot);

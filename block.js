@@ -33,6 +33,24 @@ const textures = {
     chest_front: loadTexture('images/chest_front.png'),
 };
 
+const TOOL_TYPES = {
+    PICKAXE: "pickaxe",
+    AXE: "axe",
+    SHOVEL: "shovel",
+    HAND: "hand"
+};
+
+
+const TOOL_MATERIALS = {
+    WOOD: 2,
+    STONE: 4,
+    IRON: 6,
+    GOLD: 12,
+    DIAMOND: 8,
+    NETHERITE: 9
+};
+
+
 export const blocks = {
     empty: {
         id: 0,
@@ -53,39 +71,52 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.grassSide }), // front
             new THREE.MeshLambertMaterial({ map: textures.grassSide })  // back
         ],
-        icon: 'images/block-icon/grass.png'
+        icon: 'images/block-icon/grass.png',
+        tool: TOOL_TYPES.SHOVEL,
+        need_tool: false,
     },
     dirt: {
         id: 2,
         name: 'dirt',
         type: 'block',
+        stackable: true,
         hardness: 0.5,
         material: new THREE.MeshLambertMaterial({ map: textures.dirt }),
-        icon: 'images/block-icon/dirt.webp'
+        icon: 'images/block-icon/dirt.webp',
+        tool: TOOL_TYPES.SHOVEL,
+        need_tool: false,
     },
     stone: {
         id: 3,
         name: 'stone',
         type: 'block',
+        stackable: true,
         hardness: 1.5,
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8, //rareté
-        icon: 'images/block-icon/stone.png'
+        icon: 'images/block-icon/stone.png',
+        tool: TOOL_TYPES.PICKAXE,
+        need_tool: true,
     },
     coalOre: {
         id: 4,
         name: 'coal_ore',
         type: 'block',
+        stackable: true,
+        hardness: 3,
         material: new THREE.MeshLambertMaterial({ map: textures.coalOre }),
         scale: { x: 20, y: 20, z: 20 },
         scarcity: 0.8,
-        icon: 'images/block-icon/coal_ore.png'
+        icon: 'images/block-icon/coal_ore.png',
+        tool: TOOL_TYPES.PICKAXE
     },
     ironOre: {
         id: 5,
         name: 'iron_ore',
         type: 'block',
+        stackable: true,
+        hardness: 3,
         material: new THREE.MeshLambertMaterial({ map: textures.ironOre }),
         scale: { x: 40, y: 40, z: 40 },
         scarcity: 0.9,
@@ -95,6 +126,7 @@ export const blocks = {
         id: 6,
         name: 'planks',
         type: 'block',
+        stackable: true,
         hardness: 2,
         material: new THREE.MeshLambertMaterial({ map: textures.planks }),
         icon: 'images/block-icon/wood.png'
@@ -103,6 +135,7 @@ export const blocks = {
         id: 7,
         name: 'bedrock',
         type: 'block',
+        stackable: true,
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8
@@ -111,6 +144,7 @@ export const blocks = {
         id: 17,
         name: 'log',
         type: 'block',
+        stackable: true,
         hardness: 2,
         material:  [
             new THREE.MeshLambertMaterial({ map: textures.log }), // right
@@ -120,12 +154,14 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.log }), // front
             new THREE.MeshLambertMaterial({ map: textures.log })  // back
         ],
-        icon: 'images/block-icon/log.png'
+        icon: 'images/block-icon/log.png',
+        tool: TOOL_TYPES.AXE
     },
     leaves: {
         id: 18,
         name: 'leaves',
         type: 'block',
+        stackable: true,
         hardness: 0.2,
         material: new THREE.MeshLambertMaterial({ map: textures.leaves }),
         icon: 'images/block-icon/leaves.webp'
@@ -134,6 +170,7 @@ export const blocks = {
         id: 20,
         name: 'glass',
         type: 'block',
+        stackable: true,
         hardness: 0.3,
         material: new THREE.MeshLambertMaterial({ map: textures.glass, transparent: true }),
         icon: 'images/block-icon/glass.webp'
@@ -142,6 +179,7 @@ export const blocks = {
         id: 54,
         name: 'chest',
         type: 'block',
+        stackable: true,
         hardness: 2.5,
         material: [
             new THREE.MeshLambertMaterial({ map: textures.chest_side }), // right
@@ -158,6 +196,7 @@ export const blocks = {
         id: 58,
         name: 'Crafting Table',
         type: 'block',
+        stackable: true,
         hardness: 2.5,
         material: [
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_side }), // right
@@ -174,6 +213,7 @@ export const blocks = {
         id: 61,
         name: 'Furnace',
         type: 'block',
+        stackable: true,
         hardness: 3.5,
         material: [
             new THREE.MeshLambertMaterial({ map: textures.furnace_side }), // right
@@ -186,16 +226,56 @@ export const blocks = {
         icon: 'images/block-icon/furnace.webp',
         interface: true
     },
+    wooden_pickaxe: {
+        id: 310,
+        name: 'Wooden Pickaxe',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/wooden_pickaxe.png',
+        tool_type: TOOL_TYPES.PICKAXE,
+        tool_material: TOOL_MATERIALS.WOOD
+    },
+    stone_shovel: {
+        id: 313,
+        name: 'Stone Shovel',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/stone_shovel.webp',
+        tool_type: TOOL_TYPES.SHOVEL,
+        tool_material: TOOL_MATERIALS.STONE
+    },
     stone_pickaxe: {
         id: 314,
         name: 'Stone Pickaxe',
         type: 'item',
+        stackable: false,
         icon: 'images/block-icon/stone_pickaxe.webp',
+        tool_type: TOOL_TYPES.PICKAXE,
+        tool_material: TOOL_MATERIALS.STONE
+    },
+    stone_axe: {
+        id: 315,
+        name: 'Stone axe',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/stone_axe.webp',
+        tool_type: TOOL_TYPES.AXE,
+        tool_material: TOOL_MATERIALS.STONE
+    },
+    diamond_pickaxe: {
+        id: 318,
+        name: 'Diamind Pickaxe',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/diamond_pickaxe.webp',
+        tool_type: TOOL_TYPES.PICKAXE,
+        tool_material: TOOL_MATERIALS.DIAMOND
     },
     stick: {
         id: 320,
         name: 'Stick',
         type: 'item',
+        stackable: true,
         icon: 'images/block-icon/stick.webp',
     },
 };
@@ -214,3 +294,4 @@ export const resources = [
     blocks.coalOre,
     blocks.ironOre
 ];
+

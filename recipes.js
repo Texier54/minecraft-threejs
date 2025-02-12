@@ -11,13 +11,45 @@ export const RecipesList = {
         ],
         output: blocks.planks.id,
     },
-    pickaxe: {
+    wooden_pickaxe: {
+        pattern: [
+            [blocks.planks.id, blocks.planks.id, blocks.planks.id],
+            [null, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: blocks.wooden_pickaxe.id,
+    },
+    stone_pickaxe: {
         pattern: [
             [blocks.stone.id, blocks.stone.id, blocks.stone.id],
             [null, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
         output: blocks.stone_pickaxe.id,
+    },
+    stone_shovel: {
+        pattern: [
+            [null, blocks.stone.id, null],
+            [null, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: blocks.stone_shovel.id,
+    },
+    stone_axe: {
+        pattern: [
+            [blocks.stone.id, blocks.stone.id, null],
+            [blocks.stone.id, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: blocks.stone_axe.id,
+    },
+    diamond_pickaxe: {
+        pattern: [
+            [blocks.glass.id, blocks.glass.id, blocks.glass.id],
+            [null, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: blocks.diamond_pickaxe.id,
     },
     chest: {
         pattern: [

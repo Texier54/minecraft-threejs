@@ -117,12 +117,43 @@ export class Player {
     }
 
     startDestroyingBlock(event) {
-        if (!this.isMouseDown) return; // Vérifie si le clic est toujours enfoncé
+        if (!this.isMouseDown || !this.selectedCoords) return; // Vérifie si le clic est toujours enfoncé
 
         let destructionProgress = 0;
         const blockToRemove = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
-        let destructionTime = getBlockByIdFast(blockToRemove.id).hardness * 1.5 * 1000;
+        console.log(blockToRemove);
+        let destructionTime = getBlockByIdFast(blockToRemove.id).hardness * 1000;
 
+        let speedMultiplier = 1;
+
+        destructionTime *= 1.5;
+        const toolId = this.inventory.getSelectedItem()?.block;
+
+        let tool = null;
+
+        if (toolId) {
+            tool = getBlockByIdFast(toolId);
+            if (tool.type == 'item' && tool.tool_type == getBlockByIdFast(blockToRemove.id).tool)
+                speedMultiplier = tool.tool_material;
+        }
+
+        let damage = speedMultiplier/getBlockByIdFast(blockToRemove.id).hardness;
+
+        if (getBlockByIdFast(blockToRemove.id)?.need_tool && !(tool && tool.type == 'item' && tool.tool_type == getBlockByIdFast(blockToRemove.id).tool))
+            damage /= 100;
+        else
+            damage /= 30;
+
+        const ticks = Math.ceil(1 / damage)
+
+        destructionTime = (ticks / 20)*1000;
+
+        // Instant breaking
+        if (damage > 1)
+            destructionTime = 0;
+
+
+        console.log(destructionTime);
         this.isDestroying = true;
         this.animateBlockBreaking(destructionTime);
 
@@ -279,7 +310,8 @@ export class Player {
             this.camera.add(this.meshHandItem);
             this.handMesh.visible = false;
         } else {
-            this.meshHandItem.visible = false;
+            if (this.meshHandItem)
+                this.meshHandItem.visible = false;
             this.handMesh.visible = true;
         }
 
