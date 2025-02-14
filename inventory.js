@@ -235,7 +235,7 @@ export class Inventory {
                 if (x >= gridNumber)
                     break;
             }
-            console.log(x+'-'+y)
+            //console.log(x+'-'+y)
             if (this.blockInventory[slotId]?.block)
                 grid[x][y] = this.blockInventory[slotId]?.block;
             else
@@ -308,10 +308,12 @@ export class Inventory {
             // Si un objet est tenu, le poser
             if (!selectedItem) {
                 if (event.button == 0) {
-                    // Slot vide : déplacer l'item
-                    this.blockInventory[index] = this.heldItem;
-                    this.heldItem = null;
-                    this.heldItemElement.style.display = 'none';
+                    if (index != this.output) {
+                        // Slot vide : déplacer l'item
+                        this.blockInventory[index] = this.heldItem;
+                        this.heldItem = null;
+                        this.heldItemElement.style.display = 'none';
+                    }
                 } else {
                     this.blockInventory[index] = { ...this.heldItem };
                     this.blockInventory[index].quantity = 1;
@@ -320,10 +322,15 @@ export class Inventory {
             } else {
 
                 if (this.blockInventory[index].block == this.heldItem.block) {
-                    this.blockInventory[index].quantity += this.heldItem.quantity;
-                    this.heldItem = null;
-                    this.heldItemElement.style.display = 'none';
-                } else {
+                    if (index == this.output) {
+                        this.heldItem.quantity += this.blockInventory[index].quantity;
+                    } else {
+                        this.blockInventory[index].quantity += this.heldItem.quantity;
+                        this.heldItem = null;
+                        this.heldItemElement.style.display = 'none';
+                    }
+
+                } else if (index != this.output) {
                     // Slot occupé : échanger les items
                     [this.blockInventory[index], this.heldItem] = [this.heldItem, this.blockInventory[index]];
                     const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
