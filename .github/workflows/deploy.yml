@@ -22,5 +22,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # Déploie le dossier dist
+          github_token: ${{ secrets.GITHUB_TOKEN }} # Utiliser le token GitHub
+          publish_dir: ./dist  # Spécifier le dossier de build
+          publish_branch: gh-pages  # Déployer sur la branche gh-pages
+          allow_empty_commit: true  # Optionnel : éviter les erreurs si rien n'a changé
