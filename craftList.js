@@ -6,6 +6,11 @@ for (const [index, recipe] of Object.entries(RecipesList)) {
 
     let craft = document.createElement('div');
     craft.classList.add('craft');
+    let title = document.createElement('h2');
+    title.classList.add('title');
+    title.innerHTML = index;
+    craft.append(title);
+
     let grid = document.createElement('div');
     grid.classList.add('grid');
     for (let x = 0; x < 3; x++) {
@@ -22,10 +27,6 @@ for (const [index, recipe] of Object.entries(RecipesList)) {
                 slot.append(img);
             }
             grid.append(slot);
-
-
-
-
         }
     }
 

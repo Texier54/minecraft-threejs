@@ -259,19 +259,17 @@ export class Inventory {
                 if (event.button == 0) {
                     // Slot vide : déplacer l'item
                     this.inventory[index] = this.heldItem;
-                    this.heldItem = null;
-                    this.heldItemElement.style.display = 'none';
+                    this.clearHeldItem();
                 } else {
                     this.inventory[index] = { ...this.heldItem };
                     this.inventory[index].quantity = 1;
-                    this.heldItem.quantity -= 1;
+                    this.setHeldItem(this.heldItem.block, this.heldItem.quantity -= 1);
                 }
             } else {
 
                 if (this.inventory[index].block == this.heldItem.block && getBlockByIdFast(this.inventory[index].block).stackable) {
                     this.inventory[index].quantity += this.heldItem.quantity;
-                    this.heldItem = null;
-                    this.heldItemElement.style.display = 'none';
+                    this.clearHeldItem();
                 } else {
                     // Slot occupé : échanger les items
                     [this.inventory[index], this.heldItem] = [this.heldItem, this.inventory[index]];
@@ -315,23 +313,21 @@ export class Inventory {
                     if (index != this.output) {
                         // Slot vide : déplacer l'item
                         this.blockInventory[index] = this.heldItem;
-                        this.heldItem = null;
-                        this.heldItemElement.style.display = 'none';
+                        this.clearHeldItem();
                     }
                 } else {
                     this.blockInventory[index] = { ...this.heldItem };
                     this.blockInventory[index].quantity = 1;
-                    this.heldItem.quantity -= 1;
+                    this.setHeldItem(this.heldItem.block, this.heldItem.quantity -= 1);
                 }
             } else {
 
                 if (this.blockInventory[index].block == this.heldItem.block && getBlockByIdFast(this.blockInventory[index].block).stackable) {
                     if (index == this.output) {
-                        this.heldItem.quantity += this.blockInventory[index].quantity;
+                        this.setHeldItem(this.heldItem.block, this.heldItem.quantity += this.blockInventory[index].quantity);
                     } else {
                         this.blockInventory[index].quantity += this.heldItem.quantity;
-                        this.heldItem = null;
-                        this.heldItemElement.style.display = 'none';
+                        this.clearHeldItem();
                     }
 
                 } else if (index != this.output) {
@@ -346,19 +342,12 @@ export class Inventory {
         } else if (selectedItem) {
             if (event.button == 0) {
             // Si aucun objet n'est tenu, prendre l'item du slot
-                this.heldItem = this.blockInventory[index];
+                this.setHeldItem(this.blockInventory[index].block, this.blockInventory[index].quantity);
                 this.blockInventory[index] = null;
-                const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
-                this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
-                this.heldItemElement.style.display = 'block';
             } else {
                 //si clic droit
-                this.heldItem = { ...this.blockInventory[index] };
-                this.heldItem.quantity = Math.round(this.heldItem.quantity/2);
+                this.setHeldItem(this.blockInventory[index].block, Math.round(this.blockInventory[index].quantity/2));
                 this.blockInventory[index].quantity = Math.floor(this.blockInventory[index].quantity/2);
-                const blockObject = Object.values(blocks).find(block => block.id === this.heldItem.block)
-                this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
-                this.heldItemElement.style.display = 'block';
             }
         }
 
@@ -382,6 +371,20 @@ export class Inventory {
 
         this.renderInventory();
 
+    }
+
+    clearHeldItem() {
+        this.heldItem = null;
+        this.heldItemElement.style.display = 'none';
+    }
+
+    setHeldItem(id, quantity) {
+        this.heldItem = { block: id, quantity: quantity};
+        const blockObject = getBlockByIdFast(id);
+        this.heldItemElement.src = blockObject.icon; // Affiche l'image de l'item tenu
+        this.heldItemElement.style.display = 'block';
+        if (quantity < 1)
+            this.clearHeldItem();
     }
 
     addBlock(blockToAdd) {
