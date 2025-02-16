@@ -346,19 +346,19 @@ export class Player {
     }
 
     onKeyDown(event) {
-        if (event.key === 'Shift') keys.speed = true;
-        if (event.key === 'z') this.input.z = this.maxSpeed;
-        if (event.key === 's') this.input.z = -this.maxSpeed;
-        if (event.key === 'q') this.input.x = -this.maxSpeed;
-        if (event.key === 'd') this.input.x = this.maxSpeed;
-        if (event.key === ' ') if (this.onGround) this.velocity.y += this.jumpSpeed;
+        if (event.code === 'ShiftLeft') keys.speed = true;
+        if (event.code === 'KeyW') this.input.z = this.maxSpeed;
+        if (event.code === 'KeyS') this.input.z = -this.maxSpeed;
+        if (event.code === 'KeyA') this.input.x = -this.maxSpeed;
+        if (event.code === 'KeyD') this.input.x = this.maxSpeed;
+        if (event.code === 'Space') if (this.onGround) this.velocity.y += this.jumpSpeed;
     }
 
     onKeyUp(event) {
-        if (event.key === 'z') this.input.z = 0;
-        if (event.key === 's') this.input.z = 0;
-        if (event.key === 'q') this.input.x = 0;
-        if (event.key === 'd') this.input.x = 0;
+        if (event.code === 'KeyW') this.input.z = 0;
+        if (event.code === 'KeyS') this.input.z = 0;
+        if (event.code === 'KeyA') this.input.x = 0;
+        if (event.code === 'KeyD') this.input.x = 0;
     }
 
     // renvoi la position du player dans le world

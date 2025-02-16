@@ -2,6 +2,7 @@
 
 import {blocks, getBlockByIdFast, resources} from './block.js';
 import { Recipes } from './recipes.js';
+import { Smelting } from './smelting.js';
 import {UIList} from "./ui.js";
 
 export class Inventory {
@@ -63,6 +64,9 @@ export class Inventory {
         });
 
         this.recipes = new Recipes();
+        this.smelting = new Smelting();
+
+        document.addEventListener('keydown', this.onKeyDown.bind(this));
     }
     show(id = 0) {
         this.inventoryContainer.style.display = 'block';
@@ -360,13 +364,20 @@ export class Inventory {
 
 
 
-        //vérifie recettes
-        const ouput = this.recipes.checkRecipe(this.inventoryToGrid());
-        if (ouput)
-            this.blockInventory[this.output] = { block : ouput.id, quantity : ouput.quantity};
-        else
-            this.blockInventory[this.output] = null;
-
+        if (this.UIID == 0 || this.UIID == 58) {
+            //vérifie recettes
+            const ouput = this.recipes.checkRecipe(this.inventoryToGrid());
+            if (ouput)
+                this.blockInventory[this.output] = { block : ouput.id, quantity : ouput.quantity};
+            else
+                this.blockInventory[this.output] = null;
+        } else if (this.UIID == 61) {
+            const ouput = this.smelting.checkSmelting(this.inventoryToGrid());
+            if (ouput)
+                this.blockInventory[this.output] = { block : ouput.id, quantity : ouput.quantity};
+            else
+                this.blockInventory[this.output] = null;
+        }
 
 
         this.renderInventory();
@@ -433,6 +444,27 @@ export class Inventory {
             this.renderBar();
         })();
     }
+
+
+    onKeyDown(event) {
+
+        document.querySelectorAll('.item').forEach(el => el.classList.remove('selected'));
+        let id = null;
+        if (event.code === 'Digit1') id = 27;
+        if (event.code === 'Digit2') id = 28;
+        if (event.code === 'Digit3') id = 29;
+        if (event.code === "Digit4") id = 30;
+        if (event.code === 'Digit5') id = 31;
+        if (event.code === 'Digit6') id = 32;
+        if (event.code === 'Digit7') id = 33;
+        if (event.code === 'Digit8') id = 34;
+        if (event.code === 'Digit0') id = 35;
+
+        if (id)
+            this.selectItem(id);
+
+    };
+
 }
 
 const dbName = 'minecraftDB';
