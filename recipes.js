@@ -9,7 +9,21 @@ export const RecipesList = {
             [null, null, null],
             [null, null, null],
         ],
-        output: blocks.planks.id,
+        output: {
+            id: blocks.planks.id,
+            quantity: 4,
+        },
+    },
+    wooden_shovel: {
+        pattern: [
+            [null, blocks.planks.id, null],
+            [null, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: {
+            id: blocks.wooden_shovel.id,
+            quantity: 1,
+        },
     },
     wooden_pickaxe: {
         pattern: [
@@ -17,7 +31,10 @@ export const RecipesList = {
             [null, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
-        output: blocks.wooden_pickaxe.id,
+        output: {
+            id: blocks.wooden_pickaxe.id,
+            quantity: 1,
+        },
     },
     stone_pickaxe: {
         pattern: [
@@ -25,7 +42,10 @@ export const RecipesList = {
             [null, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
-        output: blocks.stone_pickaxe.id,
+        output: {
+            id: blocks.stone_pickaxe.id,
+            quantity: 1,
+        },
     },
     stone_shovel: {
         pattern: [
@@ -33,7 +53,10 @@ export const RecipesList = {
             [null, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
-        output: blocks.stone_shovel.id,
+        output: {
+            id: blocks.stone_shovel.id,
+            quantity: 1,
+        },
     },
     stone_axe: {
         pattern: [
@@ -41,7 +64,21 @@ export const RecipesList = {
             [blocks.stone.id, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
-        output: blocks.stone_axe.id,
+        output: {
+            id: blocks.stone_axe.id,
+            quantity: 1,
+        },
+    },
+    iron_pickaxe: {
+        pattern: [
+            [blocks.iron_ingot.id, blocks.iron_ingot.id, blocks.iron_ingot.id],
+            [null, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: {
+            id: blocks.iron_pickaxe.id,
+            quantity: 1,
+        },
     },
     diamond_pickaxe: {
         pattern: [
@@ -49,7 +86,10 @@ export const RecipesList = {
             [null, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
-        output: blocks.diamond_pickaxe.id,
+        output: {
+            id: blocks.diamond_pickaxe.id,
+            quantity: 1,
+        },
     },
     chest: {
         pattern: [
@@ -57,7 +97,21 @@ export const RecipesList = {
             [blocks.planks.id, null, blocks.planks.id],
             [blocks.planks.id, blocks.planks.id, blocks.planks.id],
         ],
-        output: blocks.chest.id,
+        output: {
+            id: blocks.chest.id,
+            quantity: 1,
+        },
+    },
+    furnace: {
+        pattern: [
+            [blocks.stone.id, blocks.stone.id, blocks.stone.id],
+            [blocks.stone.id, null, blocks.stone.id],
+            [blocks.stone.id, blocks.stone.id, blocks.stone.id],
+        ],
+        output: {
+            id: blocks.furnace.id,
+            quantity: 1,
+        },
     },
     stick: {
         pattern: [
@@ -65,7 +119,10 @@ export const RecipesList = {
             [blocks.planks.id, null, null],
             [null, null, null],
         ],
-        output: blocks.stick.id,
+        output: {
+            id: blocks.stick.id,
+            quantity: 4,
+        },
     }
 }
 

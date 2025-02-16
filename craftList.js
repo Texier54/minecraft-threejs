@@ -11,17 +11,17 @@ for (const [index, recipe] of Object.entries(RecipesList)) {
     for (let x = 0; x < 3; x++) {
         for (let y = 0; y < 3; y++) {
 
-            let blockDiv = document.createElement('div');
-            blockDiv.classList.add('block')
+            let slot = document.createElement('div');
+            slot.classList.add('slot')
             const blockId = recipe.pattern[x][y];
             if (blockId) {
                 let img = document.createElement('img');
                 const block = getBlockByIdFast(blockId);
                 img.src = block.icon;
-                img.width = 50;
-                blockDiv.append(img);
+                img.width = 43;
+                slot.append(img);
             }
-            grid.append(blockDiv);
+            grid.append(slot);
 
 
 
@@ -31,15 +31,18 @@ for (const [index, recipe] of Object.entries(RecipesList)) {
 
     craft.append(grid);
 
-    let blockDiv = document.createElement('div');
-    blockDiv.classList.add('block')
+    let slot = document.createElement('div');
+    let quantity = document.createElement('div');
+    slot.classList.add('slot')
     let img = document.createElement('img');
-    const block = getBlockByIdFast(recipe.output);
+    const block = getBlockByIdFast(recipe.output.id);
     img.src = block.icon;
-    img.width = 50;
-    blockDiv.append(img);
-
-    craft.append(blockDiv);
+    img.width = 43;
+    quantity.innerHTML = recipe.output.quantity;
+    quantity.classList.add('slot-quantity');
+    slot.append(img);
+    slot.append(quantity);
+    craft.append(slot);
 
     document.getElementById('listing').append(craft);
 

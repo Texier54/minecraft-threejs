@@ -1,6 +1,6 @@
 
 
-import { blocks, resources } from './block.js';
+import {blocks, getBlockByIdFast, resources} from './block.js';
 import { Recipes } from './recipes.js';
 import {UIList} from "./ui.js";
 
@@ -264,7 +264,7 @@ export class Inventory {
                 }
             } else {
 
-                if (this.inventory[index].block == this.heldItem.block) {
+                if (this.inventory[index].block == this.heldItem.block && getBlockByIdFast(this.inventory[index].block).stackable) {
                     this.inventory[index].quantity += this.heldItem.quantity;
                     this.heldItem = null;
                     this.heldItemElement.style.display = 'none';
@@ -321,7 +321,7 @@ export class Inventory {
                 }
             } else {
 
-                if (this.blockInventory[index].block == this.heldItem.block) {
+                if (this.blockInventory[index].block == this.heldItem.block && getBlockByIdFast(this.blockInventory[index].block).stackable) {
                     if (index == this.output) {
                         this.heldItem.quantity += this.blockInventory[index].quantity;
                     } else {
@@ -361,9 +361,9 @@ export class Inventory {
 
 
         //vérifie recettes
-        const gain = this.recipes.checkRecipe(this.inventoryToGrid());
-        if (gain)
-            this.blockInventory[this.output] = { block : gain, quantity : 1};
+        const ouput = this.recipes.checkRecipe(this.inventoryToGrid());
+        if (ouput)
+            this.blockInventory[this.output] = { block : ouput.id, quantity : ouput.quantity};
         else
             this.blockInventory[this.output] = null;
 

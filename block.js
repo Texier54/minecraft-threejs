@@ -109,7 +109,8 @@ export const blocks = {
         scale: { x: 20, y: 20, z: 20 },
         scarcity: 0.8,
         icon: 'images/block-icon/coal_ore.png',
-        tool: TOOL_TYPES.PICKAXE
+        tool: TOOL_TYPES.PICKAXE,
+        need_tool: true,
     },
     ironOre: {
         id: 5,
@@ -120,7 +121,9 @@ export const blocks = {
         material: new THREE.MeshLambertMaterial({ map: textures.ironOre }),
         scale: { x: 40, y: 40, z: 40 },
         scarcity: 0.9,
-        icon: 'images/block-icon/iron_ore.png'
+        icon: 'images/block-icon/iron_ore.png',
+        tool: TOOL_TYPES.PICKAXE,
+        need_tool: true,
     },
     planks: {
         id: 6,
@@ -225,6 +228,31 @@ export const blocks = {
         ],
         icon: 'images/block-icon/furnace.webp',
         interface: true
+    },
+    iron_pickaxe: {
+        id: 297,
+        name: 'Iron Pickaxe',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/iron_pickaxe.webp',
+        tool_type: TOOL_TYPES.PICKAXE,
+        tool_material: TOOL_MATERIALS.IRON
+    },
+    iron_ingot: {
+        id: 305,
+        name: 'Iron Ingot',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/iron_ingot.webp',
+    },
+    wooden_shovel: {
+        id: 309,
+        name: 'Wooden Shovel',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/wooden_shovel.webp',
+        tool_type: TOOL_TYPES.SHOVEL,
+        tool_material: TOOL_MATERIALS.WOOD
     },
     wooden_pickaxe: {
         id: 310,
