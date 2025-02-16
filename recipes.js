@@ -3,6 +3,17 @@ import * as THREE from "three";
 
 
 export const RecipesList = {
+    crafting_table: {
+        pattern: [
+            [blocks.planks.id, blocks.planks.id, null],
+            [blocks.planks.id, blocks.planks.id, null],
+            [null, null, null],
+        ],
+        output: {
+            id: blocks.craftingTable.id,
+            quantity: 1,
+        },
+    },
     planks: {
         pattern: [
             [blocks.log.id, null, null],
