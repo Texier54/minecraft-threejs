@@ -45,8 +45,8 @@ player.setInventory(inventory);
 player.setUI(ui);
 
 //DEBUG
-player.load();
-inventory.load();
+//player.load();
+//inventory.load();
 
 
 const pig = new Pig();
