@@ -54,7 +54,7 @@ export class WorldChunk extends THREE.Group {
             this.generateMesh();
         } else {
             // Créer un Worker pour déporter la génération
-            const worker = new Worker('chunkWorker.js', { type: 'module' });
+            const worker = new Worker(new URL('chunkWorker.js', import.meta.url), { type: 'module' });
 
             // Gestion du retour de données depuis le Worker
             worker.onmessage = (event) => {
