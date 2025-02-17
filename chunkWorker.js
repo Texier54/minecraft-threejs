@@ -6,6 +6,8 @@ const blocks = {
     empty: { id: 0, name: 'empty', visible: false },
     grass: { id: 1, name: 'grass' },
     dirt: { id: 2, name: 'dirt' },
+    sand: { id: 12, name: 'sand' },
+    gravel: { id: 13, name: 'gravel' },
     stone: { id: 3, name: 'stone', scale: { x: 30, y: 30, z: 30 }, scarcity: 0.8 },
     coalOre: { id: 4, name: 'coal_ore', scale: { x: 20, y: 20, z: 20 }, scarcity: 0.8 },
     ironOre: { id: 5, name: 'iron_ore', scale: { x: 40, y: 40, z: 40 }, scarcity: 0.9 },
@@ -76,6 +78,7 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
                 if (y < height && getBlock(x, y, z)?.id === blocks.empty.id) {
                     setBlockId(x, y, z, blocks.stone.id);
                     generateResources(rng, x, y, z, position);
+                    //generateCaves(simplex, x, y, z, position);
                 } else if (y == height) {
                     setBlockId(x, y, z, blocks.grass.id);
                     // Randomly generate a tree
@@ -164,4 +167,16 @@ function generateResources(seed, x, y, z, position) {
 
     })
 
+}
+
+function generateCaves(simplex, x, y, z, position) {
+
+    const scale = 0.02; // Fréquence du bruit, à ajuster pour la taille des filons
+    const noiseValue = simplex.noise(x * scale, y * scale, z * scale);
+
+    // Définition des types de minerai en fonction du bruit et de la profondeur
+    if (noiseValue > 0.4) {
+
+            setBlockId(x, y, z, blocks.dirt.id); // Diamants en profondeur
+    }
 }

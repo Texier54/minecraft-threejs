@@ -31,6 +31,8 @@ const textures = {
     chest_top: loadTexture('images/chest_top.png'),
     chest_side: loadTexture('images/chest_side.png'),
     chest_front: loadTexture('images/chest_front.png'),
+    sand: loadTexture('images/sand.png'),
+    gravel: loadTexture('images/gravel.png'),
 };
 
 const TOOL_TYPES = {
@@ -142,6 +144,24 @@ export const blocks = {
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
         scarcity: 0.8
+    },
+    sand: {
+        id: 12,
+        name: 'sand',
+        type: 'block',
+        stackable: true,
+        hardness: 0.5,
+        material: new THREE.MeshLambertMaterial({ map: textures.sand }),
+        icon: 'images/block-icon/send.webp'
+    },
+    gravel: {
+        id: 13,
+        name: 'gravel',
+        type: 'block',
+        stackable: true,
+        hardness: 0.6,
+        material: new THREE.MeshLambertMaterial({ map: textures.gravel }),
+        icon: 'images/block-icon/gravel.webp'
     },
     log: {
         id: 17,

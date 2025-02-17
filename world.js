@@ -9,7 +9,7 @@ export class World extends THREE.Group {
 
     asyncLoading = true;
 
-    drawDistance = 5;
+    drawDistance = 2;
 
     chunkSize = { width: 16, height: 80 };
 
@@ -281,6 +281,7 @@ export class World extends THREE.Group {
         if (coords.block.y === 0) return;
 
         if (chunk) {
+            this.checkRemoveTree(x, y, z);
             chunk.removeBlock(
                 coords.block.x,
                 coords.block.y,
@@ -294,6 +295,43 @@ export class World extends THREE.Group {
             this.revealBlock(x, y + 1, z);
             this.revealBlock(x, y, z - 1);
             this.revealBlock(x, y, z + 1);
+
+        }
+    }
+
+    setBlockInventory(x, y, z, inventory) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+        if (chunk) {
+            chunk.setBlockInventory(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z,
+                inventory
+            );
+        }
+    }
+
+    checkRemoveTree(x, y, z) {
+        const block = this.getBlock(x, y, z);
+        if (block.id == blocks.log.id) {
+
+            for (let dx = -6; dx <= 6; dx++) {
+                for (let dy = -6; dy <= 6; dy++) {
+                    for (let dz = -6; dz <= 6; dz++) {
+                        let newX = x + dx;
+                        let newY = y + dy;
+                        let newZ = z + dz;
+
+                        // Optionnel : Exclure le point central (x, y, z) lui-même
+                        if (dx === 0 && dy === 0 && dz === 0) continue;
+
+                        if (this.getBlock(newX, newY, newZ)?.id == blocks.leaves.id)
+                            this.removeBlock( newX, newY, newZ );
+                    }
+                }
+            }
+
         }
     }
 

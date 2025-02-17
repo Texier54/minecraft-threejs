@@ -41,8 +41,9 @@ export class Inventory {
     heldItem = null; // L'objet actuellement tenu
     heldItemElement = document.getElementById('held-item'); // Élément qui suit la souris
 
-    constructor(player) {
+    constructor(player, world) {
         this.player = player;
+        this.world = world;
         this.inventory[0] = this.items[2]; // Table de craft au premier slot
         this.inventory[1] = this.items[1]; // Table de craft au premier slot
         this.inventory[3] = this.items[8]; // Table de craft au premier slot
@@ -72,6 +73,15 @@ export class Inventory {
         this.inventoryContainer.style.display = 'block';
         this.bar.style.display = 'none';
         this.UIID = id;
+        console.log(this.player.selectedCoords);
+        if (this.UIID) {
+            let content = this.world.getBlock(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z).inventory;
+            console.log(content);
+            if (content)
+                this.blockInventory = content;
+            else
+                this.blockInventory = Array(41).fill(null);
+        }
         this.renderInventory();
     }
 
@@ -79,6 +89,8 @@ export class Inventory {
         this.inventoryContainer.style.display = 'none';
         this.bar.style.display = 'grid';
         this.renderBar();
+        if (this.UIID)
+            this.world.setBlockInventory(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z, this.blockInventory);
     }
 
     getBlock(position) {

@@ -356,6 +356,12 @@ export class WorldChunk extends THREE.Group {
         }
     }
 
+    setBlockInventory(x, y, z, inventory) {
+        if (this.inBounds(x, y, z)) {
+            this.data[x][y][z].inventory = inventory;
+        }
+    }
+
     /**
      * Create a new instance for the block at (x,y,z)
      * @param {number} x
@@ -406,7 +412,7 @@ export class WorldChunk extends THREE.Group {
      */
     deleteBlockInstance(x, y, z) {
         const block = this.getBlock(x, y, z);
-//console.log(block);
+        //console.log(block);
         if (block.id === blocks.empty.id || block.instanceId === null) return;
 
         // Get the mesh and instance id of the block

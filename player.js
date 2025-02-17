@@ -50,7 +50,7 @@ export class Player {
         const handMaterial = new THREE.MeshBasicMaterial({ map: handTexture });
         this.handMesh = new THREE.Mesh(handGeometry, handMaterial);
 
-// Positionne la main dans le champ de vision du joueur
+        // Positionne la main dans le champ de vision du joueur
         this.handMesh.position.set(0.4, -0.25, -0.4); // Ajuste les coordonnées pour la perspective
         this.handMesh.rotation.x = 0.6;
         this.handMesh.rotation.z = -0.4;

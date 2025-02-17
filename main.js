@@ -37,7 +37,7 @@ const fpsDisplay = document.getElementById('fps');
 
 const player = new Player(scene, world);
 const physics = new Physics(scene);
-const inventory = new Inventory(player);
+const inventory = new Inventory(player, world);
 const menu = new Menu(world, player, inventory);
 const ui = new UI(player, inventory);
 
@@ -45,8 +45,8 @@ player.setInventory(inventory);
 player.setUI(ui);
 
 //DEBUG
-//player.load();
-//inventory.load();
+player.load();
+inventory.load();
 
 
 const pig = new Pig();
@@ -118,6 +118,8 @@ window.addEventListener('keydown', (event) => {
         else {
             player.controls.lock();
             inventory.hide();
+            //world.setBlockInventory(-7, 68, 9, ['id']);
+            console.log(world.getBlock(-7, 68, 9));
         }
 
     }
@@ -168,29 +170,7 @@ function animate() {
 
 animate();
 
-checkCreateChunk();
 setupLights();
-
-let selectedItemId = null;
-
-window.addEventListener('keydown', (event) => {
-
-    document.querySelectorAll('.item').forEach(el => el.classList.remove('selected'));
-    let id = null;
-    if (event.key === '&') id = 27;
-    if (event.key === 'é') id = 28;
-    if (event.key === '"') id = 29;
-    if (event.key === "'") id = 30;
-    if (event.key === '(') id = 31;
-    if (event.key === '§') id = 32;
-    if (event.key === 'è') id = 33;
-    if (event.key === '!') id = 34;
-    if (event.key === 'ç') id = 35;
-
-    if (id)
-        inventory.selectItem(id);
-
-});
 
 function updateChunkLOD() {
     chunks.forEach((chunk, key) => {
@@ -203,19 +183,6 @@ function updateChunkLOD() {
     });
 }
 
-
-
-function checkCreateChunk() {
-    //world.generate(0, 0, chunks, scene);
-    const playerChunkX = Math.floor(player.position.x / 4);
-    const playerChunkZ = Math.floor(player.position.z / 16);
-
-    for (let dx = -1; dx <= 1; dx++) {
-        for (let dz = -1; dz <= 1; dz++) {
-            //world.generate(playerChunkX + dx, playerChunkZ + dz, chunks, grassMaterial, scene);
-        }
-    }
-}
 
 document.addEventListener("contextmenu", function(e){
     e.preventDefault();
