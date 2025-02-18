@@ -134,6 +134,17 @@ export const RecipesList = {
             id: blocks.stick.id,
             quantity: 4,
         },
+    },
+    torch: {
+        pattern: [
+            [blocks.coalOre.id, null, null],
+            [blocks.stick.id, null, null],
+            [null, null, null],
+        ],
+        output: {
+            id: blocks.torch.id,
+            quantity: 4,
+        },
     }
 }
 

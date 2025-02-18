@@ -25,7 +25,7 @@ export class Player {
     constructor(scene, world, inventory, ui) {
 
         //this.player.position.set(0, 5, 0);
-        this.position.set(10, 80, 10);
+        this.position.set(10, 120, 10);
         scene.add(this.camera);
 
         this.scene = scene;
@@ -297,6 +297,7 @@ export class Player {
             this.scene.remove(this.meshHandItem);
             this.camera.remove(this.meshHandItem);
             const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+            //console.log(getBlockByIdFast(id).geometry.width);
             this.meshHandItem = new THREE.Mesh(geometry, getBlockByIdFast(id).material);
             //meshHand.name = blockType.id;
             this.meshHandItem.count = 0;

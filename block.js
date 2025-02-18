@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
 const textureLoader = new THREE.TextureLoader();
+const geometryBlock = new THREE.BoxGeometry(1, 1, 1);
+const geometryTorch = new THREE.BoxGeometry(0.15, 0.8, 0.15);
 
 function loadTexture(path) {
     const texture = textureLoader.load(path);
@@ -33,6 +35,8 @@ const textures = {
     chest_front: loadTexture('images/chest_front.png'),
     sand: loadTexture('images/sand.png'),
     gravel: loadTexture('images/gravel.png'),
+    torch: loadTexture('images/torch.png'),
+    torch_top: loadTexture('images/torch_top.png'),
 };
 
 const TOOL_TYPES = {
@@ -76,6 +80,7 @@ export const blocks = {
         icon: 'images/block-icon/grass.png',
         tool: TOOL_TYPES.SHOVEL,
         need_tool: false,
+        geometry: geometryBlock,
     },
     dirt: {
         id: 2,
@@ -87,6 +92,7 @@ export const blocks = {
         icon: 'images/block-icon/dirt.webp',
         tool: TOOL_TYPES.SHOVEL,
         need_tool: false,
+        geometry: geometryBlock,
     },
     stone: {
         id: 3,
@@ -100,6 +106,7 @@ export const blocks = {
         icon: 'images/block-icon/stone.png',
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
+        geometry: geometryBlock,
     },
     coalOre: {
         id: 4,
@@ -113,6 +120,7 @@ export const blocks = {
         icon: 'images/block-icon/coal_ore.png',
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
+        geometry: geometryBlock,
     },
     ironOre: {
         id: 5,
@@ -126,6 +134,7 @@ export const blocks = {
         icon: 'images/block-icon/iron_ore.png',
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
+        geometry: geometryBlock,
     },
     planks: {
         id: 6,
@@ -134,7 +143,8 @@ export const blocks = {
         stackable: true,
         hardness: 2,
         material: new THREE.MeshLambertMaterial({ map: textures.planks }),
-        icon: 'images/block-icon/wood.png'
+        icon: 'images/block-icon/wood.png',
+        geometry: geometryBlock,
     },
     bedrock: {
         id: 7,
@@ -143,7 +153,8 @@ export const blocks = {
         stackable: true,
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
         scale: { x: 30, y: 30, z: 30 },
-        scarcity: 0.8
+        scarcity: 0.8,
+        geometry: geometryBlock,
     },
     sand: {
         id: 12,
@@ -152,7 +163,8 @@ export const blocks = {
         stackable: true,
         hardness: 0.5,
         material: new THREE.MeshLambertMaterial({ map: textures.sand }),
-        icon: 'images/block-icon/send.webp'
+        icon: 'images/block-icon/send.webp',
+        geometry: geometryBlock,
     },
     gravel: {
         id: 13,
@@ -161,7 +173,8 @@ export const blocks = {
         stackable: true,
         hardness: 0.6,
         material: new THREE.MeshLambertMaterial({ map: textures.gravel }),
-        icon: 'images/block-icon/gravel.webp'
+        icon: 'images/block-icon/gravel.webp',
+        geometry: geometryBlock,
     },
     log: {
         id: 17,
@@ -178,7 +191,8 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.log })  // back
         ],
         icon: 'images/block-icon/log.png',
-        tool: TOOL_TYPES.AXE
+        tool: TOOL_TYPES.AXE,
+        geometry: geometryBlock,
     },
     leaves: {
         id: 18,
@@ -187,7 +201,8 @@ export const blocks = {
         stackable: true,
         hardness: 0.2,
         material: new THREE.MeshLambertMaterial({ map: textures.leaves }),
-        icon: 'images/block-icon/leaves.webp'
+        icon: 'images/block-icon/leaves.webp',
+        geometry: geometryBlock,
     },
     glass: {
         id: 20,
@@ -196,7 +211,27 @@ export const blocks = {
         stackable: true,
         hardness: 0.3,
         material: new THREE.MeshLambertMaterial({ map: textures.glass, transparent: true }),
-        icon: 'images/block-icon/glass.webp'
+        transparent: false,
+        icon: 'images/block-icon/glass.webp',
+        geometry: geometryBlock,
+    },
+    torch: {
+        id: 50,
+        name: 'torch',
+        type: 'block',
+        stackable: true,
+        hardness: 0,
+        material: [
+            new THREE.MeshLambertMaterial({ map: textures.torch }), // right
+            new THREE.MeshLambertMaterial({ map: textures.torch }), // left
+            new THREE.MeshLambertMaterial({ map: textures.torch_top }), // top
+            new THREE.MeshLambertMaterial({ map: textures.torch }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.torch }), // front
+            new THREE.MeshLambertMaterial({ map: textures.torch })  // back
+        ],
+        transparent: true,
+        icon: 'images/block-icon/torch.webp',
+        geometry: geometryTorch,
     },
     chest: {
         id: 54,
@@ -213,7 +248,8 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.chest_side })  // back
         ],
         icon: 'images/block-icon/chest.webp',
-        interface: true
+        interface: true,
+        geometry: geometryBlock,
     },
     craftingTable: {
         id: 58,
@@ -230,7 +266,8 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.crafting_table_side })  // back
         ],
         icon: 'images/block-icon/crafting_table.webp',
-        interface: true
+        interface: true,
+        geometry: geometryBlock,
     },
     furnace: {
         id: 61,
@@ -247,7 +284,8 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.furnace_side })  // back
         ],
         icon: 'images/block-icon/furnace.webp',
-        interface: true
+        interface: true,
+        geometry: geometryBlock,
     },
     iron_pickaxe: {
         id: 297,

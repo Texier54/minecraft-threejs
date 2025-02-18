@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { blocks, resources } from './block.js';
+import {blocks, getBlockByIdFast, resources} from './block.js';
 import { WorldChunk } from './worldChunk.js';
 
 import { DataStore } from './dataStore.js';
@@ -252,13 +252,15 @@ export class World extends THREE.Group {
                 blockId
             );
 
-            // Hide neighboring blocks if they are completely obscured
-            this.hideBlock(x - 1, y, z);
-            this.hideBlock(x + 1, y, z);
-            this.hideBlock(x, y - 1, z);
-            this.hideBlock(x, y + 1, z);
-            this.hideBlock(x, y, z - 1);
-            this.hideBlock(x, y, z + 1);
+            if (getBlockByIdFast(blockId).transparent !== true) {
+                // Hide neighboring blocks if they are completely obscured
+                this.hideBlock(x - 1, y, z);
+                this.hideBlock(x + 1, y, z);
+                this.hideBlock(x, y - 1, z);
+                this.hideBlock(x, y + 1, z);
+                this.hideBlock(x, y, z - 1);
+                this.hideBlock(x, y, z + 1);
+            }
 
         }
 

@@ -7,7 +7,6 @@ export class WorldChunk extends THREE.Group {
 
     chunks;
     chunkSize;
-    geometry;
     height;
     meshs;
 
@@ -23,7 +22,6 @@ export class WorldChunk extends THREE.Group {
 
         // Créer le terrain
         const blockSize = 1;
-        this.geometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
         this.rng = new RNG(this.params.seed);
 
     }
@@ -231,7 +229,7 @@ export class WorldChunk extends THREE.Group {
         Object.values(blocks)
             .filter(blockType => blockType.id !== blocks.empty.id && blockType.type === 'block')
             .forEach(blockType => {
-                const mesh = new THREE.InstancedMesh(this.geometry, blockType.material, maxBlock);
+                const mesh = new THREE.InstancedMesh(blockType.geometry, blockType.material, maxBlock);
                 mesh.name = blockType.id;
                 mesh.count = 0;
                 mesh.castShadow = true;

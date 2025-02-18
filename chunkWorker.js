@@ -66,6 +66,9 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
                 (position.z + z) / params.terrain.scale
             );
 
+
+            //console.log(getBiome(rng, x, z));
+
             const scaledNoise = params.terrain.offset + params.terrain.magnitude * noiseValue;
             let height = Math.floor(scaledNoise*chunkHeight); // Hauteur basée sur le bruit
             height = Math.max(1, Math.min(height, chunkHeight -1));
@@ -80,7 +83,10 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
                     generateResources(rng, x, y, z, position);
                     //generateCaves(simplex, x, y, z, position);
                 } else if (y == height) {
-                    setBlockId(x, y, z, blocks.grass.id);
+                    if (getBiome(rng, x, z, position) == 'plains')
+                        setBlockId(x, y, z, blocks.grass.id);
+                    else
+                        setBlockId(x, y, z, blocks.sand.id);
                     // Randomly generate a tree
                     if (Math.random() < params.trees.frequency) {
                         generateTree(params.seed, 1, x, height + 1, z, params);
@@ -167,6 +173,16 @@ function generateResources(seed, x, y, z, position) {
 
     })
 
+}
+
+function getBiome(seed, x, z, position) {
+    const simplex = new SimplexNoise(seed);
+    let scale = 0.01; // Plus la valeur est petite, plus les biomes sont grands
+    let noiseValue = simplex.noise((position.x + x) * scale, (position.z + z) * scale);
+
+    if (noiseValue < -0.3) return 'desert';
+    if (noiseValue < 0.3) return 'plains';
+    return 'forest';
 }
 
 function generateCaves(simplex, x, y, z, position) {
