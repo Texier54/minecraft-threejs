@@ -243,14 +243,15 @@ export class WorldChunk extends THREE.Group {
 
                 for (let y = 0; y < this.height; y++) {
 
-
-                    if (!this.isBlockObscured(x, y, z) && this.getBlock(x, y, z) != null && this.getBlock(x, y, z).id != blocks.empty.id) {
-                        matrix.setPosition(x, y, z);
-                        meshes[this.getBlock(x, y, z).id].setMatrixAt(meshes[this.getBlock(x, y, z).id].count, matrix);
-                        const mesh = meshes[this.getBlock(x, y, z).id];
+                    const block = this.getBlock(x, y, z);
+                    if (!this.isBlockObscured(x, y, z) && block != null && block.id != blocks.empty.id) {
+                        const offsetHeight = (1-meshes[block.id].geometry.parameters.height)/2;
+                        matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
+                        meshes[block.id].setMatrixAt(meshes[block.id].count, matrix);
+                        const mesh = meshes[block.id];
                         const instanceId = mesh.count;
                         this.setBlockInstanceId(x, y, z, instanceId);
-                        meshes[this.getBlock(x, y, z).id].count++;
+                        meshes[block.id].count++;
                     }
                 }
                 //chunk.add(mesh);
@@ -378,10 +379,19 @@ export class WorldChunk extends THREE.Group {
 
             // Compute the transformation matrix for the new instance and update the instanced
             const matrix = new THREE.Matrix4();
-            matrix.setPosition(x, y, z);
+            const offsetHeight = (1-mesh.geometry.parameters.height)/2;
+            matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
             mesh.setMatrixAt(instanceId, matrix);
             mesh.instanceMatrix.needsUpdate = true;
             mesh.computeBoundingSphere();
+
+            if (block.id == blocks.torch.id) {
+                const light = new THREE.PointLight(0xffa500, 2, 7, 2); // Couleur orange, intensité, distance, atténuation
+                light.position.set(x, y + 0.5, z); // Légèrement au-dessus de la torche
+                light.castShadow = true; // Permettre les ombres si activé dans la scène
+
+                this.add(light);
+            }
         }
     }
 

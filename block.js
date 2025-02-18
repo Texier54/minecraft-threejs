@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 const textureLoader = new THREE.TextureLoader();
 const geometryBlock = new THREE.BoxGeometry(1, 1, 1);
-const geometryTorch = new THREE.BoxGeometry(0.15, 0.8, 0.15);
+const geometryTorch = new THREE.BoxGeometry(0.12, 0.7, 0.12);
 
 function loadTexture(path) {
     const texture = textureLoader.load(path);
@@ -164,6 +164,8 @@ export const blocks = {
         hardness: 0.5,
         material: new THREE.MeshLambertMaterial({ map: textures.sand }),
         icon: 'images/block-icon/send.webp',
+        tool: TOOL_TYPES.SHOVEL,
+        need_tool: false,
         geometry: geometryBlock,
     },
     gravel: {

@@ -73,6 +73,7 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
             let height = Math.floor(scaledNoise*chunkHeight); // Hauteur basée sur le bruit
             height = Math.max(1, Math.min(height, chunkHeight -1));
 
+            let biome = getBiome(simplex, x, z, position);
 
             for (let y = 0; y < chunkHeight; y++) {
 
@@ -83,12 +84,19 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
                     generateResources(rng, x, y, z, position);
                     //generateCaves(simplex, x, y, z, position);
                 } else if (y == height) {
-                    if (getBiome(rng, x, z, position) == 'plains')
+
+                    if (biome == 'plains')
+                        setBlockId(x, y, z, blocks.grass.id);
+                    else if (biome == 'forest')
                         setBlockId(x, y, z, blocks.grass.id);
                     else
                         setBlockId(x, y, z, blocks.sand.id);
+
+                    let multiTree = 1;
+                    if (biome == 'forest')
+                        multiTree = 6;
                     // Randomly generate a tree
-                    if (Math.random() < params.trees.frequency) {
+                    if (biome != 'desert' && Math.random() < params.trees.frequency * multiTree) {
                         generateTree(params.seed, 1, x, height + 1, z, params);
                     }
                 }
@@ -175,24 +183,32 @@ function generateResources(seed, x, y, z, position) {
 
 }
 
-function getBiome(seed, x, z, position) {
-    const simplex = new SimplexNoise(seed);
-    let scale = 0.01; // Plus la valeur est petite, plus les biomes sont grands
-    let noiseValue = simplex.noise((position.x + x) * scale, (position.z + z) * scale);
+function getBiome(simplex, x, z, position) {
 
-    if (noiseValue < -0.3) return 'desert';
-    if (noiseValue < 0.3) return 'plains';
-    return 'forest';
+    let scale = 0.01; // Plus la valeur est petite, plus les biomes sont grands
+    let noiseValue = simplex.noise((position.x + x) / 1500, (position.z + z) / 1500);
+
+    noiseValue += 0.2 * (simplex.noise(
+        (position.x + x) / 500,
+        (position.z + z) / 500
+    ));
+
+    if (noiseValue < 0.25) return 'plains';
+    if (noiseValue < 0.5) return 'forest';
+    return 'desert';
 }
 
 function generateCaves(simplex, x, y, z, position) {
 
     const scale = 0.02; // Fréquence du bruit, à ajuster pour la taille des filons
-    const noiseValue = simplex.noise(x * scale, y * scale, z * scale);
+    const noiseValue = simplex.noise(position.x + x /500, position.y + y / 500, position.z + z /500);
+
+    let baseNoise = simplex.noise(position.x +x * 0.1, position.y+y * 0.1, position.z+z * 0.1);
+    let detailNoise = simplex.noise(position.x +x * 0.05, position.y+y * 0.05, position.z+z * 0.05) * 0.5;
+    let finalNoise = baseNoise + detailNoise;
 
     // Définition des types de minerai en fonction du bruit et de la profondeur
-    if (noiseValue > 0.4) {
-
-            setBlockId(x, y, z, blocks.dirt.id); // Diamants en profondeur
+    if (finalNoise > 0.4) {
+            setBlockId(x, y, z, blocks.coalOre.id); // Diamants en profondeur
     }
 }

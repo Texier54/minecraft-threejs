@@ -158,8 +158,12 @@ function animate() {
         fpsDisplay.textContent = `FPS: ${fps}`;
         prevTime = now;
         frameCount = 0;
-        updateChunkLOD();
-        //checkCreateChunk();
+
+        // Position the sun relative to the player. Need to adjust both the
+        // position and target of the sun to keep the same sun angle
+        sun.position.copy(player.camera.position);
+        sun.position.sub(new THREE.Vector3(-50, -50, -50));
+        sun.target.position.copy(player.camera.position);
     }
 
 
@@ -167,21 +171,8 @@ function animate() {
     renderer.render(scene, player.camera);
     requestAnimationFrame(animate);
 }
-
-animate();
-
 setupLights();
-
-function updateChunkLOD() {
-    chunks.forEach((chunk, key) => {
-        const distance = player.position.distanceTo(chunk.position);
-        if (distance > 128) {
-            chunk.visible = false; // Masquer les chunks éloignés
-        } else {
-            chunk.visible = true;
-        }
-    });
-}
+animate();
 
 
 document.addEventListener("contextmenu", function(e){
