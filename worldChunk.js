@@ -374,6 +374,11 @@ export class WorldChunk extends THREE.Group {
         if (block && block.id !== blocks.empty.id && block.instanceId === null) {
             // Get the mesh and instance id of the block
             const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
+            if (block.id == 50) {
+                console.log(mesh.count);
+                console.log(x, y, z);
+            }
+
             const instanceId = mesh.count++;
             this.setBlockInstanceId(x, y, z, instanceId);
 
@@ -435,7 +440,8 @@ export class WorldChunk extends THREE.Group {
         // Updating the instance id of the block in the last position to its new instance id
         const v = new THREE.Vector3();
         v.applyMatrix4(lastMatrix);
-        this.setBlockInstanceId(v.x, v.y, v.z, instanceId);
+        //this.setBlockInstanceId(v.x, v.y, v.z, instanceId); PROBLEME TORCH
+        this.setBlockInstanceId(x, y, z, instanceId);
 
         // Swapping the transformation matrices
         mesh.setMatrixAt(instanceId, lastMatrix);

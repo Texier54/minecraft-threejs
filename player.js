@@ -109,7 +109,6 @@ export class Player {
                         this.ui.open(selectedBlock.id);
                     }
                 } else {
-                    console.log(event.button);
                     this.startDestroyingBlock(event);
                 }
             }
@@ -153,7 +152,7 @@ export class Player {
             destructionTime = 0;
 
 
-        console.log(destructionTime);
+        //console.log(destructionTime);
         this.isDestroying = true;
         this.animateBlockBreaking(destructionTime);
 
@@ -237,12 +236,18 @@ export class Player {
 
                 // extrait la position du bloc transformation matrix et le met dans coords
                 this.selectedCoords = chunk.position.clone();
-                this.selectedCoordsNormal = chunk.position.clone();
+                // convertit les coordonnées locales du bloc en coordonnées mondiales.
                 this.selectedCoords.applyMatrix4(blockMatrix);
-                this.selectedCoordsNormal.applyMatrix4(blockMatrix);
 
-                //si on ajoute un bloc
-                this.selectedCoordsNormal.add(intersected.normal);
+                // Arrondir les coordonnées à des entiers (alignement sur la grille)
+                this.selectedCoords.set(
+                    Math.round(this.selectedCoords.x),
+                    Math.round(this.selectedCoords.y),
+                    Math.round(this.selectedCoords.z)
+                );
+
+                // Si on ajoute un bloc, il doit être placé à côté du bloc sélectionné
+                this.selectedCoordsNormal = this.selectedCoords.clone().add(intersected.normal);
 
                 this.selectionHelper.position.copy(this.selectedCoords);
                 this.selectionHelper.visible = true;
