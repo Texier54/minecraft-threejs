@@ -358,6 +358,7 @@ export class Player {
         if (event.code === 'KeyA') this.input.x = -this.maxSpeed;
         if (event.code === 'KeyD') this.input.x = this.maxSpeed;
         if (event.code === 'Space') if (this.onGround) this.velocity.y += this.jumpSpeed;
+        if (event.code === 'F5') this.camera.position.set(this.camera.position.x, this.camera.position.y+1, this.camera.position.z);
     }
 
     onKeyUp(event) {

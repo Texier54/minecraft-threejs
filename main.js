@@ -110,7 +110,7 @@ const chunks = new Map(); // Contiendra les chunks générés
 
 
 window.addEventListener('keydown', (event) => {
-    if (event.key === 'e') {
+    if (event.code === 'KeyE') {
         if (player.controls.isLocked) {
             player.controls.unlock();
             inventory.show();
@@ -118,8 +118,6 @@ window.addEventListener('keydown', (event) => {
         else {
             player.controls.lock();
             inventory.hide();
-            //world.setBlockInventory(-7, 68, 9, ['id']);
-            console.log(world.getBlock(-7, 68, 9));
         }
 
     }
