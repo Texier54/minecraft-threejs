@@ -391,7 +391,7 @@ export class WorldChunk extends THREE.Group {
             mesh.computeBoundingSphere();
 
             if (block.id == blocks.torch.id) {
-                const light = new THREE.PointLight(0xffa500, 2, 7, 2); // Couleur orange, intensité, distance, atténuation
+                const light = new THREE.PointLight(0xffa500, 8, 14, 2); // Couleur orange, intensité, distance, atténuation
                 light.position.set(x, y + 0.5, z); // Légèrement au-dessus de la torche
                 light.castShadow = true; // Permettre les ombres si activé dans la scène
 
@@ -441,7 +441,7 @@ export class WorldChunk extends THREE.Group {
         const v = new THREE.Vector3();
         v.applyMatrix4(lastMatrix);
         //this.setBlockInstanceId(v.x, v.y, v.z, instanceId); PROBLEME TORCH
-        this.setBlockInstanceId(x, y, z, instanceId);
+        this.setBlockInstanceId(v.x, Math.round(v.y), v.z, instanceId);
 
         // Swapping the transformation matrices
         mesh.setMatrixAt(instanceId, lastMatrix);

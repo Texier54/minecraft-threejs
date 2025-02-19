@@ -3,25 +3,17 @@ import {RecipesList} from "./recipes.js";
 
 
 export const SmeltingList = {
-    planks: {
-        pattern: [
-            [blocks.log.id, null, null],
-            [null, null, null],
-            [null, null, null],
-        ],
+    iron_ingot: {
+        input: blocks.ironOre.id,
         output: {
-            id: blocks.planks.id,
-            quantity: 4,
+            id: blocks.iron_ingot.id,
+            quantity: 1,
         },
     },
-    wooden_shovel: {
-        pattern: [
-            [null, blocks.planks.id, null],
-            [null, blocks.stick.id, null],
-            [null, blocks.stick.id, null],
-        ],
+    glass: {
+        input: blocks.sand.id,
         output: {
-            id: blocks.wooden_shovel.id,
+            id: blocks.glass.id,
             quantity: 1,
         },
     },
@@ -39,20 +31,11 @@ export class Smelting {
         return gain;
     }
 
-    checkSmelting(grid) {
-        console.log(grid);
+    checkSmelting(input) {
+        console.log(input);
         for (const [index, recipe] of Object.entries(SmeltingList)) {
             let match = true;
-            for (let x = 0; x < grid.length; x++) {
-                for (let y = 0; y < grid[0].length; y++) {
-
-                    if (grid[x][y] !== recipe.pattern[x][y]) {
-                        match = false;
-                        break;
-                    }
-                }
-            }
-            if (match) {
+            if (input == recipe.input) {
                 return recipe.output;
             }
         };

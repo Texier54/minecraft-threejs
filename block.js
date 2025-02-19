@@ -163,7 +163,7 @@ export const blocks = {
         stackable: true,
         hardness: 0.5,
         material: new THREE.MeshLambertMaterial({ map: textures.sand }),
-        icon: 'images/block-icon/send.webp',
+        icon: 'images/block-icon/sand.webp',
         tool: TOOL_TYPES.SHOVEL,
         need_tool: false,
         geometry: geometryBlock,
@@ -302,7 +302,7 @@ export const blocks = {
         id: 305,
         name: 'Iron Ingot',
         type: 'item',
-        stackable: false,
+        stackable: true,
         icon: 'images/block-icon/iron_ingot.webp',
     },
     wooden_shovel: {
