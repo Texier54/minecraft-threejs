@@ -45,8 +45,11 @@ player.setInventory(inventory);
 player.setUI(ui);
 
 //DEBUG
-player.load();
-inventory.load();
+if (process.env.NODE_ENV !== 'production') {
+    player.load();
+    inventory.load();
+
+}
 
 
 const pig = new Pig();
@@ -171,7 +174,6 @@ function animate() {
 }
 setupLights();
 animate();
-
 
 document.addEventListener("contextmenu", function(e){
     e.preventDefault();

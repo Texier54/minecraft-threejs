@@ -9,7 +9,7 @@ export class World extends THREE.Group {
 
     asyncLoading = true;
 
-    drawDistance = 8;
+    drawDistance = 2;
 
     chunkSize = { width: 16, height: 80 };
 
