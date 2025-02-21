@@ -152,7 +152,7 @@ export class Player {
             destructionTime = 0;
 
 
-        //console.log(destructionTime);
+        console.log(destructionTime);
         this.isDestroying = true;
         this.animateBlockBreaking(destructionTime);
 
@@ -166,7 +166,11 @@ export class Player {
             destructionProgress += 100; // Augmente la progression toutes les 100ms
 
             if (destructionProgress >= destructionTime) {
-                this.inventory.addBlock(blockToRemove);
+                const blockToRemoveO = getBlockByIdFast(blockToRemove.id);
+                if (Object.hasOwn(blockToRemoveO, 'drops'))
+                    this.inventory.addBlock(blockToRemoveO.drops);
+                else
+                    this.inventory.addBlock(blockToRemove.id);
                 this.world.removeBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
                 var audio = new Audio('audio/dirt1.ogg');
                 audio.play();
@@ -248,6 +252,24 @@ export class Player {
 
                 // Si on ajoute un bloc, il doit être placé à côté du bloc sélectionné
                 this.selectedCoordsNormal = this.selectedCoords.clone().add(intersected.normal);
+
+                const blockSelected = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z)
+
+
+                if (blockSelected) {
+                    const selectionMaterial = new THREE.MeshBasicMaterial({
+                        color: 0x000000, // Couleur du cube (noir ou autre)
+                        transparent: true, // Permet la transparence
+                        opacity: 0.2, // Niveau de transparence
+
+                    });
+
+                    //adapater taille mesh au block highligt
+                    let geometry = getBlockByIdFast(blockSelected.id).geometry;
+                    this.selectionHelper.scale.set( geometry.parameters.width+0.01, geometry.parameters.height+0.01, geometry.parameters.depth+0.01);
+
+                }
+
 
                 this.selectionHelper.position.copy(this.selectedCoords);
                 this.selectionHelper.visible = true;

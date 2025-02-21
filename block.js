@@ -121,6 +121,7 @@ export const blocks = {
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
         geometry: geometryBlock,
+        drops: 302
     },
     ironOre: {
         id: 5,
@@ -297,6 +298,13 @@ export const blocks = {
         icon: 'images/block-icon/iron_pickaxe.webp',
         tool_type: TOOL_TYPES.PICKAXE,
         tool_material: TOOL_MATERIALS.IRON
+    },
+    coal: {
+        id: 302,
+        name: 'Coal',
+        type: 'item',
+        stackable: true,
+        icon: 'images/block-icon/coal.webp',
     },
     iron_ingot: {
         id: 305,

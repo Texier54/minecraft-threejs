@@ -35,7 +35,7 @@ export class Smelting {
         console.log(input);
         for (const [index, recipe] of Object.entries(SmeltingList)) {
             let match = true;
-            if (input == recipe.input) {
+            if (input[0].block == recipe.input) {
                 return recipe.output;
             }
         };

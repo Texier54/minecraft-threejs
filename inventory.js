@@ -3,6 +3,7 @@
 import {blocks, getBlockByIdFast, resources} from './block.js';
 import { Recipes } from './recipes.js';
 import { Smelting } from './smelting.js';
+import { Furnace } from './furnace.js';
 import {UIList} from "./ui.js";
 
 export class Inventory {
@@ -65,7 +66,7 @@ export class Inventory {
         });
 
         this.recipes = new Recipes();
-        this.smelting = new Smelting();
+        this.furnace = new Furnace();
 
         document.addEventListener('keydown', this.onKeyDown.bind(this));
     }
@@ -152,12 +153,6 @@ export class Inventory {
 
                 if (index < 36)
                     this.inventoryStockage.appendChild(slot);
-                /*
-                else if (index < 40)
-                    this.inventoryCrafter.appendChild(slot);
-                else
-                    this.inventoryOutput.appendChild(slot);
-*/
 
         });
 
@@ -372,12 +367,8 @@ export class Inventory {
                 this.blockInventory[this.output] = { block : ouput.id, quantity : ouput.quantity};
             else
                 this.blockInventory[this.output] = null;
-        } else if (this.UIID == 61) {
-            const ouput = this.smelting.checkSmelting(this.inventoryToGrid());
-            if (ouput)
-                this.blockInventory[this.output] = { block : ouput.id, quantity : ouput.quantity};
-            else
-                this.blockInventory[this.output] = null;
+        } else if (this.UIID == blocks.furnace.id) {
+            this.furnace.handle(this.blockInventory);
         }
 
 
@@ -403,7 +394,7 @@ export class Inventory {
         let saved = false;
         this.inventory.forEach((item, index) => {
             if (index < 36) {
-                if (item?.block == blockToAdd.id) {
+                if (item?.block == blockToAdd) {
                     item.quantity += 1;
                     saved = true;
                 }
@@ -413,8 +404,8 @@ export class Inventory {
             this.inventory.forEach((item, index) => {
                 if (index < 36 && !saved) {
                     if (item == null) {
-                        console.log(blockToAdd.id);
-                        this.inventory[index] = { quantity: 1, block: blockToAdd.id };
+                        console.log(blockToAdd);
+                        this.inventory[index] = { quantity: 1, block: blockToAdd };
                         saved = true;
                     }
                 }
@@ -473,7 +464,7 @@ export class Inventory {
         if (event.code === 'Digit6') id = 32;
         if (event.code === 'Digit7') id = 33;
         if (event.code === 'Digit8') id = 34;
-        if (event.code === 'Digit0') id = 35;
+        if (event.code === 'Digit9') id = 35;
 
         if (id)
             this.selectItem(id);
