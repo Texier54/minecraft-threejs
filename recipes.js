@@ -49,7 +49,7 @@ export const RecipesList = {
     },
     stone_pickaxe: {
         pattern: [
-            [blocks.stone.id, blocks.stone.id, blocks.stone.id],
+            [blocks.cobblestone.id, blocks.cobblestone.id, blocks.cobblestone.id],
             [null, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
@@ -60,7 +60,7 @@ export const RecipesList = {
     },
     stone_shovel: {
         pattern: [
-            [null, blocks.stone.id, null],
+            [null, blocks.cobblestone.id, null],
             [null, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
@@ -71,8 +71,8 @@ export const RecipesList = {
     },
     stone_axe: {
         pattern: [
-            [blocks.stone.id, blocks.stone.id, null],
-            [blocks.stone.id, blocks.stick.id, null],
+            [blocks.cobblestone.id, blocks.cobblestone.id, null],
+            [blocks.cobblestone.id, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
         output: {
@@ -115,9 +115,9 @@ export const RecipesList = {
     },
     furnace: {
         pattern: [
-            [blocks.stone.id, blocks.stone.id, blocks.stone.id],
-            [blocks.stone.id, null, blocks.stone.id],
-            [blocks.stone.id, blocks.stone.id, blocks.stone.id],
+            [blocks.cobblestone.id, blocks.cobblestone.id, blocks.cobblestone.id],
+            [blocks.cobblestone.id, null, blocks.cobblestone.id],
+            [blocks.cobblestone.id, blocks.cobblestone.id, blocks.cobblestone.id],
         ],
         output: {
             id: blocks.furnace.id,
@@ -137,7 +137,7 @@ export const RecipesList = {
     },
     torch: {
         pattern: [
-            [blocks.coalOre.id, null, null],
+            [blocks.coal.id, null, null],
             [blocks.stick.id, null, null],
             [null, null, null],
         ],
