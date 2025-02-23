@@ -107,6 +107,10 @@ export class Player {
                         this.inventory.removeBlock(this.inventory.getSelectedItem().block);
                         var audio = new Audio('audio/dirt1.ogg');
                         audio.play();
+
+                        this.socket.emit("addBlock", {
+                            x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block
+                        });
                     } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
                         this.ui.open(selectedBlock.id);
                     }
@@ -174,6 +178,9 @@ export class Player {
                 else
                     this.inventory.addBlock(blockToRemove.id);
                 this.world.removeBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
+                this.socket.emit("removeBlock", {
+                     x: this.selectedCoords.x, y: this.selectedCoords.y, z: this.selectedCoords.z
+                });
                 var audio = new Audio('audio/dirt1.ogg');
                 audio.play();
                 this.isDestroying = false;

@@ -210,6 +210,14 @@ socket.on('player-disconnect', (id) => {
     scene.remove(playersMesh[id]);
 });
 
+socket.on('addBlock', (data) => {
+    world.addBlock(data.x, data.y, data.z, data.blockId);
+});
+
+socket.on('removeBlock', (data) => {
+    world.removeBlock(data.x, data.y, data.z);
+});
+
 
 // Quand un joueur bouge
 socket.on('playerState', (allPlayers) => {
