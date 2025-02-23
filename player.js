@@ -22,7 +22,9 @@ export class Player {
     selectedCoordsNormal = null;
 
 
-    constructor(scene, world, inventory, ui) {
+    constructor(scene, world, socket) {
+
+        this.socket = socket;
 
         //this.player.position.set(0, 5, 0);
         this.position.set(10, 120, 10);
@@ -365,6 +367,13 @@ export class Player {
             this.position.y += this.velocity.y * dt;
 
             document.getElementById('player-position').innerHTML = this.toString();
+            const direction = new THREE.Vector3();
+            this.camera.getWorldDirection(direction);
+            this.socket.emit("playerState", {
+                id: this.socket.id, // Identifiant unique du joueur
+                position: { x: this.position.x, y: this.position.y, z: this.position.z },
+                direction : { x: direction.x, y: direction.y, z: direction.z }
+            });
         }
     }
 
@@ -406,8 +415,8 @@ export class Player {
     save() {
         (async () => {
             const dataSize = new Blob([JSON.stringify(this.position)]).size; // Taille en octets
-            console.log(`Taille des données : ${dataSize} octets`);
-            console.log(this.position);
+            //console.log(`Taille des données : ${dataSize} octets`);
+            //console.log(this.position);
             const minecraftData = this.position;
             await storeData(minecraftData);
         })();

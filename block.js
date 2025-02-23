@@ -9,6 +9,11 @@ function loadTexture(path) {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.magFilter = THREE.NearestFilter;
     texture.minFilter = THREE.NearestFilter;
+
+    //Active mipmaps pour éviter l’aliasing.
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipMapLinearFilter;
+
     return texture;
 }
 

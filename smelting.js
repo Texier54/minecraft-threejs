@@ -32,10 +32,9 @@ export class Smelting {
     }
 
     checkSmelting(input) {
-        console.log(input);
         for (const [index, recipe] of Object.entries(SmeltingList)) {
             let match = true;
-            if (input[0].block == recipe.input) {
+            if (input[0]?.block == recipe.input) {
                 return recipe.output;
             }
         };

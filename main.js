@@ -10,6 +10,9 @@ import {Physics} from "./physics.js";
 import {Inventory} from "./inventory.js";
 import {Menu} from "./menu.js";
 import {UI} from "./ui.js";
+import { io } from 'socket.io-client';
+
+const socket = io('http://baptiste-texier.ddns.net:3000');
 
 
 const scene = new THREE.Scene();
@@ -35,7 +38,7 @@ document.body.appendChild(renderer.domElement);
 const fpsDisplay = document.getElementById('fps');
 
 
-const player = new Player(scene, world);
+const player = new Player(scene, world, socket);
 const physics = new Physics(scene);
 const inventory = new Inventory(player, world);
 const menu = new Menu(world, player, inventory);
@@ -135,6 +138,12 @@ var frameCount = 0;
 var prevTimeNew = 0;
 const clock = new THREE.Clock(); // Gérer le temps pour un mouvement fluide
 
+
+import Stats from 'three/examples/jsm/libs/stats.module.js';
+
+const stats = new Stats();
+document.body.appendChild(stats.dom);
+
 // Fonction d'animation
 function animate() {
 
@@ -171,6 +180,9 @@ function animate() {
     pig.movePig(deltaTime, world); // Déplacer le cochon
     renderer.render(scene, player.camera);
     requestAnimationFrame(animate);
+
+
+    stats.update(); // Met à jour les statistiques
 }
 setupLights();
 animate();
@@ -179,3 +191,122 @@ document.addEventListener("contextmenu", function(e){
     e.preventDefault();
 }, false);
 
+
+
+
+const players = {}; // Stocker les joueurs affichés
+
+// Quand un joueur rejoint
+socket.emit('join', { username: 'Joueur1', position: { x: 0, y: 70, z: 0 }, direction : { x: 0, y: 0, z: 0 } });
+
+socket.on('player-update', (allPlayers) => {
+    console.log('Joueurs connectés:', allPlayers);
+    updatePlayers(allPlayers);
+});
+
+// Quand un joueur bouge
+socket.on('playerState', (allPlayers) => {
+    updatePlayers(allPlayers);
+});
+
+// Fonction pour mettre à jour les joueurs
+function updatePlayers(allPlayers) {
+    for (let id in allPlayers) {
+        if (id != socket.id) {
+            if (!players[id]) {
+                // Si le joueur n’existe pas encore, on le crée
+                const playerMesh = createPlayerMesh();
+                scene.add(playerMesh);
+                players[id] = playerMesh;
+            }
+
+            //console.log(allPlayers);
+            // Mise à jour de la position
+            players[id].position.set(
+                allPlayers[id].position.x,
+                allPlayers[id].position.y-1,
+                allPlayers[id].position.z
+            );
+
+            // Mettre à jour la direction de la vue, en ignorant l'axe Y
+            const playerPos = players[id];
+            const targetX = allPlayers[id].position.x + allPlayers[id].direction.x;
+            const targetZ = allPlayers[id].position.z + allPlayers[id].direction.z;
+
+            // Corriger le décalage de 45° (ajustement de l'angle)
+            const direction = new THREE.Vector3(targetX, playerPos.position.y, targetZ);
+
+            // Calculer la direction à partir de la position du joueur pour éviter le décalage
+            const angle = Math.atan2(direction.z - playerPos.position.z, direction.x - playerPos.position.x);
+            players[id].rotation.y = angle;  // Appliquer la rotation en Y
+
+            // Optionnel : Pour éviter que le joueur tourne dans une direction incorrecte, tu peux aussi forcer un angle spécifique :
+            // players[id].rotation.y -= Math.PI / 4; // Si tu veux compenser un décalage de 45°.
+
+            // Utilisation de lookAt pour ajuster le joueur, avec la rotation correcte appliquée
+            players[id].lookAt(new THREE.Vector3(targetX, playerPos.position.y, targetZ));
+        }
+
+    }
+}
+
+// Fonction pour créer un joueur (un simple cube)
+function createPlayerMesh() {
+
+    const playerMesh = new THREE.Group();
+    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.75, 0.25), material);
+    body.position.set( 0, 0.5, 0 );
+    playerMesh.add(body);;
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), material);
+    head.position.set( 0, 1.1, 0 );
+    playerMesh.add(head);
+    const armRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.75, 0.25), material);
+    armRight.position.set( -0.4, 0.5, 0 );
+    playerMesh.add(armRight);
+    const armLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.75, 0.25), material);
+    armLeft.position.set( 0.4, 0.5, 0 );
+    playerMesh.add(armLeft);
+    const legRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.75, 0.25), material);
+    legRight.position.set( -0.1, -0.2, 0 );
+    playerMesh.add(legRight);
+    const legLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.75, 0.25), material);
+    legLeft.position.set( 0.1, -0.2, 0 );
+    playerMesh.add(legLeft);
+    return playerMesh;
+}
+
+
+/*
+// Envoie la position au serveur
+    socket.emit('move', { x: player.position.x, y: player.position.y, z: player.position.z });
+
+    const chunks = {}; // Stocke l’état des chunks
+
+io.on('connection', (socket) => {
+    socket.emit('load-world', chunks); // Envoie le monde au nouveau joueur
+
+    socket.on('update-chunk', ({ position, data }) => {
+        chunks[position] = data;
+        socket.broadcast.emit('update-chunk', { position, data });
+    });
+});
+
+
+socket.on('load-world', (serverChunks) => {
+    Object.keys(serverChunks).forEach((pos) => {
+        loadChunk(pos, serverChunks[pos]); // Charge les chunks du serveur
+    });
+});
+
+socket.on('update-chunk', ({ position, data }) => {
+    loadChunk(position, data); // Met à jour un chunk modifié
+});
+
+// Envoi d’une modification de chunk
+function modifyBlock(chunkPos, blockPos, newBlock) {
+    world[chunkPos][blockPos.x][blockPos.y][blockPos.z] = newBlock;
+    socket.emit('update-chunk', { position: chunkPos, data: world[chunkPos] });
+}
+
+ */
