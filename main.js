@@ -195,6 +195,7 @@ document.addEventListener("contextmenu", function(e){
 
 
 const players = {}; // Stocker les joueurs affichés
+const playersMesh = {};
 
 // Quand un joueur rejoint
 socket.emit('join', { username: 'Joueur1', position: { x: 0, y: 70, z: 0 }, direction : { x: 0, y: 0, z: 0 } });
@@ -206,6 +207,7 @@ socket.on('player-connect', (allPlayers) => {
 
 socket.on('player-disconnect', (id) => {
     console.log('Joueurs déconnecté:', id);
+    scene.remove(playersMesh[id]);
 });
 
 
@@ -223,6 +225,7 @@ function updatePlayers(allPlayers) {
                 const playerMesh = createPlayerMesh();
                 scene.add(playerMesh);
                 players[id] = playerMesh;
+                playersMesh[id] = playerMesh;
             }
 
             //console.log(allPlayers);
