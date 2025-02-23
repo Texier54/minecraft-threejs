@@ -12,7 +12,7 @@ import {Menu} from "./menu.js";
 import {UI} from "./ui.js";
 import { io } from 'socket.io-client';
 
-const socket = io('http://baptiste-texier.ddns.net:3000');
+const socket = io('https://baptiste-texier.ddns.net:3000');
 
 
 const scene = new THREE.Scene();
@@ -199,10 +199,15 @@ const players = {}; // Stocker les joueurs affichés
 // Quand un joueur rejoint
 socket.emit('join', { username: 'Joueur1', position: { x: 0, y: 70, z: 0 }, direction : { x: 0, y: 0, z: 0 } });
 
-socket.on('player-update', (allPlayers) => {
+socket.on('player-connect', (allPlayers) => {
     console.log('Joueurs connectés:', allPlayers);
     updatePlayers(allPlayers);
 });
+
+socket.on('player-disconnect', (id) => {
+    console.log('Joueurs déconnecté:', id);
+});
+
 
 // Quand un joueur bouge
 socket.on('playerState', (allPlayers) => {
