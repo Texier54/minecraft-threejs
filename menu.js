@@ -20,7 +20,6 @@ export class Menu {
         btnLoad.addEventListener('click', () => this.load());
 
         window.addEventListener('keydown', (event) => {
-            console.log(this.inventory.isShow);
             if (event.key === 'Escape' && this.inventory.isShow === false) {
                 this.openMenu();
             }

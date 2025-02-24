@@ -135,6 +135,7 @@ export const blocks = {
         hardness: 2,
         material: new THREE.MeshLambertMaterial({ map: textures.planks }),
         icon: 'images/block-icon/wood.png',
+        tool: TOOL_TYPES.AXE,
         geometry: geometryBlock,
     },
     bedrock: {
@@ -142,9 +143,8 @@ export const blocks = {
         name: 'bedrock',
         type: 'block',
         stackable: true,
+        hardness: 10000,
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
-        scale: { x: 30, y: 30, z: 30 },
-        scarcity: 0.8,
         geometry: geometryBlock,
     },
     sand: {
@@ -156,7 +156,6 @@ export const blocks = {
         material: new THREE.MeshLambertMaterial({ map: textures.sand }),
         icon: 'images/block-icon/sand.webp',
         tool: TOOL_TYPES.SHOVEL,
-        need_tool: false,
         geometry: geometryBlock,
     },
     gravel: {
@@ -167,6 +166,7 @@ export const blocks = {
         hardness: 0.6,
         material: new THREE.MeshLambertMaterial({ map: textures.gravel }),
         icon: 'images/block-icon/gravel.webp',
+        tool: TOOL_TYPES.SHOVEL,
         geometry: geometryBlock,
     },
     ironOre: {
@@ -271,6 +271,7 @@ export const blocks = {
         ],
         icon: 'images/block-icon/chest.webp',
         interface: true,
+        tool: TOOL_TYPES.AXE,
         geometry: geometryBlock,
     },
     craftingTable: {
