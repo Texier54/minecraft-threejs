@@ -45,6 +45,7 @@ export class Inventory {
     constructor(player, world) {
         this.player = player;
         this.world = world;
+        this.isShow = false;
         this.inventory[0] = this.items[2]; // Table de craft au premier slot
         this.inventory[1] = this.items[1]; // Table de craft au premier slot
         this.inventory[3] = this.items[8]; // Table de craft au premier slot
@@ -71,6 +72,7 @@ export class Inventory {
         document.addEventListener('keydown', this.onKeyDown.bind(this));
     }
     show(id = 0) {
+        this.isShow = true;
         this.inventoryContainer.style.display = 'block';
         this.bar.style.display = 'none';
         this.UIID = id;
@@ -92,6 +94,7 @@ export class Inventory {
         this.renderBar();
         if (this.UIID)
             this.world.setBlockInventory(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z, this.blockInventory);
+        this.isShow = false;
     }
 
     getBlock(position) {
@@ -468,6 +471,11 @@ export class Inventory {
 
         if (id)
             this.selectItem(id);
+
+        if (event.key === 'Escape' && this.isShow) {
+            this.hide();
+            this.player.controls.lock();
+        }
 
     };
 

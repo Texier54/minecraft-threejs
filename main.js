@@ -51,7 +51,6 @@ player.setUI(ui);
 if (process.env.NODE_ENV !== 'production') {
     player.load();
     inventory.load();
-
 }
 
 

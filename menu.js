@@ -20,7 +20,8 @@ export class Menu {
         btnLoad.addEventListener('click', () => this.load());
 
         window.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
+            console.log(this.inventory.isShow);
+            if (event.key === 'Escape' && this.inventory.isShow === false) {
                 this.openMenu();
             }
         });
@@ -34,6 +35,7 @@ export class Menu {
 
     openMenu() {
         document.getElementById('menu').style.display = 'block';
+        this.inventory.hide();
     }
 
     save() {
