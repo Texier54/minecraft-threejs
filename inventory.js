@@ -77,13 +77,11 @@ export class Inventory {
         this.bar.style.display = 'none';
         this.UIID = id;
         console.log(this.player.selectedCoords);
+        this.blockInventory = Array(41).fill(null);
         if (this.UIID) {
             let content = this.world.getBlock(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z).inventory;
-            console.log(content);
             if (content)
                 this.blockInventory = content;
-            else
-                this.blockInventory = Array(41).fill(null);
         }
         this.renderInventory();
     }
