@@ -7,7 +7,7 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: 'index.html',
-                craftList: 'craftList.html'
+                recipeBook: 'recipeBook.html'
             }
         }
     }
