@@ -17,6 +17,13 @@ export const SmeltingList = {
             quantity: 1,
         },
     },
+    stone: {
+        input: blocks.cobblestone.id,
+        output: {
+            id: blocks.stone.id,
+            quantity: 1,
+        },
+    },
 }
 
 export class Smelting {
