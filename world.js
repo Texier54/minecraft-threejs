@@ -9,7 +9,7 @@ export class World extends THREE.Group {
 
     asyncLoading = true;
 
-    drawDistance = 2;
+    drawDistance = 4;
 
     chunkSize = { width: 16, height: 80 };
 
@@ -19,6 +19,28 @@ export class World extends THREE.Group {
             scale: 40, //size of our smooth simplexnoise
             magnitude: 0.1, // size of th hills
             offset: 0.8, //monter descendre
+        },
+        biomes: {
+            montains: {
+                scale: 20, //size of our smooth simplexnoise
+                magnitude: 0.1, // size of th hills
+                offset: 0.8, //monter descendre
+            },
+            plains: {
+                scale: 80, //size of our smooth simplexnoise
+                magnitude: 0.1, // size of th hills
+                offset: 0.8, //monter descendre
+            },
+            forest: {
+                scale: 40, //size of our smooth simplexnoise
+                magnitude: 0.1, // size of th hills
+                offset: 0.8, //monter descendre
+            },
+            desert: {
+                scale: 120, //size of our smooth simplexnoise
+                magnitude: 0.1, // size of th hills
+                offset: 0.8, //monter descendre
+            }
         },
         trees: {
             trunk: {
@@ -40,14 +62,53 @@ export class World extends THREE.Group {
         super();
     }
 
+    worldToUint8Array(world) {
+        let data = [];
+
+        for (const key in world) {
+            if (Object.hasOwn(world, key)) {
+                const chunk = world[key]; // chunk = tableau de 16 lignes
+
+                for (const row of chunk) {
+                    data.push(...row); // Ajouter chaque ligne (Array(80)) au tableau principal
+                }
+            }
+        }
+console.log(data);
+        return new Uint8Array(data);
+    }
+
     /**
      * Saves the world data to local storage
      */
     save() {
 
+        /*
+        (async () => {
+            const chunkId = "chunk_0_0";
+
+            // Génère un chunk de test (16x16x256 blocs, chaque bloc est un entier entre 0 et 255)
+            console.log(this.dataStore.data);
+            const chunkData = new Uint8Array(this.worldToUint8Array(this.dataStore.data));
+
+            console.log("\n=== Test de stockage ===");
+            await storeData(chunkId, chunkData);
+
+            console.log("\n=== Test de chargement ===");
+            const loadedChunk = await loadData(chunkId);
+
+            if (loadedChunk) {
+                console.log("[Vérification] Les données chargées correspondent-elles aux données originales ?",
+                    chunkData.every((val, index) => val === loadedChunk[index]) ? "✅ OUI" : "❌ NON"
+                );
+            }
+        })();
+*/
+
+
         (async () => {
             const dataSize = new Blob([JSON.stringify(this.dataStore.getData())]).size; // Taille en octets
-            console.log(`Taille des données : ${dataSize} octets`);
+            console.log(`Taille des données : ${dataSize/1000000} Mo`);
             //console.log(this.dataStore.getData());
             const minecraftData = this.dataStore.getData();
             console.log(minecraftData);
@@ -397,13 +458,115 @@ function initDB() {
     });
 }
 
+/*
+// Initialiser IndexedDB
+async function initDB() {
+    return new Promise((resolve, reject) => {
+        console.log("[IndexedDB] Initialisation...");
+
+        const request = indexedDB.open(dbName, 1);
+
+        request.onupgradeneeded = (event) => {
+            console.log("[IndexedDB] Mise à jour de la base...");
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(storeName)) {
+                db.createObjectStore(storeName);
+                console.log("[IndexedDB] Table "+storeName+" créée.");
+            }
+        };
+
+        request.onsuccess = () => {
+            console.log("[IndexedDB] Base de données ouverte avec succès !");
+            resolve(request.result);
+        };
+
+        request.onerror = () => {
+            console.error("[IndexedDB] Erreur d'ouverture :", request.error);
+            reject(request.error);
+        };
+    });
+}
+
+ */
+
+
+
+import pako from "pako"; // npm install pako
+
+/*
+async function storeData(chunkId, chunkData) {
+
+    console.log(`[IndexedDB] Sauvegarde du chunk ${chunkId}...`);
+
+
+    const db = await initDB();
+    const transaction = db.transaction([storeName], "readwrite");
+    const store = transaction.objectStore(storeName);
+
+    // Compression des données
+    const compressedData = pako.deflate(chunkData);
+    console.log(`[Compression] Taille originale : ${chunkData.byteLength} octets`);
+    console.log(`[Compression] Taille compressée : ${compressedData.byteLength} octets`);
+
+    return new Promise((resolve, reject) => {
+        //const request = store.put({ data : compressedData, id: chunkId});
+        const request = store.put({ data : compressedData }, chunkId);
+
+        request.onsuccess = () => {
+            console.log(`[IndexedDB] Chunk ${chunkId} stocké avec succès !`);
+            resolve(true);
+        };
+
+        request.onerror = () => {
+            console.error(`[IndexedDB] Erreur lors du stockage du chunk ${chunkId} :`, request.error);
+            reject(request.error);
+        };
+    });
+}
+
+ */
+
+
 // Stocker des données
 async function storeData(data) {
     const db = await initDB();
     const transaction = db.transaction([storeName], 'readwrite');
     const store = transaction.objectStore(storeName);
     store.put({ id: 'minecraft_data', data });
-    return transaction.complete;
+    return transaction.oncomplete;
+}
+
+async function loadData(chunkId) {
+    console.log(`[IndexedDB] Chargement du chunk ${chunkId}...`);
+
+    const db = await initDB();
+    const transaction = db.transaction([storeName], "readonly");
+    const store = transaction.objectStore(storeName);
+
+    return new Promise((resolve, reject) => {
+        const request = store.get(chunkId);
+
+        request.onsuccess = () => {
+            if (request.result) {
+                console.log(request.result.data);
+                console.log(`[IndexedDB] Chunk ${chunkId} trouvé ! Taille compressée : ${request.result.data.byteLength} octets`);
+
+                // Décompression des données
+                const decompressedData = pako.inflate(request.result.data);
+                console.log(`[Decompression] Taille après décompression : ${decompressedData.byteLength} octets`);
+
+                resolve(decompressedData);
+            } else {
+                console.warn(`[IndexedDB] Chunk ${chunkId} non trouvé.`);
+                resolve(null);
+            }
+        };
+
+        request.onerror = () => {
+            console.error(`[IndexedDB] Erreur lors du chargement du chunk ${chunkId} :`, request.error);
+            reject(request.error);
+        };
+    });
 }
 
 // Lire des données

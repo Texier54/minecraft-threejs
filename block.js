@@ -411,6 +411,15 @@ export const blocks = {
         tool_type: TOOL_TYPES.PICKAXE,
         tool_material: TOOL_MATERIALS.DIAMOND
     },
+    diamond_axe: {
+        id: 319,
+        name: 'Diamind Axe',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/diamond_axe.webp',
+        tool_type: TOOL_TYPES.AXE,
+        tool_material: TOOL_MATERIALS.DIAMOND
+    },
     stick: {
         id: 320,
         name: 'Stick',

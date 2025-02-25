@@ -29,8 +29,10 @@ export class Sun {
         this.scene.add(this.sun);
         this.scene.add(this.sun.target);
 
+        //helper pour la position du sun
         const shadownHelper = new THREE.CameraHelper(this.sun.shadow.camera)
-        this.scene.add(shadownHelper);
+        //this.scene.add(shadownHelper);
+
         const ambient = new THREE.AmbientLight();
         ambient.intensity = 0.2;
         this.scene.add(ambient);

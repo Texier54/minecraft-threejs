@@ -93,12 +93,23 @@ export const RecipesList = {
     },
     diamond_pickaxe: {
         pattern: [
-            [blocks.glass.id, blocks.glass.id, blocks.glass.id],
+            [blocks.diamond.id, blocks.diamond.id, blocks.diamond.id],
             [null, blocks.stick.id, null],
             [null, blocks.stick.id, null],
         ],
         output: {
             id: blocks.diamond_pickaxe.id,
+            quantity: 1,
+        },
+    },
+    diamond_axe: {
+        pattern: [
+            [blocks.diamond.id, blocks.diamond.id, null],
+            [blocks.diamond.id, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: {
+            id: blocks.diamond_axe.id,
             quantity: 1,
         },
     },
