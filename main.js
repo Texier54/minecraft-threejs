@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 
-
-
 import { Player } from './player.js';
 import { World } from './world.js';
 import {blocks, getBlockByIdFast} from "./block.js";
@@ -11,12 +9,11 @@ import {Inventory} from "./inventory.js";
 import {Menu} from "./menu.js";
 import {UI} from "./ui.js";
 import { io } from 'socket.io-client';
+import { Sun } from '/sun.js';
 
 const socket = io('https://baptiste-texier.ddns.net:3000');
 
-
 const scene = new THREE.Scene();
-
 
 const world = new World();
 world.generate();
@@ -36,6 +33,7 @@ document.body.appendChild(renderer.domElement);
 
 //bloc fps
 const fpsDisplay = document.getElementById('fps');
+const timeDisplay = document.getElementById('time');
 
 
 const player = new Player(scene, world, socket);
@@ -43,6 +41,7 @@ const physics = new Physics(scene);
 const inventory = new Inventory(player, world);
 const menu = new Menu(world, player, inventory);
 const ui = new UI(player, inventory);
+const sun = new Sun(scene, player,0.0);
 
 player.setInventory(inventory);
 player.setUI(ui);
@@ -53,65 +52,8 @@ if (process.env.NODE_ENV !== 'production') {
     inventory.load();
 }
 
-
 const pig = new Pig();
 scene.add(pig);
-
-
-// Préchargement des textures
-const textureLoader = new THREE.TextureLoader();
-const top = textureLoader.load('images/grass.png');
-const side = textureLoader.load('images/grass_block_side.png');
-const stone = textureLoader.load('images/stone.png');
-
-// Configurer les filtres de texture
-[top, side, stone].forEach(texture => {
-    texture.magFilter = THREE.NearestFilter;
-    texture.minFilter = THREE.NearestFilter;
-});
-
-const textures = [side, side, top, side, side, side];  // Ordre des faces pour le matériau du bloc
-const grassMaterial = textures.map(texture => new THREE.MeshBasicMaterial({ map: texture }));
-const stoneMaterial = new THREE.MeshBasicMaterial({ map: stone });
-
-
-
-// Ajouter de la lumière
-/*
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Lumière ambiante
-scene.add(ambientLight);*/
-/*
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // Lumière directionnelle
-directionalLight.position.set(10, 10, 10);
-scene.add(directionalLight);
-*/
-
-
-let sun;
-function setupLights() {
-    sun = new THREE.DirectionalLight();
-    sun.intensity = 1.5;
-    sun.position.set(50, 50, 50);
-    sun.castShadow = true;
-
-    // Set the size of the sun's shadow box
-    sun.shadow.camera.left = -40;
-    sun.shadow.camera.right = 40;
-    sun.shadow.camera.top = 40;
-    sun.shadow.camera.bottom = -40;
-    sun.shadow.camera.near = 0.1;
-    sun.shadow.camera.far = 200;
-    sun.shadow.bias = -0.0001;
-    sun.shadow.mapSize = new THREE.Vector2(2048, 2048);
-    scene.add(sun);
-    scene.add(sun.target);
-
-    const ambient = new THREE.AmbientLight();
-    ambient.intensity = 0.2;
-    scene.add(ambient);
-}
-
-const chunks = new Map(); // Contiendra les chunks générés
 
 
 window.addEventListener('keydown', (event) => {
@@ -143,6 +85,9 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 const stats = new Stats();
 document.body.appendChild(stats.dom);
 
+// Animation principale
+let lastTime = performance.now();
+
 // Fonction d'animation
 function animate() {
 
@@ -167,14 +112,13 @@ function animate() {
         fpsDisplay.textContent = `FPS: ${fps}`;
         prevTime = now;
         frameCount = 0;
-
-        // Position the sun relative to the player. Need to adjust both the
-        // position and target of the sun to keep the same sun angle
-        sun.position.copy(player.camera.position);
-        sun.position.sub(new THREE.Vector3(-50, -50, -50));
-        sun.target.position.copy(player.camera.position);
+        timeDisplay.textContent = sun.getTime();
     }
 
+    const currentTime = performance.now();
+    const deltaTime1 = currentTime - lastTime;
+    lastTime = currentTime;
+    sun.update(deltaTime1);
 
     pig.movePig(deltaTime, world); // Déplacer le cochon
     renderer.render(scene, player.camera);
@@ -183,7 +127,6 @@ function animate() {
 
     stats.update(); // Met à jour les statistiques
 }
-setupLights();
 animate();
 
 document.addEventListener("contextmenu", function(e){

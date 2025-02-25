@@ -49,6 +49,7 @@ serve
 <div class="bar" id="bar"></div>
 <div class="bar" id="bar" style="display: none;"></div>
 
+<div id="time"></div>
 <div id="player-position"></div>
 
 </body>
@@ -219,11 +220,18 @@ serve
     background: #eee;
   }
 
+  #time {
+    position: absolute;
+    right: 10px;
+    bottom: 12px;
+    color: white;
+  }
+
   #player-position {
     position: absolute;
     right: 0;
     bottom: 0;
-    color: gray;
+    color: white;
   }
 
   .furnace-ui {
