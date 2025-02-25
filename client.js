@@ -33,7 +33,7 @@ export class Client {
 
         this.socket.on('player-disconnect', (id) => {
             console.log('Joueurs déconnecté:', id);
-            this.scene.remove(playersMesh[id]);
+            this.scene.remove(this.playersMesh[id]);
         });
 
         this.socket.on('addBlock', (data) => {
@@ -59,7 +59,7 @@ export class Client {
             if (id != this.socket.id) {
                 if (!this.players[id]) {
                     // Si le joueur n’existe pas encore, on le crée
-                    const playerMesh = createPlayerMesh();
+                    const playerMesh = this.createPlayerMesh();
                     this.scene.add(playerMesh);
                     this.players[id] = playerMesh;
                     this.playersMesh[id] = playerMesh;
@@ -91,7 +91,7 @@ export class Client {
 
                 // Utilisation de lookAt pour ajuster le joueur, avec la rotation correcte appliquée
                 this.players[id].lookAt(new THREE.Vector3(targetX, playerPos.position.y, targetZ));
-                const head = players[id].getObjectByName("head");
+                const head = this.players[id].getObjectByName("head");
                 head.lookAt(new THREE.Vector3(targetX, targetY, targetZ));
             }
 
