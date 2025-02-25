@@ -12,7 +12,7 @@ const blocks = {
     stone: { id: 3, name: 'stone', scale: { x: 30, y: 30, z: 30 }, scarcity: 0.8 },
     coalOre: { id: 16, name: 'coal_ore', scale: { x: 20, y: 20, z: 20 }, scarcity: 0.8 },
     ironOre: { id: 15, name: 'iron_ore', scale: { x: 40, y: 40, z: 40 }, scarcity: 0.9 },
-    diamondOre: { id: 56, name: 'diamond_ore', scale: { x: 40, y: 40, z: 40 }, scarcity: 1 },
+    diamondOre: { id: 56, name: 'diamond_ore', scale: { x: 40, y: 40, z: 40 }, scarcity: 0.99 },
     log: { id: 17, name: 'log' },
     leaves: { id: 18, name: 'leaves' },
     craftingTable: { id: 58, name: 'Crafting Table' },
@@ -64,11 +64,14 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
     for (let x = 0; x < chunkSize; x++) {
         for (let z = 0; z < chunkSize; z++) {
 
-            const noiseValue = simplex.noise(
-                (position.x + x) / params.terrain.scale,
-                (position.z + z) / params.terrain.scale
-            );
+            let biome = getBiome(simplex, x, z, position);
 
+            const biome_scale = params.biomes[biome].scale;
+
+            const noiseValue = simplex.noise(
+                (position.x + x) / biome_scale,
+                (position.z + z) / biome_scale
+            );
 
             //console.log(getBiome(rng, x, z));
 
@@ -76,7 +79,7 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
             let height = Math.floor(scaledNoise*chunkHeight); // Hauteur basée sur le bruit
             height = Math.max(1, Math.min(height, chunkHeight -1));
 
-            let biome = getBiome(simplex, x, z, position);
+
 
             for (let y = 0; y < chunkHeight; y++) {
 

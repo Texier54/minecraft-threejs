@@ -4,11 +4,11 @@ import { blocks, resources } from './block.js';
 
 export class Menu {
 
-    constructor(world, player, inventory) {
+    constructor(world, player, inventory, client) {
         this.world = world;
         this.player = player;
         this.inventory = inventory;
-
+        this.client = client;
 
         const btnBTG = document.getElementById('backToGame');
         btnBTG.addEventListener('click', () => this.backToGame());
@@ -18,6 +18,9 @@ export class Menu {
 
         const btnLoad = document.getElementById('load');
         btnLoad.addEventListener('click', () => this.load());
+
+        const btnConnect = document.getElementById('connect');
+        btnConnect.addEventListener('click', () => this.connect());
 
         window.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && this.inventory.isShow === false) {
@@ -48,6 +51,12 @@ export class Menu {
         this.inventory.load();
         this.player.load();
     }
+
+    connect() {
+        if (!this.client.getSocket())
+            this.client.init()
+    }
+
 
 
 }

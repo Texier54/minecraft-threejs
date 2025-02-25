@@ -108,7 +108,7 @@ export class Player {
                         var audio = new Audio('audio/dirt1.ogg');
                         audio.play();
 
-                        this.socket.emit("addBlock", {
+                        this.socket.getSocket()?.emit("addBlock", {
                             x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block
                         });
                     } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
@@ -178,7 +178,7 @@ export class Player {
                 else
                     this.inventory.addBlock(blockToRemove.id);
                 this.world.removeBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
-                this.socket.emit("removeBlock", {
+                this.socket.getSocket()?.emit("removeBlock", {
                      x: this.selectedCoords.x, y: this.selectedCoords.y, z: this.selectedCoords.z
                 });
                 var audio = new Audio('audio/dirt1.ogg');
@@ -376,7 +376,7 @@ export class Player {
             document.getElementById('player-position').innerHTML = this.toString();
             const direction = new THREE.Vector3();
             this.camera.getWorldDirection(direction);
-            this.socket.emit("playerState", {
+            this.socket.getSocket()?.emit("playerState", {
                 id: this.socket.id, // Identifiant unique du joueur
                 position: { x: this.position.x, y: this.position.y, z: this.position.z },
                 direction : { x: direction.x, y: direction.y, z: direction.z }

@@ -282,7 +282,7 @@ export const blocks = {
         hardness: 3,
         material: new THREE.MeshLambertMaterial({ map: textures.diamondOre }),
         scale: { x: 40, y: 40, z: 40 },
-        scarcity: 1,//rareté
+        scarcity: 0.99,//rareté
         icon: 'images/block-icon/diamond_ore.png',
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
