@@ -12,6 +12,7 @@ const blocks = {
     stone: { id: 3, name: 'stone', scale: { x: 30, y: 30, z: 30 }, scarcity: 0.8 },
     coalOre: { id: 16, name: 'coal_ore', scale: { x: 20, y: 20, z: 20 }, scarcity: 0.8 },
     ironOre: { id: 15, name: 'iron_ore', scale: { x: 40, y: 40, z: 40 }, scarcity: 0.9 },
+    diamondOre: { id: 56, name: 'diamond_ore', scale: { x: 40, y: 40, z: 40 }, scarcity: 1 },
     log: { id: 17, name: 'log' },
     leaves: { id: 18, name: 'leaves' },
     craftingTable: { id: 58, name: 'Crafting Table' },
@@ -19,7 +20,8 @@ const blocks = {
 
 const resources = [
     blocks.coalOre,
-    blocks.ironOre
+    blocks.ironOre,
+    blocks.diamondOre
 ];
 
 let data = [];

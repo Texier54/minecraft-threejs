@@ -41,7 +41,7 @@ const physics = new Physics(scene);
 const inventory = new Inventory(player, world);
 const menu = new Menu(world, player, inventory);
 const ui = new UI(player, inventory);
-const sun = new Sun(scene, player,0.0);
+const sun = new Sun(scene, player,0.20);
 
 player.setInventory(inventory);
 player.setUI(ui);

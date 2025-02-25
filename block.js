@@ -44,6 +44,7 @@ const textures = {
     gravel: loadTexture('images/gravel.png'),
     torch: loadTexture('images/torch.png'),
     torch_top: loadTexture('images/torch_top.png'),
+    diamondOre: loadTexture('images/diamond_ore.png'),
 };
 
 const TOOL_TYPES = {
@@ -108,8 +109,6 @@ export const blocks = {
         stackable: true,
         hardness: 1.5,
         material: new THREE.MeshLambertMaterial({ map: textures.stone }),
-        scale: { x: 30, y: 30, z: 30 },
-        scarcity: 0.8, //rareté
         icon: 'images/block-icon/stone.png',
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
@@ -178,7 +177,7 @@ export const blocks = {
         hardness: 3,
         material: new THREE.MeshLambertMaterial({ map: textures.ironOre }),
         scale: { x: 40, y: 40, z: 40 },
-        scarcity: 0.9,
+        scarcity: 0.9,//rareté
         icon: 'images/block-icon/iron_ore.png',
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
@@ -192,7 +191,7 @@ export const blocks = {
         hardness: 3,
         material: new THREE.MeshLambertMaterial({ map: textures.coalOre }),
         scale: { x: 20, y: 20, z: 20 },
-        scarcity: 0.8,
+        scarcity: 0.8,//rareté
         icon: 'images/block-icon/coal_ore.png',
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
@@ -275,6 +274,21 @@ export const blocks = {
         tool: TOOL_TYPES.AXE,
         geometry: geometryBlock,
     },
+    diamondOre: {
+        id: 56,
+        name: 'diamond_ore',
+        type: 'block',
+        stackable: true,
+        hardness: 3,
+        material: new THREE.MeshLambertMaterial({ map: textures.diamondOre }),
+        scale: { x: 40, y: 40, z: 40 },
+        scarcity: 1,//rareté
+        icon: 'images/block-icon/diamond_ore.png',
+        tool: TOOL_TYPES.PICKAXE,
+        need_tool: true,
+        geometry: geometryBlock,
+        drops: 304
+    },
     craftingTable: {
         id: 58,
         name: 'Crafting Table',
@@ -328,6 +342,13 @@ export const blocks = {
         type: 'item',
         stackable: true,
         icon: 'images/block-icon/coal.webp',
+    },
+    diamond: {
+        id: 304,
+        name: 'Diamond',
+        type: 'item',
+        stackable: true,
+        icon: 'images/block-icon/diamond.webp',
     },
     iron_ingot: {
         id: 305,
