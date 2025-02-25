@@ -6,6 +6,7 @@ const blocks = {
     empty: { id: 0, name: 'empty', visible: false },
     grass: { id: 1, name: 'grass' },
     dirt: { id: 2, name: 'dirt' },
+    bedrock: { id: 7, name: 'bedrock' },
     sand: { id: 12, name: 'sand' },
     gravel: { id: 13, name: 'gravel' },
     stone: { id: 3, name: 'stone', scale: { x: 30, y: 30, z: 30 }, scarcity: 0.8 },
@@ -79,7 +80,9 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
 
                 if (y < height && y > height-3 && getBlock(x, y, z)?.id === blocks.empty.id)
                     setBlockId(x, y, z, blocks.dirt.id);
-                if (y < height && getBlock(x, y, z)?.id === blocks.empty.id) {
+                if (y == 0) {
+                    setBlockId(x, y, z, blocks.bedrock.id);
+                } else if (y < height && getBlock(x, y, z)?.id === blocks.empty.id) {
                     setBlockId(x, y, z, blocks.stone.id);
                     generateResources(rng, x, y, z, position);
                     //generateCaves(simplex, x, y, z, position);

@@ -197,7 +197,7 @@ const players = {}; // Stocker les joueurs affichés
 const playersMesh = {};
 
 // Quand un joueur rejoint
-socket.emit('join', { username: 'Joueur1', position: { x: 0, y: 70, z: 0 }, direction : { x: 0, y: 0, z: 0 } });
+socket.emit('join', { username: 'Joueur1', position: { x: 0, y: 71, z: 10 }, direction : { x: 0, y: 0, z: 0 } });
 
 socket.on('player-connect', (allPlayers) => {
     console.log('Joueurs connectés:', allPlayers);
@@ -239,13 +239,14 @@ function updatePlayers(allPlayers) {
             // Mise à jour de la position
             players[id].position.set(
                 allPlayers[id].position.x,
-                allPlayers[id].position.y-1,
+                allPlayers[id].position.y,
                 allPlayers[id].position.z
             );
 
             // Mettre à jour la direction de la vue, en ignorant l'axe Y
             const playerPos = players[id];
             const targetX = allPlayers[id].position.x + allPlayers[id].direction.x;
+            const targetY = allPlayers[id].position.y + allPlayers[id].direction.y;
             const targetZ = allPlayers[id].position.z + allPlayers[id].direction.z;
 
             // Corriger le décalage de 45° (ajustement de l'angle)
@@ -260,35 +261,42 @@ function updatePlayers(allPlayers) {
 
             // Utilisation de lookAt pour ajuster le joueur, avec la rotation correcte appliquée
             players[id].lookAt(new THREE.Vector3(targetX, playerPos.position.y, targetZ));
+            const head = players[id].getObjectByName("head");
+            head.lookAt(new THREE.Vector3(targetX, targetY, targetZ));
         }
 
     }
 }
-
+import {mobs} from "./mobs.js";
 // Fonction pour créer un joueur (un simple cube)
 function createPlayerMesh() {
-
     const playerMesh = new THREE.Group();
     const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.75, 0.25), material);
-    body.position.set( 0, 0.5, 0 );
-    playerMesh.add(body);;
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), material);
-    head.position.set( 0, 1.1, 0 );
-    playerMesh.add(head);
-    const armRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.75, 0.25), material);
-    armRight.position.set( -0.4, 0.5, 0 );
-    playerMesh.add(armRight);
-    const armLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.75, 0.25), material);
-    armLeft.position.set( 0.4, 0.5, 0 );
-    playerMesh.add(armLeft);
-    const legRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.75, 0.25), material);
-    legRight.position.set( -0.1, -0.2, 0 );
+
+    const legRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.72, 0.25), mobs.steve.leg.material);
+    legRight.position.set( -0.12, -1.45, 0 );
     playerMesh.add(legRight);
-    const legLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.75, 0.25), material);
-    legLeft.position.set( 0.1, -0.2, 0 );
+    const legLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.72, 0.25), mobs.steve.leg.material);
+    legLeft.position.set( 0.12, -1.45, 0 );
     playerMesh.add(legLeft);
+
+
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.71, 0.25), mobs.steve.body.material);
+    body.position.set( 0, -0.75, 0 );
+    playerMesh.add(body);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), mobs.steve.head.material);
+    head.position.set( 0, -0.15, 0 );
+    head.name = "head";  // Donne un nom unique
+    playerMesh.add(head);
+    const armRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.71, 0.25), mobs.steve.arm.material);
+    armRight.position.set( -0.38, -0.75, 0 );
+    playerMesh.add(armRight);
+    const armLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.71, 0.25), mobs.steve.arm.material);
+    armLeft.position.set( 0.38, -0.75, 0 );
+    playerMesh.add(armLeft);
+
     return playerMesh;
+
 }
 
 

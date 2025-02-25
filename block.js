@@ -23,6 +23,7 @@ const textures = {
     grassSide: loadTexture('images/grass_block_side.png'),
     stone: loadTexture('images/stone.png'),
     cobblestone: loadTexture('images/cobblestone.png'),
+    bedrock: loadTexture('images/bedrock.png'),
     coalOre: loadTexture('images/coal_ore.png'),
     ironOre: loadTexture('images/iron_ore.png'),
     crafting_table_top: loadTexture('images/crafting_table_top.png'),
@@ -144,7 +145,7 @@ export const blocks = {
         type: 'block',
         stackable: true,
         hardness: 10000,
-        material: new THREE.MeshLambertMaterial({ map: textures.stone }),
+        material: new THREE.MeshLambertMaterial({ map: textures.bedrock }),
         geometry: geometryBlock,
     },
     sand: {
