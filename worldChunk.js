@@ -391,10 +391,9 @@ export class WorldChunk extends THREE.Group {
             mesh.computeBoundingSphere();
 
             if (block.id == blocks.torch.id) {
-                const light = new THREE.PointLight(0xffa500, 8, 14, 2); // Couleur orange, intensité, distance, atténuation
-                light.position.set(x, y + 0.7, z); // Légèrement au-dessus de la torche
-                light.castShadow = true; // Permettre les ombres si activé dans la scène
-
+                const light = new THREE.PointLight(0xfffee0, 2, 14, 0.1); // Couleur orange, intensité, distance, atténuation
+                light.position.set(x, y + 0.1, z); // Légèrement au-dessus de la torche
+                light.castShadow = false; // Permettre les ombres si activé dans la scène
                 this.add(light);
             }
         }
