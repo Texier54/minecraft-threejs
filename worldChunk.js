@@ -461,7 +461,7 @@ export class WorldChunk extends THREE.Group {
 
     getBiome(x, z) {
         // Récupérer le biome du chunk correspondant
-        console.log(this.position.x, this.position.z)
+        //console.log(this.position.x, this.position.z)
         if (this.inBounds(x, 0, z) && typeof this.data[x] !== "undefined" && typeof this.biomes[x] !== "undefined")
             return this.biomes[x][z];
         else {
