@@ -373,7 +373,9 @@ export class Player {
             this.controls.moveForward(this.velocity.z * dt);
             this.position.y += this.velocity.y * dt;
 
-            document.getElementById('player-position').innerHTML = this.toString();
+            let biome = this.world.getPlayerBiome(Math.floor(this.position.x), Math.floor(this.position.z));
+            document.getElementById('player-position').innerHTML = this.toString()+' - '+biome;
+
             const direction = new THREE.Vector3();
             this.camera.getWorldDirection(direction);
             this.socket.getSocket()?.emit("playerState", {

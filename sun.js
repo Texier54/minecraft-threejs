@@ -10,6 +10,13 @@ export class Sun {
         this.setupLights();
         this.player = player
         this.dayDuration = 1200 * 1000; // Durée d'un cycle complet (60 secondes par exemple)
+
+        const sunGeometry = new THREE.BoxGeometry(5, 5, 5);
+        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Couleur jaune éclatante
+        this.sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+        //this.sunMesh.rotation.set(2, 0, 0);
+        this.sunMesh.position.set(50, 100, 50); // Même position que la DirectionalLight
+        scene.add(this.sunMesh);
     }
 
     setupLights() {
@@ -57,6 +64,9 @@ export class Sun {
 
         this.sun.position.copy(this.player.camera.position);
         this.sun.position.sub(new THREE.Vector3(-Math.cos(angle) * 50, -(Math.sin(angle) * 50), -10));
+
+        this.sunMesh.position.copy(this.player.camera.position);
+        this.sunMesh.position.sub(new THREE.Vector3(-Math.cos(angle) * 50, -(Math.sin(angle) * 50), -10));
 
         //this.sun.position.set(Math.cos(angle) * 50, Math.sin(angle) * 50+60, -10);
 

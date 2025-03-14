@@ -9,7 +9,7 @@ export class World extends THREE.Group {
 
     asyncLoading = true;
 
-    drawDistance = 4;
+    drawDistance = 5;
 
     chunkSize = { width: 16, height: 80 };
 
@@ -18,28 +18,28 @@ export class World extends THREE.Group {
         terrain: {
             scale: 40, //size of our smooth simplexnoise
             magnitude: 0.1, // size of th hills
-            offset: 0.8, //monter descendre
+            offset: 0.5, //monter descendre
         },
         biomes: {
-            montains: {
-                scale: 20, //size of our smooth simplexnoise
-                magnitude: 0.1, // size of th hills
-                offset: 0.8, //monter descendre
+            mountains: {
+                scale: 40, //size of our smooth simplexnoise
+                magnitude: 0.2, // size of th hills
+                offset: 0.5, //monter descendre
             },
             plains: {
                 scale: 80, //size of our smooth simplexnoise
                 magnitude: 0.1, // size of th hills
-                offset: 0.8, //monter descendre
+                offset: 0.5, //monter descendre
             },
             forest: {
                 scale: 40, //size of our smooth simplexnoise
                 magnitude: 0.1, // size of th hills
-                offset: 0.8, //monter descendre
+                offset: 0.5, //monter descendre
             },
             desert: {
                 scale: 120, //size of our smooth simplexnoise
                 magnitude: 0.1, // size of th hills
-                offset: 0.8, //monter descendre
+                offset: 0.5, //monter descendre
             }
         },
         trees: {
@@ -253,6 +253,20 @@ console.log(data);
             return chunk.getBlock(
                 coords.block.x,
                 coords.block.y,
+                coords.block.z
+            );
+        } else {
+            return null;
+        }
+    }
+
+    getPlayerBiome(x, z) {
+        const coords = this.worldToChunkCoords(x, 0, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk /*&& chunk.loaded*/) {
+            return chunk.getBiome(
+                coords.block.x,
                 coords.block.z
             );
         } else {

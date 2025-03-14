@@ -19,6 +19,7 @@ export class WorldChunk extends THREE.Group {
         this.height = size.height;
         this.params = params;
         this.dataStore = dataStore;
+        this.biomes = [];
 
         // Créer le terrain
         const blockSize = 1;
@@ -56,9 +57,10 @@ export class WorldChunk extends THREE.Group {
 
             // Gestion du retour de données depuis le Worker
             worker.onmessage = (event) => {
-                const { data } = event.data;
+                const { data, biomes } = event.data;
 
-                this.data = event.data.data;
+                this.biomes = biomes;
+                this.data = data;
                 this.dataStore.set(this.position.x, this.position.z, this.data)
                 this.generateMesh();
 
@@ -455,5 +457,18 @@ export class WorldChunk extends THREE.Group {
 
         // Remove the instance associated with the block and update the data model
         this.setBlockInstanceId(x, y, z, null);
+    }
+
+    getBiome(x, z) {
+        // Récupérer le biome du chunk correspondant
+        console.log(this.position.x, this.position.z)
+        if (this.inBounds(x, 0, z) && typeof this.data[x] !== "undefined" && typeof this.biomes[x] !== "undefined")
+            return this.biomes[x][z];
+        else {
+            console.log(this.biomes);
+            return null;
+        }
+
+
     }
 }

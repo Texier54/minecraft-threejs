@@ -25,20 +25,22 @@ const resources = [
 ];
 
 let data = [];
+let biomes = []
 let params = [];
 self.onmessage = function (event) {
     const { chunkData, chunkSize, chunkHeight, params, position } = event.data;
 
     const rng = new RNG(params.seed);
     // Simule la génération d'un chunk (remplacez par votre logique réelle)
-    const generatedData = initializeTerrain(chunkSize, chunkHeight, params);
+    const generatedData = initializeTerrain(chunkSize, chunkHeight);
+    const generatedBiomes = initializeBiomes(chunkSize);
     const generatedTerrain = generateTerrain(chunkSize, chunkHeight, params, rng, position);
 
     // Envoyer les données générées au thread principal
-    self.postMessage({ data: data });
+    self.postMessage({ data: data, biomes: biomes });
 };
 
-function initializeTerrain(chunkSize, chunkHeight, params) {
+function initializeTerrain(chunkSize, chunkHeight) {
     // Logique simplifiée pour la génération de chunks
 
     for (let x = 0; x < chunkSize; x++) {
@@ -57,6 +59,20 @@ function initializeTerrain(chunkSize, chunkHeight, params) {
     }
 }
 
+function initializeBiomes(chunkSize) {
+    // Logique simplifiée pour la génération de chunks
+
+    for (let x = 0; x < chunkSize; x++) {
+        let row = [];
+        for (let z = 0; z < chunkSize; z++) {
+            row.push({}); // Placeholder biome
+        }
+        biomes.push(row);
+    }
+}
+
+
+
 function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
 
     const simplex = new SimplexNoise(rng);
@@ -64,23 +80,31 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
     for (let x = 0; x < chunkSize; x++) {
         for (let z = 0; z < chunkSize; z++) {
 
-            let biome = getBiome(simplex, x, z, position);
+            let biomeData = getBiome(simplex, x, z, position);
+            let biome1 = biomeData.biome1;
+            let biome = biome1;
+            let biome2 = biomeData.biome2;
+            let blend = biomeData.blend;
 
-            const biome_scale = params.biomes[biome].scale;
-
-            const noiseValue = simplex.noise(
-                (position.x + x) / biome_scale,
-                (position.z + z) / biome_scale
+            const biome_scale1 = params.biomes[biome1].scale;
+            const noiseValue1 = simplex.noise(
+                (position.x + x) / biome_scale1,
+                (position.z + z) / biome_scale1
             );
+            let height1 = params.biomes[biome1].offset + params.biomes[biome1].magnitude * noiseValue1;
 
-            //console.log(getBiome(rng, x, z));
+            const biome_scale2 = params.biomes[biome2].scale;
+            const noiseValue2 = simplex.noise(
+                (position.x + x) / biome_scale2,
+                (position.z + z) / biome_scale2
+            );
+            let height2 = params.biomes[biome2].offset + params.biomes[biome2].magnitude * noiseValue2;
 
-            const scaledNoise = params.terrain.offset + params.terrain.magnitude * noiseValue;
-            let height = Math.floor(scaledNoise*chunkHeight); // Hauteur basée sur le bruit
-            height = Math.max(1, Math.min(height, chunkHeight -1));
+            let height = Math.floor(lerp(height1, height2, blend)*chunkHeight);
+            height = Math.max(1, Math.min(height, chunkHeight - 1));
 
-
-
+            if (typeof(biomes[x][z]) !== "undefined")
+                biomes[x][z] = biome1;
             for (let y = 0; y < chunkHeight; y++) {
 
                 if (y < height && y > height-3 && getBlock(x, y, z)?.id === blocks.empty.id)
@@ -93,16 +117,23 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
                     //generateCaves(simplex, x, y, z, position);
                 } else if (y == height) {
 
+
                     if (biome == 'plains')
                         setBlockId(x, y, z, blocks.grass.id);
                     else if (biome == 'forest')
                         setBlockId(x, y, z, blocks.grass.id);
+                    else if (biome == 'mountains')
+                        setBlockId(x, y, z, blocks.grass.id);
                     else
                         setBlockId(x, y, z, blocks.sand.id);
+
+
 
                     let multiTree = 1;
                     if (biome == 'forest')
                         multiTree = 6;
+                    if (biome == 'mountains')
+                        multiTree = 0.5;
                     // Randomly generate a tree
                     if (biome != 'desert' && Math.random() < params.trees.frequency * multiTree) {
                         generateTree(params.seed, 1, x, height + 1, z, params);
@@ -190,23 +221,31 @@ function generateResources(seed, x, y, z, position) {
     })
 
 }
+function lerp(a, b, t) {
+    return a + t * (b - a);
+}
 
 function getBiome(simplex, x, z, position) {
+    let noiseValue = simplex.noise((position.x + x) / 500, (position.z + z) / 500);
+    noiseValue += 0.2 * simplex.noise((position.x + x) / 250, (position.z + z) / 250);
 
-    let scale = 0.01; // Plus la valeur est petite, plus les biomes sont grands
-    let noiseValue = simplex.noise((position.x + x) / 1500, (position.z + z) / 1500);
+    // Normalisation pour être entre 0 et 1
+    noiseValue = (noiseValue + 1) / 2;
 
-    noiseValue += 0.2 * (simplex.noise(
-        (position.x + x) / 500,
-        (position.z + z) / 500
-    ));
+    /*
+    •	Si noiseValue = 0.1, alors blend = (0.1 - 0.1) / 0.2 = 0, donc 100% “plains”.
+	•	Si noiseValue = 0.2, alors blend = (0.2 - 0.1) / 0.2 = 0.5, donc 50% “plains”, 50% “forest”.
+	•	Si noiseValue = 0.3, alors blend = (0.3 - 0.1) / 0.2 = 1, donc 100% “forest”.
 
-    if (noiseValue < 0.25) return 'plains';
-    if (noiseValue < 0.5) return 'forest';
-    return 'desert';
+     */
+    if (noiseValue < 0.2) return { biome1: 'desert', biome2: 'plains', blend: (noiseValue - 0.1) / 0.1 };
+    if (noiseValue < 0.4) return { biome1: 'plains', biome2: 'forest', blend: (noiseValue - 0.2) / 0.2 };
+    if (noiseValue < 0.6) return { biome1: 'forest', biome2: 'mountains', blend: (noiseValue - 0.4) / 0.2 };
+    return { biome1: 'mountains', biome2: 'mountains', blend: (noiseValue - 0.6) / 0.4 };
 }
 
 function generateCaves(simplex, x, y, z, position) {
+
 
     const scale = 0.02; // Fréquence du bruit, à ajuster pour la taille des filons
     const noiseValue = simplex.noise(position.x + x /500, position.y + y / 500, position.z + z /500);
@@ -219,4 +258,6 @@ function generateCaves(simplex, x, y, z, position) {
     if (finalNoise > 0.4) {
             setBlockId(x, y, z, blocks.coalOre.id); // Diamants en profondeur
     }
+
+
 }
