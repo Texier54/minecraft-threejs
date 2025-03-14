@@ -6,13 +6,14 @@ import {io} from "socket.io-client";
 export class Client {
 
 
-    constructor(world, scene) {
+    constructor(world, scene, chat) {
         this.players = {}; // Stocker les joueurs affichés
         this.playersMesh = {};
 
         this.world = world;
         this.scene = scene;
         this.socket = null;
+        this.chat = chat;
     }
 
     getSocket() {
@@ -25,14 +26,17 @@ export class Client {
         this.socket = io('https://baptiste-texier.ddns.net:3000');
         // Quand un joueur rejoint
         this.socket.emit('join', { username: 'Joueur1', position: { x: 0, y: 71, z: 10 }, direction : { x: 0, y: 0, z: 0 } });
+        this.chat.add('Connected to server');
 
-        this.socket.on('player-connect', (allPlayers) => {
-            console.log('Joueurs connectés:', allPlayers);
-            this.updatePlayers(allPlayers);
+        this.socket.on('player-connect', (Player) => {
+            console.log('Joueurs connectés:', Player);
+            this.chat.add(Player.id+' joined the game');
+            this.updatePlayers({[Player.id]: Player});
         });
 
         this.socket.on('player-disconnect', (id) => {
             console.log('Joueurs déconnecté:', id);
+            this.chat.add(id+' left the game');
             this.scene.remove(this.playersMesh[id]);
         });
 

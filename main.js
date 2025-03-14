@@ -10,6 +10,7 @@ import {Menu} from "./menu.js";
 import {UI} from "./ui.js";
 import { Sun } from '/sun.js';
 import { Client } from '/client.js';
+import { Chat } from '/chat.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 
@@ -35,12 +36,13 @@ document.body.appendChild(renderer.domElement);
 const fpsDisplay = document.getElementById('fps');
 const timeDisplay = document.getElementById('time');
 
-const client = new Client(world, scene);
+const chat = new Chat(world, scene);
+const client = new Client(world, scene, chat);
 //client.init();
 const player = new Player(scene, world, client);
 const physics = new Physics(scene);
 const inventory = new Inventory(player, world);
-const menu = new Menu(world, player, inventory, client);
+const menu = new Menu(world, player, inventory, client, chat);
 const ui = new UI(player, inventory);
 const sun = new Sun(scene, player,0.20);
 

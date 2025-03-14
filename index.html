@@ -50,6 +50,8 @@ serve
 <div class="bar" id="bar"></div>
 <div class="bar" id="bar" style="display: none;"></div>
 
+<div id="chat"></div>
+
 <div id="time"></div>
 <div id="player-position"></div>
 
@@ -156,6 +158,20 @@ serve
     margin-top: 5px;
     margin-left: 5px;
     font-size: 12px;
+  }
+
+  #chat {
+    position: absolute;
+    left: 10px;
+    bottom: 15px;
+    font-weight: bold;
+    color: white;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    font-family: Minecraftia;
+    font-size: 12px;
+    display: none;
   }
 
   #crosshair {

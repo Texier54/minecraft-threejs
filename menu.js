@@ -4,11 +4,12 @@ import { blocks, resources } from './block.js';
 
 export class Menu {
 
-    constructor(world, player, inventory, client) {
+    constructor(world, player, inventory, client, chat) {
         this.world = world;
         this.player = player;
         this.inventory = inventory;
         this.client = client;
+        this.chat = chat;
 
         const btnBTG = document.getElementById('backToGame');
         btnBTG.addEventListener('click', () => this.backToGame());
@@ -44,12 +45,14 @@ export class Menu {
         this.world.save()
         this.inventory.save();
         this.player.save();
+        this.chat.add('Saved game');
     }
 
     load() {
         this.world.load()
         this.inventory.load();
         this.player.load();
+        this.chat.add('Load saved');
     }
 
     connect() {
