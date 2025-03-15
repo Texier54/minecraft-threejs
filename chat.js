@@ -10,9 +10,8 @@ export class Chat {
         window.addEventListener('keydown', this.onKeyDown.bind(this));
     }
 
-    add(msg) {
-        this.content.push(msg);
-        console.log(this.content);
+    add(msg, color = '#AAAAAA') {
+        this.content.push({msg: msg, color: color});
         this.display();
 
     }
@@ -20,7 +19,7 @@ export class Chat {
     display() {
         let content = '';
         this.content.forEach(line => {
-            content += '<span style="color: #FEFE3F;">'+line+'</span><br>';
+            content += '<span style="color: '+line.color+';">'+line.msg+'</span><br>';
         });
 
         this.element.innerHTML = content;

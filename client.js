@@ -24,13 +24,20 @@ export class Client {
 
 
         this.socket = io('https://baptiste-texier.ddns.net:3000');
-        // Quand un joueur rejoint
-        this.socket.emit('join', { username: 'Joueur1', position: { x: 0, y: 71, z: 10 }, direction : { x: 0, y: 0, z: 0 } });
-        this.chat.add('Connected to server');
+
+        this.socket.on('connect', (data) => {
+            this.chat.add('Connected to server', '#FFFF55');
+            // Envoyer joueur
+            this.socket.emit('join', { username: 'Joueur1', position: { x: 0, y: 71, z: 10 }, direction : { x: 0, y: 0, z: 0 } });
+        });
+
+        this.socket.on('connect_error', (err) => {
+            this.chat.add('Unable to connect to server');
+        });
 
         this.socket.on('player-connect', (Player) => {
             console.log('Joueurs connectés:', Player);
-            this.chat.add(Player.id+' joined the game');
+            this.chat.add(Player.id+' joined the game', '#FFFF55');
             this.updatePlayers({[Player.id]: Player});
         });
 
