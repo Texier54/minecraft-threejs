@@ -156,6 +156,17 @@ export const RecipesList = {
             id: blocks.torch.id,
             quantity: 4,
         },
+    },
+    oak_stairs: {
+        pattern: [
+            [blocks.planks.id, null, null],
+            [blocks.planks.id, blocks.planks.id, null],
+            [blocks.planks.id, blocks.planks.id, blocks.planks.id],
+        ],
+        output: {
+            id: blocks.oak_stairs.id,
+            quantity: 6,
+        },
     }
 }
 

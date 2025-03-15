@@ -386,7 +386,11 @@ export class WorldChunk extends THREE.Group {
 
             // Compute the transformation matrix for the new instance and update the instanced
             const matrix = new THREE.Matrix4();
-            const offsetHeight = (1-mesh.geometry.parameters.height)/2;
+            //const offsetHeight = (1-mesh.geometry.parameters.height)/2;
+
+            const boundingBox = new THREE.Box3().setFromObject(mesh);
+            const offsetHeight = (1-(boundingBox.max.y - boundingBox.min.y))/2;
+
             matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
             mesh.setMatrixAt(instanceId, matrix);
             mesh.instanceMatrix.needsUpdate = true;

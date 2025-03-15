@@ -275,7 +275,11 @@ export class Player {
 
                     //adapater taille mesh au block highligt
                     let geometry = getBlockByIdFast(blockSelected.id).geometry;
-                    this.selectionHelper.scale.set( geometry.parameters.width+0.01, geometry.parameters.height+0.01, geometry.parameters.depth+0.01);
+                    geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
+
+                    let size = new THREE.Vector3();
+                    geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
+                    this.selectionHelper.scale.set(size.x + 0.01, size.y + 0.01, size.z + 0.01);
 
                 }
 

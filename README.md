@@ -16,3 +16,4 @@ https://texier54.github.io/minecraft-threejs/
 * 1,2,3,4,5,6,7,8,9 -> Slot bar
 * Echap -> Menu
 * F5 Change camera
+* T display chat

@@ -1,8 +1,17 @@
 import * as THREE from 'three';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
 const textureLoader = new THREE.TextureLoader();
 const geometryBlock = new THREE.BoxGeometry(1, 1, 1);
-const geometryTorch = new THREE.BoxGeometry(0.12, 0.7, 0.12);
+const geometryTorch = new THREE.BoxGeometry(0.12, 0.7, 0.12)
+
+
+
+const step1 = new THREE.BoxGeometry(1, 0.5, 1);
+const step2 = new THREE.BoxGeometry(1, 0.5, 0.5);
+step2.translate(0, 0.25, -0.25); // Déplacer la petite marche
+step1.translate(0, -0.25, 0); // Déplacer la petite marche
+const geometryStair = BufferGeometryUtils.mergeGeometries([step1, step2]);
 
 function loadTexture(path) {
     const texture = textureLoader.load(path);
@@ -254,6 +263,17 @@ export const blocks = {
         transparent: true,
         icon: 'images/block-icon/torch.webp',
         geometry: geometryTorch,
+    },
+    oak_stairs: {
+        id: 53,
+        name: 'oak_stairs',
+        type: 'block',
+        stackable: true,
+        hardness: 2,
+        material: new THREE.MeshLambertMaterial({ map: textures.planks }),
+        icon: 'images/block-icon/oak_stairs.png',
+        tool: TOOL_TYPES.AXE,
+        geometry: geometryStair,
     },
     chest: {
         id: 54,
