@@ -92,6 +92,19 @@ export class Player {
         this.isDestroying = false;
     }
 
+    getPlacementDirection(faceNormal) {
+        const direction = new THREE.Vector3();
+        this.camera.getWorldDirection(direction);
+        console.log(direction);
+        console.log(faceNormal);
+        if (faceNormal.y === 1) return new THREE.Vector3(0, 1, 0); // Vers le haut
+        if (faceNormal.y === -1) return new THREE.Vector3(0, -1, 0); // Vers le bas
+        if (faceNormal.x === 1) return new THREE.Vector3(1, 0, 0); // À droite
+        if (faceNormal.x === -1) return new THREE.Vector3(-1, 0, 0); // À gauche
+        if (faceNormal.z === 1) return new THREE.Vector3(0, 0, 1); // Devant
+        if (faceNormal.z === -1) return new THREE.Vector3(0, 0, -1); // Derrière
+        return new THREE.Vector3(0, 1, 0); // Par défaut vers le haut
+    }
 
     onMouseDown(event) {
         if (this.controls.isLocked) {
@@ -103,7 +116,8 @@ export class Player {
                     const selectedBlock = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
 
                     if (this.inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && getBlockByIdFast(this.inventory.getSelectedItem()?.block).type === 'block') {
-                        this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block);
+
+                        this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block, this.getPlacementDirection(this.selectedNormal));
                         this.inventory.removeBlock(this.inventory.getSelectedItem().block);
                         var audio = new Audio('audio/dirt1.ogg');
                         audio.play();
@@ -261,6 +275,8 @@ export class Player {
 
                 // Si on ajoute un bloc, il doit être placé à côté du bloc sélectionné
                 this.selectedCoordsNormal = this.selectedCoords.clone().add(intersected.normal);
+
+                this.selectedNormal = intersected.normal;
 
                 const blockSelected = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z)
 

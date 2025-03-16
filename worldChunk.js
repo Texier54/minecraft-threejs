@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { blocks, resources } from './block.js';
+import {blocks, getBlockByIdFast, resources} from './block.js';
 import { RNG } from './rng.js';
 
 export class WorldChunk extends THREE.Group {
@@ -37,7 +37,8 @@ export class WorldChunk extends THREE.Group {
                     row.push({
                         id: blocks.empty.id,
                         instanceId: null,
-                        inventory: null
+                        inventory: null,
+                        direction: new THREE.Vector3(0, 1, 0) // Par défaut vers le haut
                     });
                 }
                 slice.push(row);
@@ -348,12 +349,19 @@ export class WorldChunk extends THREE.Group {
      * @param {number} z
      * @param {number} blockId
      */
-    addBlock(x, y, z, blockId) {
+    addBlock(x, y, z, blockId, direction) {
         if (this.getBlock(x, y, z).id === blocks.empty.id) {
             this.setBlockId(x, y, z, blockId);
+            this.setBlockDirection(x, y, z, direction);
             this.addBlockInstance(x, y, z);
             //this.dataStore.set(this.position.x, this.position.z, x, y, z, blockId);
             this.dataStore.set(this.position.x, this.position.z, this.data)
+        }
+    }
+
+    setBlockDirection(x, y, z, direction) {
+        if (this.inBounds(x, y, z)) {
+            this.data[x][y][z].direction = direction;
         }
     }
 
@@ -376,20 +384,31 @@ export class WorldChunk extends THREE.Group {
         if (block && block.id !== blocks.empty.id && block.instanceId === null) {
             // Get the mesh and instance id of the block
             const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
-            if (block.id == 50) {
-                console.log(mesh.count);
-                console.log(x, y, z);
-            }
 
             const instanceId = mesh.count++;
             this.setBlockInstanceId(x, y, z, instanceId);
 
             // Compute the transformation matrix for the new instance and update the instanced
             const matrix = new THREE.Matrix4();
+
+            const quaternion = new THREE.Quaternion();
+            quaternion.setFromEuler(new THREE.Euler(0, Math.atan2(block.direction.x, block.direction.z), 0));
+            matrix.compose(
+                new THREE.Vector3(x, y, z),  // Position
+                quaternion,                  // Rotation
+                new THREE.Vector3(1, 1, 1)    // Échelle
+            );
+
             //const offsetHeight = (1-mesh.geometry.parameters.height)/2;
 
-            const boundingBox = new THREE.Box3().setFromObject(mesh);
-            const offsetHeight = (1-(boundingBox.max.y - boundingBox.min.y))/2;
+
+            let geometry = getBlockByIdFast(block.id).geometry;
+            geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
+
+            let size = new THREE.Vector3();
+            geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
+
+            const offsetHeight = (1-(size.y))/2;
 
             matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
             mesh.setMatrixAt(instanceId, matrix);

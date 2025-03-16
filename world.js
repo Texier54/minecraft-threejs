@@ -315,7 +315,7 @@ console.log(data);
         this.clear();
     }
 
-    addBlock(x, y, z, blockId) {
+    addBlock(x, y, z, blockId, direction) {
         const coords = this.worldToChunkCoords(x, y, z);
         const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
 
@@ -324,7 +324,8 @@ console.log(data);
                 coords.block.x,
                 coords.block.y,
                 coords.block.z,
-                blockId
+                blockId,
+                direction
             );
 
             if (getBlockByIdFast(blockId).transparent !== true) {
