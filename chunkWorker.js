@@ -1,5 +1,6 @@
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 import {RNG} from "./rng.js";
+import * as THREE from "three";
 
 
 const blocks = {
@@ -51,6 +52,8 @@ function initializeTerrain(chunkSize, chunkHeight) {
                 row.push({
                     id: 0, // Exemple d'identifiant de bloc
                     instanceId: null,
+                    inventory: null,
+                    direction: new THREE.Vector3(0, 0, 0) // Par défaut vers le haut
                 });
             }
             slice.push(row);

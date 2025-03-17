@@ -74,7 +74,17 @@ export class Physics {
                 for (let z = minZ; z <= maxZ; z++) {
                     const blockId = world.getBlock(x, y, z)?.id;
                     if (blockId && blockId !== blocks.empty.id) {
-                        const block = { x, y, z };
+                        let size = {};
+                        let hasStep = false;
+                        if (blockId == 53) {
+                            size = { x: 1, y: 1, z: 1 };
+                            hasStep = true; // Ajout d'une propriété pour détecter les escaliers
+                        }
+                        else if (blockId == 50)
+                            size = { x: 0.1, y: 0.1 };
+                        else
+                            size = { x: 1, y: 1, z: 1 };
+                        const block = { x, y, z,  size: size, hasStep: hasStep };
                         candidates.push(block);
                         //this.addCollisionHelper(block);
                     }
@@ -97,11 +107,13 @@ export class Physics {
         const collisions = [];
 
         for (const block of candidates) {
-            // Get the point on the block that is closest to the center of the player's bounding cylinder
+            const halfSize = { x: block.size.x / 2, y: block.size.y / 2, z: block.size.z / 2 };
+
+            // Calculer le point le plus proche du joueur sur le bloc
             const closestPoint = {
-                x: Math.max(block.x - 0.5, Math.min(player.position.x, block.x + 0.5)),
-                y: Math.max(block.y - 0.5, Math.min(player.position.y - (player.height / 2), block.y + 0.5)),
-                z: Math.max(block.z - 0.5, Math.min(player.position.z, block.z + 0.5))
+                x: Math.max(block.x - halfSize.x, Math.min(player.position.x, block.x + halfSize.x)),
+                y: Math.max(block.y - halfSize.y, Math.min(player.position.y - (player.height / 2), block.y + halfSize.y)),
+                z: Math.max(block.z - halfSize.z, Math.min(player.position.z, block.z + halfSize.z))
             };
 
             // Get distance along each axis between closest point and the center
@@ -126,6 +138,15 @@ export class Physics {
                 } else {
                     normal = new THREE.Vector3(-dx, 0, -dz).normalize();
                     overlap = overlapXZ;
+                }
+
+                // 🚀 Gestion spéciale pour les escaliers
+                if (block.hasStep && dy > -0.6 && dy < 1.2) {
+
+                    //player.position.y += block.size.y; // Monte automatiquement l'escalier
+                    player.position.y += Math.min(block.size.y, 0.1); // Monte doucement
+                    player.onGround = true;
+                    continue; // Ignore la collision normale
                 }
 
                 collisions.push({

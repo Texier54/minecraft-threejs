@@ -93,16 +93,27 @@ export class Player {
     }
 
     getPlacementDirection(faceNormal) {
-        const direction = new THREE.Vector3();
-        this.camera.getWorldDirection(direction);
-        console.log(direction);
-        console.log(faceNormal);
-        if (faceNormal.y === 1) return new THREE.Vector3(0, 1, 0); // Vers le haut
-        if (faceNormal.y === -1) return new THREE.Vector3(0, -1, 0); // Vers le bas
-        if (faceNormal.x === 1) return new THREE.Vector3(1, 0, 0); // À droite
-        if (faceNormal.x === -1) return new THREE.Vector3(-1, 0, 0); // À gauche
-        if (faceNormal.z === 1) return new THREE.Vector3(0, 0, 1); // Devant
-        if (faceNormal.z === -1) return new THREE.Vector3(0, 0, -1); // Derrière
+
+        let direction = new THREE.Vector3();
+        this.camera.getWorldDirection(direction); // Récupère la direction de la caméra
+
+        // Trouver l'axe dominant
+        const maxAxis = Math.max(Math.abs(direction.x), 0, Math.abs(direction.z));
+
+        // Créer le vecteur aligné sur un seul axe
+        let vector = new THREE.Vector3(
+            Math.abs(direction.x) === maxAxis ? Math.sign(direction.x) : 0,
+            0,
+            Math.abs(direction.z) === maxAxis ? Math.sign(direction.z) : 0
+        );
+
+
+        let placementDir = vector.negate();
+
+        if (placementDir.x === 1) return new THREE.Vector3(1, 0, 0); // À droite
+        if (placementDir.x === -1) return new THREE.Vector3(-1, 0, 0); // À gauche
+        if (placementDir.z === 1) return new THREE.Vector3(0, 0, 1); // Devant
+        if (placementDir.z === -1) return new THREE.Vector3(0, 0, -1); // Derrière
         return new THREE.Vector3(0, 1, 0); // Par défaut vers le haut
     }
 
@@ -266,6 +277,10 @@ export class Player {
                 // convertit les coordonnées locales du bloc en coordonnées mondiales.
                 this.selectedCoords.applyMatrix4(blockMatrix);
 
+                // Extraire le quaternion (rotation) du bloc
+                const blockQuaternion = new THREE.Quaternion();
+                blockMatrix.decompose(new THREE.Vector3(), blockQuaternion, new THREE.Vector3());
+
                 // Arrondir les coordonnées à des entiers (alignement sur la grille)
                 this.selectedCoords.set(
                     Math.round(this.selectedCoords.x),
@@ -273,21 +288,30 @@ export class Player {
                     Math.round(this.selectedCoords.z)
                 );
 
-                // Si on ajoute un bloc, il doit être placé à côté du bloc sélectionné
-                this.selectedCoordsNormal = this.selectedCoords.clone().add(intersected.normal);
+                // Clone la normale pour ne pas modifier l'original
+                this.selectedNormal = intersected.face.normal.clone();
 
-                this.selectedNormal = intersected.normal;
+
+                // Appliquer la rotation du bloc à la normale
+                this.selectedNormal.applyQuaternion(blockQuaternion).normalize();
+
+                // Calculer la position réelle du bloc
+                this.selectedCoords = chunk.position.clone();
+                this.selectedCoords.applyMatrix4(blockMatrix);
+
+                // Arrondir pour aligner sur la grille
+                this.selectedCoords.set(
+                    Math.round(this.selectedCoords.x),
+                    Math.round(this.selectedCoords.y),
+                    Math.round(this.selectedCoords.z)
+                );
+
+                // Déterminer où placer le bloc adjacent (pour placer un bloc en face de la normale)
+                this.selectedCoordsNormal = this.selectedCoords.clone().add(this.selectedNormal);
 
                 const blockSelected = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z)
 
-
-                if (blockSelected) {
-                    const selectionMaterial = new THREE.MeshBasicMaterial({
-                        color: 0x000000, // Couleur du cube (noir ou autre)
-                        transparent: true, // Permet la transparence
-                        opacity: 0.2, // Niveau de transparence
-
-                    });
+                if (blockSelected && blockSelected.id !== blocks.empty.id) {
 
                     //adapater taille mesh au block highligt
                     let geometry = getBlockByIdFast(blockSelected.id).geometry;

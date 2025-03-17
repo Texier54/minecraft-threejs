@@ -27,26 +27,6 @@ export class WorldChunk extends THREE.Group {
 
     }
 
-    initializeTerrain() {
-        this.data = [];
-        for (let x = 0; x < this.chunkSize; x++) {
-            const slice = [];
-            for (let y = 0; y < this.height; y++) {
-                const row = [];
-                for (let z = 0; z < this.chunkSize; z++) {
-                    row.push({
-                        id: blocks.empty.id,
-                        instanceId: null,
-                        inventory: null,
-                        direction: new THREE.Vector3(0, 1, 0) // Par défaut vers le haut
-                    });
-                }
-                slice.push(row);
-            }
-            this.data.push(slice);
-        }
-    }
-
     generate() {
 
         if (this.dataStore.contains(this.position.x, this.position.z)) {
@@ -106,125 +86,7 @@ export class WorldChunk extends THREE.Group {
 
     }
 
-    generateResources(seed, x, y, z) {
-
-        const simplex = new SimplexNoise(seed);
-        resources.forEach(resource => {
-
-            const value = simplex.noise3D(
-                (this.position.x + x) / resource.scale.x,
-                (this.position.y + y) / resource.scale.y,
-                (this.position.z + z) / resource.scale.z);
-            if (value > resource.scarcity)
-                this.setBlockId(x, y, z, resource.id);
-
-        })
-
-    }
-
-    generateTerrain(seed) {
-
-        const simplex = new SimplexNoise(seed);
-
-        for (let x = 0; x < this.chunkSize; x++) {
-            for (let z = 0; z < this.chunkSize; z++) {
-                const noiseValue = simplex.noise2D(
-                    (this.position.x + x) / this.params.terrain.scale,
-                    (this.position.z + z) / this.params.terrain.scale
-                );
-
-                const scaledNoise = this.params.terrain.offset + this.params.terrain.magnitude * noiseValue;
-
-                let height = Math.floor(scaledNoise*this.height); // Hauteur basée sur le bruit
-
-                height = Math.max(1, Math.min(height, this.height -1));
-
-
-
-                for (let y = 0; y < this.height; y++) {
-
-                    if (y < height && y > height-3 && this.getBlock(x, y, z)?.id === blocks.empty.id)
-                        this.setBlockId(x, y, z, blocks.dirt.id);
-                    if (y < height && this.getBlock(x, y, z)?.id === blocks.empty.id) {
-                        this.setBlockId(x, y, z, blocks.stone.id);
-                        this.generateResources(simplex, x, y, z);
-                    } else if (y == height) {
-                        this.setBlockId(x, y, z, blocks.grass.id);
-                        // Randomly generate a tree
-                        if (Math.random() < this.params.trees.frequency) {
-                            this.generateTree(seed, 1, x, height + 1, z);
-                        }
-                    }
-                    /*
-                    else if (y > height)
-                        this.setBlockId(x, y, z, blocks.empty.id);
-
-                     */
-                }
-            }
-        }
-    }
-
-    /**
-     * Creates a tree appropriate for the biome at (x, y, z)
-     * @param {string} biome
-     * @param {number} x
-     * @param {number} y
-     * @param {number} z
-     */
-    generateTree(seed, biome, x, y, z) {
-        const minH = this.params.trees.trunk.minHeight;
-        const maxH = this.params.trees.trunk.maxHeight;
-        const h = Math.round(minH + (maxH - minH) * Math.random() +1);
-
-        for (let treeY = y; treeY < y + h; treeY++) {
-            this.setBlockId(x, treeY, z, blocks.log.id);
-        }
-
-        this.generateTreeCanopy(biome, x, y + h, z, seed);
-
-
-    }
-
-    generateTreeCanopy(biome, centerX, centerY, centerZ, seed) {
-        const minR = this.params.trees.canopy.minRadius;
-        const maxR = this.params.trees.canopy.maxRadius;
-        const r = Math.round(minR + (maxR - minR) * Math.random());
-
-
-        for (let x = -r; x <= r; x++) {
-            for (let y = -r; y <= r; y++) {
-                for (let z = -r; z <= r; z++) {
-                    const n = Math.random();
-
-                    // Make sure the block is within the canopy radius
-                    if (x * x + y * y + z * z > r * r) continue;
-                    // Don't overwrite an existing block
-                    const block = this.getBlock(centerX + x, centerY + y, centerZ + z);
-                    if (block && block.id !== blocks.empty.id) continue;
-                    // Fill in the tree canopy with leaves based on the density parameter
-                    if (n < this.params.trees.canopy.density) {
-                        if (this.getBlock(centerX + x, centerY + y, centerZ + z) !== null)
-                            this.setBlockId(centerX + x, centerY + y, centerZ + z, blocks.leaves.id);
-                    }
-                }
-            }
-        }
-    }
-
     generateMesh() {
-
-        /*
-                const chunkKey = `${chunkX}_${chunkZ}`;
-                if (chunks.has(chunkKey)) return;
-
-                const chunk = new THREE.Group(); // Chaque chunk est un groupe d'objets
-
-
-                // Positionner le chunk en fonction de ses coordonnées globales
-                chunk.position.set(chunkX * this.chunkSize, 0, chunkZ * this.chunkSize); // Définir la position globale du chunk
-                chunks.set(chunkKey, chunk);
-        */
         const maxBlock = this.chunkSize * this.chunkSize * 40;
 
         // Creating a lookup table where the key is the block id
@@ -248,7 +110,42 @@ export class WorldChunk extends THREE.Group {
 
                     const block = this.getBlock(x, y, z);
                     if (!this.isBlockObscured(x, y, z) && block != null && block.id != blocks.empty.id) {
-                        const offsetHeight = (1-meshes[block.id].geometry.parameters.height)/2;
+
+                        let geometry = getBlockByIdFast(block.id).geometry;
+                        geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
+
+                        let size = new THREE.Vector3();
+                        geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
+
+                        if (block.direction) {
+                            // Transformation matrix pour positionner et tourner le bloc
+                            const quaternion = new THREE.Quaternion();
+                            const direction = new THREE.Vector3(block.direction.x, block.direction.y, block.direction.z);
+
+                            // Appliquer une rotation en fonction de la direction
+                            if (direction.equals(new THREE.Vector3(1, 0, 0))) {
+                                quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)); // Rotation à droite
+                            } else if (direction.equals(new THREE.Vector3(-1, 0, 0))) {
+                                quaternion.setFromEuler(new THREE.Euler(0, -Math.PI / 2, 0)); // Rotation à gauche
+                            } else if (direction.equals(new THREE.Vector3(0, 0, 1))) {
+                                quaternion.setFromEuler(new THREE.Euler(0, 0, 0)); // Face avant
+                            } else if (direction.equals(new THREE.Vector3(0, 0, -1))) {
+                                quaternion.setFromEuler(new THREE.Euler(0, Math.PI, 0)); // Face arrière
+                            } else if (direction.equals(new THREE.Vector3(0, 1, 0))) {
+                                quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); // Haut
+                            } else if (direction.equals(new THREE.Vector3(0, -1, 0))) {
+                                quaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)); // Bas
+                            }
+
+                            matrix.compose(
+                                new THREE.Vector3(x, y, z),  // Position
+                                quaternion,                  // Rotation
+                                new THREE.Vector3(1, 1, 1)    // Échelle
+                            );
+                        }
+
+                        const offsetHeight = (1-(size.y))/2;
+
                         matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
                         meshes[block.id].setMatrixAt(meshes[block.id].count, matrix);
                         const mesh = meshes[block.id];
@@ -388,11 +285,26 @@ export class WorldChunk extends THREE.Group {
             const instanceId = mesh.count++;
             this.setBlockInstanceId(x, y, z, instanceId);
 
-            // Compute the transformation matrix for the new instance and update the instanced
+            // Transformation matrix pour positionner et tourner le bloc
             const matrix = new THREE.Matrix4();
-
             const quaternion = new THREE.Quaternion();
-            quaternion.setFromEuler(new THREE.Euler(0, Math.atan2(block.direction.x, block.direction.z), 0));
+            const direction = block.direction;
+
+            // Appliquer une rotation en fonction de la direction
+            if (direction.equals(new THREE.Vector3(1, 0, 0))) {
+                quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)); // Rotation à droite
+            } else if (direction.equals(new THREE.Vector3(-1, 0, 0))) {
+                quaternion.setFromEuler(new THREE.Euler(0, -Math.PI / 2, 0)); // Rotation à gauche
+            } else if (direction.equals(new THREE.Vector3(0, 0, 1))) {
+                quaternion.setFromEuler(new THREE.Euler(0, 0, 0)); // Face avant
+            } else if (direction.equals(new THREE.Vector3(0, 0, -1))) {
+                quaternion.setFromEuler(new THREE.Euler(0, Math.PI, 0)); // Face arrière
+            } else if (direction.equals(new THREE.Vector3(0, 1, 0))) {
+                quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); // Haut
+            } else if (direction.equals(new THREE.Vector3(0, -1, 0))) {
+                quaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)); // Bas
+            }
+
             matrix.compose(
                 new THREE.Vector3(x, y, z),  // Position
                 quaternion,                  // Rotation
