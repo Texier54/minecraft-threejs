@@ -12,7 +12,7 @@
   }
   }
 </script>
-  <script type="module" crossorigin src="/minecraft-threejs/assets/main-Ck0Z6DXd.js"></script>
+  <script type="module" crossorigin src="/minecraft-threejs/assets/main-COv1N0lm.js"></script>
   <link rel="modulepreload" crossorigin href="/minecraft-threejs/assets/smelting-B9EyUaOG.js">
 </head>
 <body>
@@ -52,6 +52,7 @@ serve
 <div class="bar" id="bar"></div>
 <div class="bar" id="bar" style="display: none;"></div>
 
+<div id="playerList"></div>
 <div id="chat"></div>
 
 <div id="time"></div>
@@ -160,6 +161,20 @@ serve
     margin-top: 5px;
     margin-left: 5px;
     font-size: 12px;
+  }
+
+  #playerList {
+    position: absolute;
+    right: 45%;
+    top: 45%;
+    font-weight: bold;
+    color: white;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    font-family: Minecraftia;
+    font-size: 12px;
+    display: none;
   }
 
   #chat {
