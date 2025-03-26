@@ -36,7 +36,7 @@ document.body.appendChild(renderer.domElement);
 const fpsDisplay = document.getElementById('fps');
 const timeDisplay = document.getElementById('time');
 
-const chat = new Chat(world, scene);
+const chat = new Chat();
 const client = new Client(world, scene, chat);
 //client.init();
 const player = new Player(scene, world, client);

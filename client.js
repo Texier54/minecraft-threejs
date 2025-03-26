@@ -14,6 +14,8 @@ export class Client {
         this.scene = scene;
         this.socket = null;
         this.chat = chat;
+        window.addEventListener('keydown', this.onKeyDown.bind(this));
+        window.addEventListener('keyup', this.onKeyUp.bind(this));
     }
 
     getSocket() {
@@ -138,6 +140,43 @@ export class Client {
 
         return playerMesh;
 
+    }
+
+
+    displayPlayersList() {
+
+        let element = document.getElementById('playerList');
+        if (this.socket) {
+            let content = '';
+
+            content += '<span>'+this.socket.id+'</span><br>';
+            for (const key in this.players) {
+                if (this.players.hasOwnProperty(key)) {
+                    console.log(`Clé: ${key}, UUID: ${this.players[key].uuid}, Type: ${this.players[key].type}`);
+                    content += '<span>'+key+'</span><br>';
+                }
+            }
+
+            element.innerHTML = content;
+            element.style.display = 'block';
+        }
+
+
+
+    }
+
+    hidePlayersList() {
+        let element = document.getElementById('playerList');
+        element.style.display = 'none';
+    }
+
+    onKeyDown(event) {
+        if (event.code === 'KeyL') this.displayPlayersList();
+    }
+
+    onKeyUp(event) {
+        console.log('uyo');
+        if (event.code === 'KeyL') this.hidePlayersList();
     }
 
 

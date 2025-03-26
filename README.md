@@ -17,3 +17,4 @@ https://texier54.github.io/minecraft-threejs/
 * Echap -> Menu
 * F5 Change camera
 * T display chat
+* L players list
