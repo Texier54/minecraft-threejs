@@ -288,7 +288,7 @@ export class WorldChunk extends THREE.Group {
             // Transformation matrix pour positionner et tourner le bloc
             const matrix = new THREE.Matrix4();
             const quaternion = new THREE.Quaternion();
-            const direction = block.direction;
+            const direction = new THREE.Vector3(block.direction.x, block.direction.y, block.direction.z);
 
             // Appliquer une rotation en fonction de la direction
             if (direction.equals(new THREE.Vector3(1, 0, 0))) {

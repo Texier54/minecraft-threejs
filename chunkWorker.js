@@ -53,7 +53,7 @@ function initializeTerrain(chunkSize, chunkHeight) {
                     id: 0, // Exemple d'identifiant de bloc
                     instanceId: null,
                     inventory: null,
-                    direction: new THREE.Vector3(0, 0, 0) // Par défaut vers le haut
+                    direction: { x:0, y:0, z:0 } // Par défaut vers le haut
                 });
             }
             slice.push(row);

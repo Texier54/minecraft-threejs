@@ -110,11 +110,11 @@ export class Player {
 
         let placementDir = vector.negate();
 
-        if (placementDir.x === 1) return new THREE.Vector3(1, 0, 0); // À droite
-        if (placementDir.x === -1) return new THREE.Vector3(-1, 0, 0); // À gauche
-        if (placementDir.z === 1) return new THREE.Vector3(0, 0, 1); // Devant
-        if (placementDir.z === -1) return new THREE.Vector3(0, 0, -1); // Derrière
-        return new THREE.Vector3(0, 1, 0); // Par défaut vers le haut
+        if (placementDir.x === 1) return {x:1, y:0, z:0}; // À droite
+        if (placementDir.x === -1) return {x:-1, y:0, z:0}; // À gauche
+        if (placementDir.z === 1) return {x:0, y:0, z:1}; // Devant
+        if (placementDir.z === -1) return {x:0, y:0, z:-1}; // Derrière
+        return {x:0, y:1, z:0}; // Par défaut vers le haut
     }
 
     onMouseDown(event) {
@@ -271,15 +271,21 @@ export class Player {
                 // récupére transformation matrix du bloc intercepté
                 const blockMatrix = new THREE.Matrix4();
                 intersected.object.getMatrixAt(intersected.instanceId, blockMatrix);
+                console.log(blockMatrix);
 
-                // extrait la position du bloc transformation matrix et le met dans coords
+
+                // Récupère la position du chunk (grille globale)
                 this.selectedCoords = chunk.position.clone();
-                // convertit les coordonnées locales du bloc en coordonnées mondiales.
-                this.selectedCoords.applyMatrix4(blockMatrix);
 
+                // Extraire la position du bloc sans la rotation
+                // decompose envoie les de blockMatrix dans des variables, nous on veut que la position
+                const blockPosition = new THREE.Vector3();
                 // Extraire le quaternion (rotation) du bloc
                 const blockQuaternion = new THREE.Quaternion();
-                blockMatrix.decompose(new THREE.Vector3(), blockQuaternion, new THREE.Vector3());
+                blockMatrix.decompose(blockPosition, blockQuaternion, new THREE.Vector3());
+
+                // Ajoute la position du bloc à la position du chunk
+                this.selectedCoords.add(blockPosition);
 
                 // Arrondir les coordonnées à des entiers (alignement sur la grille)
                 this.selectedCoords.set(
@@ -287,6 +293,7 @@ export class Player {
                     Math.round(this.selectedCoords.y),
                     Math.round(this.selectedCoords.z)
                 );
+                console.log(this.selectedCoords);
 
                 // Clone la normale pour ne pas modifier l'original
                 this.selectedNormal = intersected.face.normal.clone();
@@ -294,17 +301,6 @@ export class Player {
 
                 // Appliquer la rotation du bloc à la normale
                 this.selectedNormal.applyQuaternion(blockQuaternion).normalize();
-
-                // Calculer la position réelle du bloc
-                this.selectedCoords = chunk.position.clone();
-                this.selectedCoords.applyMatrix4(blockMatrix);
-
-                // Arrondir pour aligner sur la grille
-                this.selectedCoords.set(
-                    Math.round(this.selectedCoords.x),
-                    Math.round(this.selectedCoords.y),
-                    Math.round(this.selectedCoords.z)
-                );
 
                 // Déterminer où placer le bloc adjacent (pour placer un bloc en face de la normale)
                 this.selectedCoordsNormal = this.selectedCoords.clone().add(this.selectedNormal);
@@ -373,12 +369,13 @@ export class Player {
 
     setBlockInHand(id) {
 
-        if (getBlockByIdFast(id)?.material) {
+        const block = getBlockByIdFast(id);
+        if (block?.material) {
             this.scene.remove(this.meshHandItem);
             this.camera.remove(this.meshHandItem);
-            const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-            //console.log(getBlockByIdFast(id).geometry.width);
-            this.meshHandItem = new THREE.Mesh(geometry, getBlockByIdFast(id).material);
+            const geometryHand = block.geometry.clone();
+            geometryHand.scale(0.3, 0.3, 0.3);
+            this.meshHandItem = new THREE.Mesh(geometryHand, block.material);
             //meshHand.name = blockType.id;
             this.meshHandItem.count = 0;
             this.meshHandItem.castShadow = true;
