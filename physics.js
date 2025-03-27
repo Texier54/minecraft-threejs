@@ -76,7 +76,7 @@ export class Physics {
                     if (blockId && blockId !== blocks.empty.id) {
                         let size = {};
                         let hasStep = false;
-                        if (blockId == 53) {
+                        if (blockId == 53 || blockId == 67) {
                             size = { x: 1, y: 1, z: 1 };
                             hasStep = true; // Ajout d'une propriété pour détecter les escaliers
                         }

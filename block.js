@@ -347,6 +347,17 @@ export const blocks = {
         tool: TOOL_TYPES.PICKAXE,
         geometry: geometryBlock,
     },
+    cobblestone_stairs: {
+        id: 67,
+        name: 'cobblestone_stairs',
+        type: 'block',
+        stackable: true,
+        hardness: 2,
+        material: new THREE.MeshLambertMaterial({ map: textures.cobblestone }),
+        icon: 'images/block-icon/cobblestone_stairs.png',
+        tool: TOOL_TYPES.PICKAXE,
+        geometry: geometryStair,
+    },
     iron_pickaxe: {
         id: 297,
         name: 'Iron Pickaxe',
