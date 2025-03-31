@@ -127,14 +127,15 @@ export class Player {
                     const selectedBlock = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
 
                     if (this.inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && getBlockByIdFast(this.inventory.getSelectedItem()?.block).type === 'block') {
-
-                        this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block, this.getPlacementDirection(this.selectedNormal));
+                        const direction = this.getPlacementDirection(this.selectedNormal);
+                        this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block, direction);
                         this.inventory.removeBlock(this.inventory.getSelectedItem().block);
                         var audio = new Audio('audio/dirt1.ogg');
                         audio.play();
 
+                        console.log(this.socket.getSocket());
                         this.socket.getSocket()?.emit("addBlock", {
-                            x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block
+                            x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block, direction: direction
                         });
                     } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
                         this.ui.open(selectedBlock.id);
@@ -271,7 +272,6 @@ export class Player {
                 // récupére transformation matrix du bloc intercepté
                 const blockMatrix = new THREE.Matrix4();
                 intersected.object.getMatrixAt(intersected.instanceId, blockMatrix);
-                console.log(blockMatrix);
 
 
                 // Récupère la position du chunk (grille globale)
@@ -293,7 +293,6 @@ export class Player {
                     Math.round(this.selectedCoords.y),
                     Math.round(this.selectedCoords.z)
                 );
-                console.log(this.selectedCoords);
 
                 // Clone la normale pour ne pas modifier l'original
                 this.selectedNormal = intersected.face.normal.clone();

@@ -61,6 +61,17 @@ io.on('connection', (socket) => {
         io.emit("removeBlock", data);
     });
 
+    // Écoute la requête du client
+    socket.on("demandeInfo", (data, callback) => {
+        console.log("Requête reçue:", data);
+
+        // Simule une réponse (exemple : envoyer un timestamp)
+        const reponse = { message: "Réponse du serveur", timestamp: Date.now() };
+
+        // Envoie la réponse au client via le callback
+        callback(reponse);
+    });
+
     socket.on('disconnect', () => {
         log(`Joueur déconnecté : ${socket.id}`);
         delete players[socket.id];

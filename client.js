@@ -50,7 +50,7 @@ export class Client {
         });
 
         this.socket.on('addBlock', (data) => {
-            this.world.addBlock(data.x, data.y, data.z, data.blockId);
+            this.world.addBlock(data.x, data.y, data.z, data.blockId, data.direction);
         });
 
         this.socket.on('removeBlock', (data) => {
@@ -175,7 +175,6 @@ export class Client {
     }
 
     onKeyUp(event) {
-        console.log('uyo');
         if (event.code === 'KeyL') this.hidePlayersList();
     }
 
