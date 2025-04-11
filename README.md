@@ -18,3 +18,4 @@ https://texier54.github.io/minecraft-threejs/
 * F5 Change camera
 * T display chat
 * L players list
+* Left Shift run

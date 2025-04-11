@@ -6,7 +6,9 @@ export class Player {
 
     radius = 0.5;
     height = 1.8;
-    maxSpeed = 10;
+    maxSpeed = 7;
+    maxRun = 5;
+    run = 0;
 
     jumpSpeed = 10;
     onGround = false;
@@ -432,16 +434,17 @@ export class Player {
     }
 
     onKeyDown(event) {
-        if (event.code === 'ShiftLeft') keys.speed = true;
-        if (event.code === 'KeyW') this.input.z = this.maxSpeed;
-        if (event.code === 'KeyS') this.input.z = -this.maxSpeed;
-        if (event.code === 'KeyA') this.input.x = -this.maxSpeed;
-        if (event.code === 'KeyD') this.input.x = this.maxSpeed;
+        if (event.code === 'ShiftLeft') this.run = this.maxRun;
+        if (event.code === 'KeyW') this.input.z = this.maxSpeed+this.run;
+        if (event.code === 'KeyS') this.input.z = -this.maxSpeed+this.run;
+        if (event.code === 'KeyA') this.input.x = -this.maxSpeed+this.run;
+        if (event.code === 'KeyD') this.input.x = this.maxSpeed+this.run;
         if (event.code === 'Space') if (this.onGround) this.velocity.y += this.jumpSpeed;
         if (event.code === 'F5') this.camera.position.set(this.camera.position.x, this.camera.position.y+1, this.camera.position.z);
     }
 
     onKeyUp(event) {
+        if (event.code === 'ShiftLeft') this.run = 0;
         if (event.code === 'KeyW') this.input.z = 0;
         if (event.code === 'KeyS') this.input.z = 0;
         if (event.code === 'KeyA') this.input.x = 0;
