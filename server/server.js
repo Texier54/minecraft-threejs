@@ -2,9 +2,11 @@ import express from 'express';
 import cors from 'cors';  // ✅ Import CORS
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+//import { World } from './world.js';
 import https from 'https';
-import fs from 'fs';
+import { Store } from './store.js';
 
+const store = new Store();
 const app = express();
 app.use(cors({ origin: '*' }));  // ✅ Autorise toutes les origines
 
@@ -20,8 +22,9 @@ const options = {
 // Crée un serveur HTTPS
 const server = https.createServer(options, app);
 
-
+//Crée serveur HTTP
 //const server = createServer(app);
+
 const io = new Server(server, {
     cors: {
         origin: "*",  // ✅ Autorise le client
@@ -38,6 +41,7 @@ io.on('connection', (socket) => {
         playerData.id = socket.id;
         players[socket.id] = playerData;
         io.emit('player-connect', playerData);
+        store.log('connect '+socket.id);
     });
 
     // Recevoir la position et la direction du joueur
@@ -53,6 +57,7 @@ io.on('connection', (socket) => {
         // Diffuser l’état du joueur à tous les autres
         log('Add block' + data);
         io.emit("addBlock", data);
+        store.world('add block '+data);
     });
 
     socket.on("removeBlock", (data) => {
@@ -76,6 +81,7 @@ io.on('connection', (socket) => {
         log(`Joueur déconnecté : ${socket.id}`);
         delete players[socket.id];
         io.emit('player-disconnect', socket.id);
+        store.log('disconnect '+socket.id);
     });
 });
 
@@ -83,6 +89,8 @@ function log(message) {
     console.log(`[${new Date().toLocaleString()}] `+message);
 }
 
+//const world = new World();
+//world.generate();
 
 // Configure une route pour vérifier que le serveur fonctionne
 app.get('/d', (req, res) => {

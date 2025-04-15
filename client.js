@@ -5,6 +5,8 @@ import {io} from "socket.io-client";
 
 export class Client {
 
+    //serverAddress = 'http://localhost:3000';
+    serverAddress = 'https://baptiste-texier.ddns.net:3000';
 
     constructor(world, scene, chat) {
         this.players = {}; // Stocker les joueurs affichés
@@ -25,7 +27,7 @@ export class Client {
     init() {
 
 
-        this.socket = io('https://baptiste-texier.ddns.net:3000');
+        this.socket = io(this.serverAddress);
 
         this.socket.on('connect', (data) => {
             this.chat.add('Connected to server', '#FFFF55');
