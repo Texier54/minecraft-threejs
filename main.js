@@ -38,6 +38,7 @@ const timeDisplay = document.getElementById('time');
 
 const chat = new Chat();
 const client = new Client(world, scene, chat);
+world.setClient(client);
 //client.init();
 const player = new Player(scene, world, client);
 const physics = new Physics(scene);

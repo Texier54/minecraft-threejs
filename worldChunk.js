@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 import {blocks, getBlockByIdFast, resources} from './block.js';
 import { RNG } from './rng.js';
+import pako from 'pako';
 
 export class WorldChunk extends THREE.Group {
 
@@ -27,9 +28,23 @@ export class WorldChunk extends THREE.Group {
 
     }
 
-    generate() {
+    generate(socket = null) {
 
-        if (this.dataStore.contains(this.position.x, this.position.z)) {
+        if (socket && socket.getSocket()) {
+            socket.getSocket()?.emit("getChunkData", {
+                x : this.position.x/this.chunkSize, z : this.position.z/this.chunkSize
+            }, (response) => {
+
+                const decompressed = pako.inflate(response, { to: 'string' });
+                const chunkData = JSON.parse(decompressed);
+                console.log(chunkData);
+                this.data = chunkData.data;
+                this.biomes = chunkData.biomes;
+                this.dataStore.set(this.position.x, this.position.z, this.data);
+                this.generateMesh();
+            });
+
+        } else if (this.dataStore.contains(this.position.x, this.position.z)) {
             this.data = this.dataStore.get(this.position.x, this.position.z)
             this.generateMesh();
         } else {

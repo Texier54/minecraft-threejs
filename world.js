@@ -9,7 +9,9 @@ export class World extends THREE.Group {
 
     asyncLoading = true;
 
-    drawDistance = 2;
+    drawDistance = 1;
+
+    client = null;
 
     chunkSize = { width: 16, height: 80 };
 
@@ -60,6 +62,10 @@ export class World extends THREE.Group {
 
     constructor() {
         super();
+    }
+
+    setClient(client) {
+        this.client = client;
     }
 
     worldToUint8Array(world) {
@@ -138,7 +144,7 @@ console.log(data);
             for (let z = -this.drawDistance; z <= this.drawDistance; z++) {
                 const chunk = new WorldChunk(this.chunkSize, this.params, this.dataStore);
                 chunk.position.set(x * this.chunkSize.width, 0,z * this.chunkSize.width)
-                chunk.generate();
+                chunk.generate(this.client);
                 chunk.userData = {x, z};
                 this.add(chunk);
             }
@@ -236,9 +242,9 @@ console.log(data);
 
         if (this.asyncLoading) {
             //pour garantir la valeur de this on doit bind chunk parce que la fonction est appelé plus tard
-            requestIdleCallback(chunk.generate.bind(chunk), { timeout: 2000 });
+            requestIdleCallback(() => chunk.generate(this.client), { timeout: 2000 });
         } else {
-            chunk.generate();
+            chunk.generate(this.client);
         }
 
         this.add(chunk);
