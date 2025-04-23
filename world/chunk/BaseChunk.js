@@ -43,4 +43,10 @@ export class BaseChunk {
     getBiome(x, z) {
         return this.inBounds(x, 0, z) && this.biomes[x]?.[z] || null;
     }
+
+    setBlockInventory(x, y, z, inventory) {
+        if (this.inBounds(x, y, z)) {
+            this.data[x][y][z].inventory = inventory;
+        }
+    }
 }

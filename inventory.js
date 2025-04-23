@@ -42,9 +42,10 @@ export class Inventory {
     heldItem = null; // L'objet actuellement tenu
     heldItemElement = document.getElementById('held-item'); // Élément qui suit la souris
 
-    constructor(player, world) {
+    constructor(player, world, socket) {
         this.player = player;
         this.world = world;
+        this.socket = socket;
         this.isShow = false;
         this.inventory[0] = this.items[2]; // Table de craft au premier slot
         this.inventory[1] = this.items[1]; // Table de craft au premier slot
@@ -79,6 +80,7 @@ export class Inventory {
         console.log(this.player.selectedCoords);
         this.blockInventory = Array(41).fill(null);
         if (this.UIID) {
+            console.log(this.world.getBlock(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z));
             let content = this.world.getBlock(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z).inventory;
             if (content)
                 this.blockInventory = content;
@@ -90,8 +92,12 @@ export class Inventory {
         this.inventoryContainer.style.display = 'none';
         this.bar.style.display = 'grid';
         this.renderBar();
-        if (this.UIID)
+        if (this.UIID) {
             this.world.setBlockInventory(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z, this.blockInventory);
+            this.socket.getSocket()?.emit("setBlockInventory", {
+                x : this.player.selectedCoords.x, y : this.player.selectedCoords.y, z : this.player.selectedCoords.z, inventory : this.blockInventory
+            });
+        }
         this.isShow = false;
     }
 
@@ -162,14 +168,16 @@ export class Inventory {
 
         this.inventoryCrafter.style.gridTemplateColumns = 'repeat('+grid+', 50px)';
 
+        console.log(this.blockInventory);
+
         for (const slotId in slots) {
             if (slots.hasOwnProperty(slotId)) {
                 const slot = slots[slotId];
                 const slotDiv = document.createElement('div');
                 slotDiv.classList.add('slot');
                 slotDiv.dataset.index = slot.name;
-
                 if (this.blockInventory[slotId] !== null) {
+                    console.log(this.blockInventory);
                     const img = document.createElement('img');
                     const div = document.createElement('div');
                     const blockObject = Object.values(blocks).find(block => block.id === this.blockInventory[slotId].block)

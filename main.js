@@ -42,7 +42,7 @@ world.setClient(client);
 //client.init();
 const player = new Player(scene, world, client);
 const physics = new Physics(scene);
-const inventory = new Inventory(player, world);
+const inventory = new Inventory(player, world, client);
 const menu = new Menu(world, player, inventory, client, chat);
 const ui = new UI(player, inventory);
 const sun = new Sun(scene, player,0.20);

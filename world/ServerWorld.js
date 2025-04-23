@@ -71,7 +71,6 @@ export class ServerWorld extends BaseWorld {
     async addBlock(x, y, z, blockData) {
         const { chunk, block } = this.worldToChunkCoords(x, y, z);
         console.log(chunk);
-        console.log(block);
         let targetChunk = await this.getChunk(chunk.x, chunk.z);
         const blockId = blockData.blockId;
         const direction = blockData.direction;
@@ -81,7 +80,6 @@ export class ServerWorld extends BaseWorld {
             blockId,
             direction
         );
-
         this.saveChunkToDisk(chunk.x, chunk.z, {
             data: targetChunk.data,
             biomes: targetChunk.biomes,
@@ -89,32 +87,42 @@ export class ServerWorld extends BaseWorld {
         return true;
     }
 
-    save() {
-        const data = this.dataStore.getData();
-        console.log('Saving data...');
-        // TODO: écrire sur disque ou base de données
-    }
-
-    load() {
-        console.log('Loading data...');
-        // TODO: charger depuis disque ou base
-    }
-
     async saveChunkToDisk(x, z, data) {
         const dir = path.resolve('worlddata');
-        const filePath = path.join(dir, `${x}_${z}.json`);
+        const filePath = path.join(dir, `${x}_${z}.bin`);
 
         await fs.mkdir(dir, { recursive: true });
-        await fs.writeFile(filePath, JSON.stringify(data));
+        await fs.writeFile(filePath, this.encodeChunk(data.data));
     }
 
     async loadChunkFromDisk(x, z) {
-        const filePath = path.resolve('worlddata', `${x}_${z}.json`);
+        const filePath = path.resolve('worlddata', `${x}_${z}.bin`);
         try {
-            const content = await fs.readFile(filePath, 'utf-8');
-            return JSON.parse(content);
+            const raw = await fs.readFile(filePath);
+            const data = this.decodeChunk(raw);
+            return { data: data, biomes : {}};
         } catch {
             return null; // pas trouvé
         }
+    }
+
+    async setBlockInventory(x, y, z, inventory) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = await this.getChunk(coords.chunk.x, coords.chunk.z);
+        if (chunk) {
+            chunk.setBlockInventory(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z,
+                inventory
+            );
+
+            this.saveChunkToDisk(coords.chunk.x, coords.chunk.z, {
+                data: chunk.data,
+                biomes: chunk.biomes,
+            });
+        }
+
+
     }
 }

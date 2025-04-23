@@ -91,6 +91,14 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on("setBlockInventory", async (data) => {
+        // Diffuser l’état du joueur à tous les autres
+        log('setBlockInventory' + data);
+        await world.setBlockInventory(data.x, data.y, data.z, data.inventory);
+        io.emit("setBlockInventory", data);
+    });
+
+
     socket.on('disconnect', () => {
         log(`Joueur déconnecté : ${socket.id}`);
         delete players[socket.id];
