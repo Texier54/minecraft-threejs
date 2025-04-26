@@ -5,8 +5,7 @@ import {io} from "socket.io-client";
 
 export class Client {
 
-    serverAddress = 'http://localhost:3000';
-    //serverAddress = 'https://baptiste-texier.ddns.net:3000';
+    serverAddress = 'https://baptiste-texier.ddns.net:3000';
 
     constructor(world, scene, chat) {
         this.players = {}; // Stocker les joueurs affichés
@@ -18,6 +17,10 @@ export class Client {
         this.chat = chat;
         window.addEventListener('keydown', this.onKeyDown.bind(this));
         window.addEventListener('keyup', this.onKeyUp.bind(this));
+
+        if (process.env.NODE_ENV !== 'production') {
+            this.serverAddress = 'http://localhost:3000';
+        }
     }
 
     getSocket() {

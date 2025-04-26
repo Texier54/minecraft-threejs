@@ -14,18 +14,18 @@ app.use(cors({ origin: '*' }));  // ✅ Autorise toutes les origines
 
 // Lis les fichiers de certificat SSL (assurez-vous que les fichiers existent)
 // Lis les fichiers de certificat SSL
-/*
+
 // Lis les fichiers du certificat SSL
 const options = {
     cert: fs.readFileSync('/etc/letsencrypt/live/baptiste-texier.ddns.net/fullchain.pem'),
     key: fs.readFileSync('/etc/letsencrypt/live/baptiste-texier.ddns.net/privkey.pem'),
-};*/
+};
 
 // Crée un serveur HTTPS
-//const server = https.createServer(options, app);
+const server = https.createServer(options, app);
 
 //Crée serveur HTTP
-const server = createServer(app);
+//const server = createServer(app);
 
 const io = new Server(server, {
     cors: {
