@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 import { Player } from './player.js';
-import { World } from './world.js';
+import { ClientWorld } from './world/ClientWorld.js';
 import {blocks, getBlockByIdFast} from "./block.js";
 import {Pig} from "./pig.js";
 import {Physics} from "./physics.js";
@@ -16,7 +16,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 const scene = new THREE.Scene();
 
-const world = new World();
+const world = new ClientWorld();
 world.generate();
 //world.load();
 scene.add(world)

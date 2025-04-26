@@ -6,7 +6,7 @@ export class BaseWorld {
     dataStore = new DataStore();
 
     params = {
-        seed: 45678,
+        seed: 456789986,
         terrain: {
             scale: 40,
             magnitude: 0.1,
@@ -42,15 +42,38 @@ export class BaseWorld {
         return { chunk: chunkCoords, block: blockCoords };
     }
 
-    getBlock(x, y, z) {
-        // À surcharger ou connecter avec dataStore/chunks
+    getBlock(x, y ,z ) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk /*&& chunk.loaded*/) {
+            return chunk.getBlock(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z
+            );
+        } else {
+            return null;
+        }
     }
 
     setBlockInventory(x, y, z, inventory) {
         // À surcharger si besoin
     }
 
-    encodeChunk(chunkData) {
+    getChunk(x, z) {
+        /*
+        •	Si BaseWorld.parent est défini (ce qui est le cas dans ClientWorld)
+        •	Et que ce parent a bien une méthode getChunk() (ce qui est ton cas)
+        •	➜ alors on l’utilise
+         */
+        if (typeof this.parent?.getChunk === 'function') {
+            return this.parent.getChunk(x, z);
+        }
+        throw new Error('getChunk must be implemented by child class');
+    }
+
+    encodeChunk(chunkData, biomes) {
         const byteArray = [];
 
         for (let x = 0; x < this.chunkSize.width; x++) {
@@ -88,12 +111,20 @@ export class BaseWorld {
             }
         }
 
+        for (let x = 0; x < this.chunkSize.width; x++) {
+            for (let z = 0; z < this.chunkSize.width; z++) {
+                const biomeName = biomes[x][z] ?? 'plains';
+                byteArray.push(biomeName);
+            }
+        }
+
         return Uint8Array.from(byteArray);
     }
 
     decodeChunk(buffer) {
         const view = new DataView(buffer.buffer || buffer);
         const data = [];
+        const biomes = [];
         let i = 0;
 
         for (let x = 0; x < this.chunkSize.width; x++) {
@@ -132,7 +163,29 @@ export class BaseWorld {
             }
         }
 
-        return data;
+        for (let x = 0; x < this.chunkSize.width; x++) {
+            biomes[x] = [];
+            for (let z = 0; z < this.chunkSize.width; z++) {
+                const biomeId = view.getUint8(i++);
+                biomes[x][z] = biomeId ?? 'plains';
+            }
+        }
+
+        return {data, biomes};
+    }
+
+    getPlayerBiome(x, z) {
+        const coords = this.worldToChunkCoords(x, 0, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk /*&& chunk.loaded*/) {
+            return chunk.getBiome(
+                coords.block.x,
+                coords.block.z
+            );
+        } else {
+            return null;
+        }
     }
 
 }

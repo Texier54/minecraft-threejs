@@ -3,7 +3,7 @@ import fs from "fs";
 export class Store {
 
     log(data) {
-        fs.writeFile('log.txt', data, err => {
+        fs.appendFile('log.txt', data+'\n', err => {
             if (err) {
                 console.error(err);
             } else {
@@ -13,7 +13,7 @@ export class Store {
     }
 
     world(data) {
-        fs.writeFile('world.txt', data, err => {
+        fs.appendFile('world.txt', data+'\n', err => {
             if (err) {
                 console.error(err);
             } else {

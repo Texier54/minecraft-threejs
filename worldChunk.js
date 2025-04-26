@@ -6,7 +6,6 @@ import pako from 'pako';
 
 export class WorldChunk extends THREE.Group {
 
-    chunks;
     chunkSize;
     height;
     meshs;
@@ -15,7 +14,6 @@ export class WorldChunk extends THREE.Group {
 
     constructor(size, params, dataStore) {
         super();
-        this.chunks = new Map(); // Contiendra les chunks générés
         this.chunkSize = size.width;
         this.height = size.height;
         this.params = params;

@@ -1,36 +1,55 @@
 import * as THREE from 'three';
 import { BaseWorld } from './BaseWorld.js';
-import { WorldChunk } from '../worldChunk.js';
+import { ClientChunk } from '../world/chunk/ClientChunk.js';
+import {getBlockByIdFast} from "../block.js";
 
 export class ClientWorld extends THREE.Group {
     constructor() {
         super();
+        // On instancie BaseWorld
         this.base = new BaseWorld();
+        this.base.parent = this; // ➔ injection du parent
+
+        // On copie toutes les propriétés et méthodes de BaseWorld dans ClientWorld
+        Object.getOwnPropertyNames(BaseWorld.prototype).forEach((name) => {
+            if (name !== 'constructor' && name !== 'getChunk') {
+                this[name] = this.base[name].bind(this.base);
+            }
+        });
+
+        // Et les propriétés directes (drawDistance, chunkSize, etc.)
+        Object.keys(this.base).forEach((key) => {
+            this[key] = this.base[key];
+        });
     }
 
     generate() {
         this.clear();
 
-        for (let x = -this.base.drawDistance; x <= this.base.drawDistance; x++) {
-            for (let z = -this.base.drawDistance; z <= this.base.drawDistance; z++) {
-                const chunk = new WorldChunk(
-                    this.base.chunkSize,
-                    this.base.params,
-                    this.base.dataStore
-                );
-
-                chunk.position.set(
-                    x * this.base.chunkSize.width,
-                    0,
-                    z * this.base.chunkSize.width
-                );
-
-                chunk.generate();
-                chunk.userData = { x, z };
-
-                this.add(chunk);
+        for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
+            for (let z = -this.drawDistance; z <= this.drawDistance; z++) {
+                this.generateChunk();
             }
         }
+    }
+
+    generateChunk(x, z) {
+        const chunk = new ClientChunk(this.chunkSize, this.params, this.dataStore);
+        chunk.position.set(
+            x * this.chunkSize.width,
+            0,
+            z * this.chunkSize.width);
+        chunk.userData = { x, z };
+
+        if (this.asyncLoading) {
+            //pour garantir la valeur de this on doit bind chunk parce que la fonction est appelé plus tard
+            requestIdleCallback(() => chunk.generate(this.client), { timeout: 2000 });
+        } else {
+            chunk.generate(this.client);
+        }
+
+        this.add(chunk);
+        //console.log(`Adding chunk at X: ${x} Z: ${z}`);
     }
 
     // Ajoute ici hideBlock, revealBlock, etc.
@@ -40,6 +59,62 @@ export class ClientWorld extends THREE.Group {
             chunk.userData.x === chunkX &&
             chunk.userData.z === chunkZ
         ));
+    }
+
+    addBlock(x, y, z, blockId, direction) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk) {
+            chunk.addBlock(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z,
+                blockId,
+                direction
+            );
+
+            if (getBlockByIdFast(blockId).transparent !== true) {
+                // Hide neighboring blocks if they are completely obscured
+                this.hideBlock(x - 1, y, z);
+                this.hideBlock(x + 1, y, z);
+                this.hideBlock(x, y - 1, z);
+                this.hideBlock(x, y + 1, z);
+                this.hideBlock(x, y, z - 1);
+                this.hideBlock(x, y, z + 1);
+            }
+
+        }
+
+
+    }
+
+    removeBlock(x, y, z) {
+        //console.log(x, y, z);
+
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        // Don't allow removing the first layer of blocks
+        if (coords.block.y === 0) return;
+
+        if (chunk) {
+            this.checkRemoveTree(x, y, z);
+            chunk.removeBlock(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z
+            );
+
+            // Reveal adjacent neighbors if they are hidden
+            this.revealBlock(x - 1, y, z);
+            this.revealBlock(x + 1, y, z);
+            this.revealBlock(x, y - 1, z);
+            this.revealBlock(x, y + 1, z);
+            this.revealBlock(x, y, z - 1);
+            this.revealBlock(x, y, z + 1);
+
+        }
     }
 
     hideBlock(x, y, z) {
@@ -52,6 +127,85 @@ export class ClientWorld extends THREE.Group {
                 coords.block.y,
                 coords.block.z
             )
+        }
+    }
+
+    setClient(client) {
+        this.client = client;
+    }
+
+    /**
+     * Updates the visible portions of the world based on the
+     * current player position
+     * @param {Player} player
+     */
+    update(player) {
+        const visibleChunks = this.getVisibleChunks(player);
+
+        const chunksToAdd = this.getChunksToAdd(visibleChunks);
+
+        this.removeUnusedChunks(visibleChunks);
+
+        for (const chunk of chunksToAdd) {
+            this.generateChunk(chunk.x, chunk.z);
+        }
+
+
+    }
+
+    getVisibleChunks(player) {
+        const visibleChunks = [];
+
+        const coords = this.worldToChunkCoords(
+            player.position.x,
+            player.position.y,
+            player.position.z
+        );
+
+        const chunkX= coords.chunk.x;
+        const chunkZ= coords.chunk.z;
+
+        for (let x = chunkX - this.drawDistance; x <= chunkX + this.drawDistance; x++) {
+            for (let z = chunkZ - this.drawDistance; z <= chunkZ + this.drawDistance; z++) {
+                visibleChunks.push({ x, z });
+            }
+        }
+
+        return visibleChunks;
+
+    }
+
+    getChunksToAdd(visibleChunks) {
+        return visibleChunks.filter((chunk) => {
+            const chunkExists = this.children
+                .map((obj) => obj.userData)
+                .find(({x, z}) => (
+                    chunk.x === x && chunk.z === z
+                ));
+            return !chunkExists;
+        })
+    }
+
+    /**
+     * Removes current loaded chunks that are no longer visible to the player
+     * @param {{ x: number, z: number}[]} visibleChunks
+     */
+    removeUnusedChunks(visibleChunks) {
+        // Filter down the visible chunks to those not already in the world
+        const chunksToRemove = this.children.filter((chunk) => {
+            const { x, z } = chunk.userData;
+            const chunkExists = visibleChunks
+                .find((visibleChunk) => (
+                    visibleChunk.x === x && visibleChunk.z === z
+                ));
+
+            return !chunkExists;
+        });
+
+        for (const chunk of chunksToRemove) {
+            chunk.disposeInstances();
+            this.remove(chunk);
+            //console.log(`Removing chunk at X: ${chunk.userData.x} Z: ${chunk.userData.z}`);
         }
     }
 }

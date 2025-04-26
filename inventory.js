@@ -168,8 +168,6 @@ export class Inventory {
 
         this.inventoryCrafter.style.gridTemplateColumns = 'repeat('+grid+', 50px)';
 
-        console.log(this.blockInventory);
-
         for (const slotId in slots) {
             if (slots.hasOwnProperty(slotId)) {
                 const slot = slots[slotId];
@@ -177,7 +175,6 @@ export class Inventory {
                 slotDiv.classList.add('slot');
                 slotDiv.dataset.index = slot.name;
                 if (this.blockInventory[slotId] !== null) {
-                    console.log(this.blockInventory);
                     const img = document.createElement('img');
                     const div = document.createElement('div');
                     const blockObject = Object.values(blocks).find(block => block.id === this.blockInventory[slotId].block)

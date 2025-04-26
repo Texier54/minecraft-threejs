@@ -92,15 +92,15 @@ export class ServerWorld extends BaseWorld {
         const filePath = path.join(dir, `${x}_${z}.bin`);
 
         await fs.mkdir(dir, { recursive: true });
-        await fs.writeFile(filePath, this.encodeChunk(data.data));
+        await fs.writeFile(filePath, this.encodeChunk(data.data, data.biomes));
     }
 
     async loadChunkFromDisk(x, z) {
         const filePath = path.resolve('worlddata', `${x}_${z}.bin`);
         try {
             const raw = await fs.readFile(filePath);
-            const data = this.decodeChunk(raw);
-            return { data: data, biomes : {}};
+            const { data, biomes} = this.decodeChunk(raw);
+            return { data: data, biomes : biomes };
         } catch {
             return null; // pas trouvé
         }

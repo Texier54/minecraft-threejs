@@ -1,4 +1,10 @@
 export class BaseChunk {
+
+    chunkSize;
+    height;
+    data;
+    biomes;
+
     constructor(size, params, dataStore) {
         this.chunkSize = size.width;
         this.height = size.height;
