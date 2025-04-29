@@ -32,7 +32,8 @@ export class Menu {
 
     backToGame() {
         document.getElementById('menu').style.display = 'none';
-        this.player.controls.lock();
+        if (this.player.usePointerLock)
+            this.player.controls.lock();
         this.inventory.hide();
     }
 

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { TouchControls } from './TouchControls.js';
 import {blocks, getBlockByIdFast} from "./block.js";
 
 export class Player {
@@ -25,6 +26,39 @@ export class Player {
 
 
     constructor(scene, world, socket) {
+
+        const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+        if (!isMobile) {
+            this.controls = new PointerLockControls(this.camera, document.body);
+            this.usePointerLock = true;
+        } else {
+            this.controls = new TouchControls(this.camera, document.body);
+            this.usePointerLock = false;
+            const forward = document.getElementById('move-forward');
+            const backward = document.getElementById('move-backward');
+            const left = document.getElementById('move-left');
+            const right = document.getElementById('move-right');
+            const jump = document.getElementById('jump');
+
+            forward.addEventListener('touchstart', () => this.input.z = this.maxSpeed);
+            forward.addEventListener('touchend', () => this.input.z = 0);
+
+            backward.addEventListener('touchstart', () => this.input.z = -this.maxSpeed);
+            backward.addEventListener('touchend', () => this.input.z = 0);
+
+            left.addEventListener('touchstart', () => this.input.x = -this.maxSpeed);
+            left.addEventListener('touchend', () => this.input.x = 0);
+
+            right.addEventListener('touchstart', () => this.input.x = this.maxSpeed);
+            right.addEventListener('touchend', () => this.input.x = 0);
+
+            jump.addEventListener('touchstart', () => {
+                if (this.onGround) this.velocity.y += this.jumpSpeed;
+            });
+
+            document.getElementById('mobile-controls').style.display = 'block';
+        }
 
         this.socket = socket;
 
@@ -120,7 +154,7 @@ export class Player {
     }
 
     onMouseDown(event) {
-        if (this.controls.isLocked) {
+        if (this.usePointerLock && this.controls.isLocked) {
             this.isMouseDown = true; // Marque le clic comme enfoncé
             this.animateHand();
 
@@ -224,7 +258,7 @@ export class Player {
 
 
     onMouseUp(event) {
-        if (this.controls.isLocked) {
+        if (this.usePointerLock && this.controls.isLocked) {
             if (event.button != 2) {
                 this.isDestroying = false;
                 clearInterval(this.destructionInterval);
@@ -261,7 +295,7 @@ export class Player {
     updateRaycaster(world) {
         const intersects = this.raycaster.intersectObjects(world.children, true);
 
-        if (this.controls.isLocked) {
+        if (this.usePointerLock && this.controls.isLocked) {
 
             // Mettre à jour le raycaster en fonction de la position de la souris
             this.raycaster.setFromCamera(this.mouse, this.camera);
@@ -408,7 +442,7 @@ export class Player {
     }
 
     applyInputs(dt) {
-        if (this.controls.isLocked) {
+        if (!this.usePointerLock || this.controls.isLocked) {
             this.velocity.x = this.input.x;
             this.velocity.z = this.input.z;
             this.controls.moveRight(this.velocity.x * dt);

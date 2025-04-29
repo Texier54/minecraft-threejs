@@ -134,3 +134,13 @@ animate();
 document.addEventListener("contextmenu", function(e){
     e.preventDefault();
 }, false);
+
+window.addEventListener('resize', () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    renderer.setSize(width, height);
+
+    player.camera.aspect = width / height;
+    player.camera.updateProjectionMatrix();
+
+});

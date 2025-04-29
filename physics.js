@@ -27,7 +27,7 @@ export class Physics {
         this.accumulator += dt;
         while (this.accumulator >= this.timestep) {
             //console.log(world.getBlock(Math.round(player.position.x), 0, Math.round(player.position.z))?.id);
-            if(player.controls.isLocked)
+            if(player.usePointerLock && player.controls.isLocked)
                 player.velocity.y -= this.gravity * this.timestep;
             player.applyInputs(this.timestep);
             player.updateBoundsHelper();
