@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { TouchControls } from './TouchControls.js';
+import { TouchControls } from './touchControls.js';
 import {blocks, getBlockByIdFast} from "./block.js";
 
 export class Player {
