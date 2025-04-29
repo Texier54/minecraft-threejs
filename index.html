@@ -12,7 +12,7 @@
   }
   }
 </script>
-  <script type="module" crossorigin src="/minecraft-threejs/assets/main-CKN4Gh3b.js"></script>
+  <script type="module" crossorigin src="/minecraft-threejs/assets/main-C3DUR8i8.js"></script>
   <link rel="modulepreload" crossorigin href="/minecraft-threejs/assets/smelting-BUUDx3Mo.js">
 </head>
 <body>
@@ -36,6 +36,15 @@ serve
 </div>
 
 <div id="61" style="display: none;" class="furnace-ui">
+</div>
+
+
+<div id="mobile-controls">
+  <button id="move-forward">↑</button>
+  <button id="move-backward">↓</button>
+  <button id="move-left">←</button>
+  <button id="move-right">→</button>
+  <button id="jump">⤒</button>
 </div>
 
 
@@ -372,5 +381,26 @@ serve
   }
   .selected {
     border: 3px #d4e4d2 solid !important;
+  }
+
+  #mobile-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    z-index: 999;
+    display: none;
+  }
+  #mobile-controls button {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+    opacity: 0.7;
+    border: none;
+    border-radius: 10px;
+    background: #555;
+    color: white;
   }
 </style>
