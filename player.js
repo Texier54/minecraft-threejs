@@ -26,7 +26,7 @@ export class Player {
 
 
     constructor(scene, world, socket) {
-
+console.log(navigator.userAgent);
         const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
         if (!isMobile) {
