@@ -2,18 +2,19 @@ import * as THREE from 'three';
 import { BaseWorld } from './BaseWorld.js';
 import { ClientChunk } from '../world/chunk/ClientChunk.js';
 import {getBlockByIdFast} from "../block.js";
+import {BaseChunk} from "./chunk/BaseChunk.js";
 
 export class ClientWorld extends THREE.Group {
     constructor() {
         super();
         // On instancie BaseWorld
         this.base = new BaseWorld();
-        this.base.parent = this; // ➔ injection du parent
 
-        // On copie toutes les propriétés et méthodes de BaseWorld dans ClientWorld
+        const methodClientWorld = Object.getOwnPropertyNames(ClientWorld.prototype);
+        // On copie toutes les méthodes de BaseWorld dans ClientWorld qui n'y existe pas deja en lui passant this
         Object.getOwnPropertyNames(BaseWorld.prototype).forEach((name) => {
-            if (name !== 'constructor' && name !== 'getChunk') {
-                this[name] = this.base[name].bind(this.base);
+            if (!methodClientWorld.includes(name)) {
+                this[name] = this.base[name].bind(this);
             }
         });
 
@@ -25,7 +26,6 @@ export class ClientWorld extends THREE.Group {
 
     generate() {
         this.clear();
-
         for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
             for (let z = -this.drawDistance; z <= this.drawDistance; z++) {
                 this.generateChunk();
@@ -51,8 +51,6 @@ export class ClientWorld extends THREE.Group {
         this.add(chunk);
         //console.log(`Adding chunk at X: ${x} Z: ${z}`);
     }
-
-    // Ajoute ici hideBlock, revealBlock, etc.
 
     getChunk(chunkX, chunkZ) {
         return this.children.find((chunk) => (
@@ -208,4 +206,24 @@ export class ClientWorld extends THREE.Group {
             //console.log(`Removing chunk at X: ${chunk.userData.x} Z: ${chunk.userData.z}`);
         }
     }
+
+    /**
+     * Reveals the block at (x,y,z) by adding a new mesh instance
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    revealBlock(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk) {
+            chunk.addBlockInstance(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z
+            )
+        }
+    }
+
 }

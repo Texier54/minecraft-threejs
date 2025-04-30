@@ -17,12 +17,12 @@ export class ClientChunk extends THREE.Group {
 
         // On instancie BaseChunk
         this.base = new BaseChunk(size, params, dataStore);
-        this.base.parent = this; // ➔ injection du parent
 
-        // On copie toutes les propriétés et méthodes de BaseWorld dans ClientWorld
+        const methodClientChunk = Object.getOwnPropertyNames(ClientChunk.prototype);
+        // On copie toutes les méthodes de BaseWorld dans ClientWorld qui n'y existe pas deja en lui passant this
         Object.getOwnPropertyNames(BaseChunk.prototype).forEach((name) => {
-            if (name !== 'constructor' && name !=='getBlock' && name !== 'inBounds') {
-                this[name] = this.base[name].bind(this.base);
+            if (!methodClientChunk.includes(name)) {
+                this[name] = this.base[name].bind(this);
             }
         });
 
@@ -33,17 +33,82 @@ export class ClientChunk extends THREE.Group {
 
     }
 
-    getBlock(x, y, z) {
-        if (this.inBounds(x, y, z) && this.data[x]) {
-            return this.data[x][y][z];
+    /**
+     * Adds a new block at (x,y,z) of type `blockId`
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     * @param {number} blockId
+     */
+    addBlock(x, y, z, blockId, direction) {
+        if (this.getBlock(x, y, z).id === blocks.empty.id) {
+            this.setBlockId(x, y, z, blockId);
+            this.setBlockDirection(x, y, z, direction);
+            this.addBlockInstance(x, y, z);
+            //this.dataStore.set(this.position.x, this.position.z, x, y, z, blockId);
+            this.dataStore.set(this.position.x, this.position.z, this.data)
         }
-        return null;
     }
-    inBounds(x, y, z) {
-        return x >= 0 && x < this.chunkSize &&
-            z >= 0 && z < this.chunkSize &&
-            y >= 0 && y < this.height;
+
+    /**
+     * Removes the block at (x, y, z)
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    removeBlock(x, y, z) {
+        const block = this.getBlock(x, y, z);
+        if (block && block.id !== blocks.empty.id) {
+            this.deleteBlockInstance(x, y, z);
+            this.setBlockId(x, y, z, blocks.empty.id);
+            //this.dataStore.set(this.position.x, this.position.z, x, y, z, blocks.empty.id);
+            this.dataStore.set(this.position.x, this.position.z, this.data)
+        }
     }
+
+    /**
+     * Removes the mesh instance associated with `block` by swapping it
+     * with the last instance and decrementing the instance count.
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    deleteBlockInstance(x, y, z) {
+        const block = this.getBlock(x, y, z);
+        //console.log(block);
+        if (block.id === blocks.empty.id || block.instanceId === null) return;
+
+        // Get the mesh and instance id of the block
+        const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
+        const instanceId = block.instanceId;
+
+        // Swapping the transformation matrix of the block in the last position
+        // with the block that we are going to remove
+        const lastMatrix = new THREE.Matrix4();
+        mesh.getMatrixAt(mesh.count - 1, lastMatrix);
+
+        // Updating the instance id of the block in the last position to its new instance id
+        const v = new THREE.Vector3();
+        v.applyMatrix4(lastMatrix);
+        //this.setBlockInstanceId(v.x, v.y, v.z, instanceId); PROBLEME TORCH
+        this.setBlockInstanceId(v.x, Math.round(v.y), v.z, instanceId);
+
+        // Swapping the transformation matrices
+        mesh.setMatrixAt(instanceId, lastMatrix);
+
+        // This effectively removes the last instance from the scene
+        mesh.count--;
+
+        // Notify the instanced mesh we updated the instance matrix
+        // Also re-compute the bounding sphere so raycasting works
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingSphere();
+
+        // Remove the instance associated with the block and update the data model
+        this.setBlockInstanceId(x, y, z, null);
+    }
+
+
     generate(socket = null) {
 
         if (socket && socket.getSocket()) {
@@ -216,6 +281,93 @@ export class ClientChunk extends THREE.Group {
     setBlockInstanceId(x, y, z, instanceId) {
         if (this.inBounds(x, y, z)) {
             this.data[x][y][z].instanceId = instanceId;
+        }
+    }
+
+    /**
+     * Reveals the block at (x,y,z) by adding a new mesh instance
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    revealBlock(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk) {
+            chunk.addBlockInstance(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z
+            )
+        }
+    }
+
+    /**
+     * Create a new instance for the block at (x,y,z)
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    addBlockInstance(x, y, z) {
+        const block = this.getBlock(x, y, z);
+
+        // Verify the block exists, it isn't an empty block type, and it doesn't already have an instance
+        if (block && block.id !== blocks.empty.id && block.instanceId === null) {
+            // Get the mesh and instance id of the block
+            const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
+
+            const instanceId = mesh.count++;
+            this.setBlockInstanceId(x, y, z, instanceId);
+
+            // Transformation matrix pour positionner et tourner le bloc
+            const matrix = new THREE.Matrix4();
+            const quaternion = new THREE.Quaternion();
+            const direction = new THREE.Vector3(block.direction.x, block.direction.y, block.direction.z);
+
+            // Appliquer une rotation en fonction de la direction
+            if (direction.equals(new THREE.Vector3(1, 0, 0))) {
+                quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)); // Rotation à droite
+            } else if (direction.equals(new THREE.Vector3(-1, 0, 0))) {
+                quaternion.setFromEuler(new THREE.Euler(0, -Math.PI / 2, 0)); // Rotation à gauche
+            } else if (direction.equals(new THREE.Vector3(0, 0, 1))) {
+                quaternion.setFromEuler(new THREE.Euler(0, 0, 0)); // Face avant
+            } else if (direction.equals(new THREE.Vector3(0, 0, -1))) {
+                quaternion.setFromEuler(new THREE.Euler(0, Math.PI, 0)); // Face arrière
+            } else if (direction.equals(new THREE.Vector3(0, 1, 0))) {
+                quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); // Haut
+            } else if (direction.equals(new THREE.Vector3(0, -1, 0))) {
+                quaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)); // Bas
+            }
+
+            matrix.compose(
+                new THREE.Vector3(x, y, z),  // Position
+                quaternion,                  // Rotation
+                new THREE.Vector3(1, 1, 1)    // Échelle
+            );
+
+            //const offsetHeight = (1-mesh.geometry.parameters.height)/2;
+
+
+            let geometry = getBlockByIdFast(block.id).geometry;
+            geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
+
+            let size = new THREE.Vector3();
+            geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
+
+            const offsetHeight = (1-(size.y))/2;
+
+            matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
+            mesh.setMatrixAt(instanceId, matrix);
+            mesh.instanceMatrix.needsUpdate = true;
+            mesh.computeBoundingSphere();
+
+            if (block.id == blocks.torch.id) {
+                const light = new THREE.PointLight(0xfffee0, 2, 14, 0.1); // Couleur orange, intensité, distance, atténuation
+                light.position.set(x, y + 0.1, z); // Légèrement au-dessus de la torche
+                light.castShadow = false; // Permettre les ombres si activé dans la scène
+                this.add(light);
+            }
         }
     }
 

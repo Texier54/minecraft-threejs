@@ -199,6 +199,11 @@ export class Inventory {
 
             }
         }
+        //si pas d'ouput on affiche pas
+        if (this.inventoryOutput.innerHTML == '')
+            this.inventoryOutput.style.display = 'none';
+        else
+            this.inventoryOutput.style.display = 'grid';
     }
 
     renderBar() {

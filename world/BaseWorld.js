@@ -1,4 +1,5 @@
 import { DataStore } from '../dataStore.js';
+import {blocks} from "../block.js";
 
 export class BaseWorld {
     chunkSize = { width: 16, height: 80 };
@@ -58,7 +59,20 @@ export class BaseWorld {
     }
 
     setBlockInventory(x, y, z, inventory) {
-        // À surcharger si besoin
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+        if (chunk) {
+            chunk.setBlockInventory(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z,
+                inventory
+            );
+        }
+    }
+
+    removeBlock(x, y, z) {
+        throw new Error('removeBlock must be implemented by child class');
     }
 
     getChunk(x, z) {
@@ -185,6 +199,29 @@ export class BaseWorld {
             );
         } else {
             return null;
+        }
+    }
+
+    checkRemoveTree(x, y, z) {
+        const block = this.getBlock(x, y, z);
+        if (block.id == blocks.log.id) {
+
+            for (let dx = -6; dx <= 6; dx++) {
+                for (let dy = -6; dy <= 6; dy++) {
+                    for (let dz = -6; dz <= 6; dz++) {
+                        let newX = x + dx;
+                        let newY = y + dy;
+                        let newZ = z + dz;
+
+                        // Optionnel : Exclure le point central (x, y, z) lui-même
+                        if (dx === 0 && dy === 0 && dz === 0) continue;
+
+                        if (this.getBlock(newX, newY, newZ)?.id == blocks.leaves.id)
+                            this.removeBlock( newX, newY, newZ );
+                    }
+                }
+            }
+
         }
     }
 

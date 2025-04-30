@@ -26,7 +26,7 @@ export class Player {
 
 
     constructor(scene, world, socket) {
-console.log(navigator.userAgent);
+
         const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
         if (!isMobile) {
@@ -169,7 +169,6 @@ console.log(navigator.userAgent);
                         var audio = new Audio('audio/dirt1.ogg');
                         audio.play();
 
-                        console.log(this.socket.getSocket());
                         this.socket.getSocket()?.emit("addBlock", {
                             x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block, direction: direction
                         });
