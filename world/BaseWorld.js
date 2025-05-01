@@ -1,5 +1,4 @@
 import { DataStore } from '../dataStore.js';
-import {blocks} from "../block.js";
 
 export class BaseWorld {
     chunkSize = { width: 16, height: 80 };
@@ -204,7 +203,7 @@ export class BaseWorld {
 
     checkRemoveTree(x, y, z) {
         const block = this.getBlock(x, y, z);
-        if (block.id == blocks.log.id) {
+        if (block.id == 17) {
 
             for (let dx = -6; dx <= 6; dx++) {
                 for (let dy = -6; dy <= 6; dy++) {
@@ -216,7 +215,7 @@ export class BaseWorld {
                         // Optionnel : Exclure le point central (x, y, z) lui-même
                         if (dx === 0 && dy === 0 && dz === 0) continue;
 
-                        if (this.getBlock(newX, newY, newZ)?.id == blocks.leaves.id)
+                        if (this.getBlock(newX, newY, newZ)?.id == 18)
                             this.removeBlock( newX, newY, newZ );
                     }
                 }
