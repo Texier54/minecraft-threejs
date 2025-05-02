@@ -224,4 +224,12 @@ export class BaseWorld {
         }
     }
 
+    isload(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+        if (chunk && chunk.data.length !== 0 )
+            return true;
+        return false;
+    }
+
 }
