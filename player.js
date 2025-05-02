@@ -58,6 +58,22 @@ export class Player {
             });
 
             document.getElementById('mobile-controls').style.display = 'block';
+
+            let touchStartTime = 0;
+
+            document.addEventListener('touchstart', (e) => {
+                this.isMouseDown = true;
+                setTimeout(() => {
+                    const duration = Date.now() - touchStartTime;
+                    if (this.isMouseDown) {
+                        this.startDestroyingBlock();
+                    } else {
+                        this.addBlock();
+                    }
+                }, 200);
+            });
+
+            document.addEventListener('touchend', this.onMouseUp.bind(this));
         }
 
         this.socket = socket;
@@ -160,25 +176,32 @@ export class Player {
 
             if (this.selectedCoords) {
                 if (event.button == 2) {
-                    const selectedBlock = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
-
-                    if (this.inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && getBlockByIdFast(this.inventory.getSelectedItem()?.block).type === 'block') {
-                        const direction = this.getPlacementDirection(this.selectedNormal);
-                        this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block, direction);
-                        this.inventory.removeBlock(this.inventory.getSelectedItem().block);
-                        var audio = new Audio('audio/dirt1.ogg');
-                        audio.play();
-
-                        this.socket.getSocket()?.emit("addBlock", {
-                            x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block, direction: direction
-                        });
-                    } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
-                        this.ui.open(selectedBlock.id);
-                    }
+                    this.addBlock();
                 } else {
                     this.startDestroyingBlock(event);
                 }
             }
+        }
+    }
+
+    addBlock() {
+        if (this.selectedCoords === null)
+            return;
+
+        const selectedBlock = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
+
+        if (this.inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && getBlockByIdFast(this.inventory.getSelectedItem()?.block).type === 'block') {
+            const direction = this.getPlacementDirection(this.selectedNormal);
+            this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block, direction);
+            this.inventory.removeBlock(this.inventory.getSelectedItem().block);
+            var audio = new Audio('audio/dirt1.ogg');
+            audio.play();
+
+            this.socket.getSocket()?.emit("addBlock", {
+                x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block, direction: direction
+            });
+        } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
+            this.ui.open(selectedBlock.id);
         }
     }
 
@@ -187,7 +210,7 @@ export class Player {
 
         let destructionProgress = 0;
         const blockToRemove = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
-        console.log(blockToRemove);
+        //console.log(blockToRemove);
         let destructionTime = getBlockByIdFast(blockToRemove.id).hardness * 1000;
 
         let speedMultiplier = 1;
@@ -219,7 +242,7 @@ export class Player {
             destructionTime = 0;
 
 
-        console.log(destructionTime);
+        //console.log(destructionTime);
         this.isDestroying = true;
         this.animateBlockBreaking(destructionTime);
 
@@ -257,8 +280,8 @@ export class Player {
 
 
     onMouseUp(event) {
-        if (this.usePointerLock && this.controls.isLocked) {
-            if (event.button != 2) {
+        if (!this.usePointerLock || this.controls.isLocked) {
+            if (!this.usePointerLock || event.button != 2) {
                 this.isDestroying = false;
                 clearInterval(this.destructionInterval);
                 this.isMouseDown = false;
@@ -294,7 +317,7 @@ export class Player {
     updateRaycaster(world) {
         const intersects = this.raycaster.intersectObjects(world.children, true);
 
-        if (this.usePointerLock && this.controls.isLocked) {
+        if (!this.usePointerLock || this.controls.isLocked) {
 
             // Mettre à jour le raycaster en fonction de la position de la souris
             this.raycaster.setFromCamera(this.mouse, this.camera);

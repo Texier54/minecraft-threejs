@@ -19,7 +19,7 @@ export class Client {
         window.addEventListener('keyup', this.onKeyUp.bind(this));
 
         if (process.env.NODE_ENV !== 'production') {
-            this.serverAddress = 'http://localhost:3000';
+            //this.serverAddress = 'http://localhost:3000';
         }
     }
 
@@ -36,6 +36,7 @@ export class Client {
             this.chat.add('Connected to server', '#FFFF55');
             // Envoyer joueur
             this.socket.emit('join', { username: 'Joueur1', position: { x: 0, y: 71, z: 10 }, direction : { x: 0, y: 0, z: 0 } });
+            this.world.generate();
         });
 
         this.socket.on('connect_error', (err) => {
