@@ -36,6 +36,7 @@ export class ClientWorld extends THREE.Group {
 
     generate() {
         this.clear();
+        this.dataStore.clear();
         for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
             for (let z = -this.drawDistance; z <= this.drawDistance; z++) {
                 this.generateChunk();
