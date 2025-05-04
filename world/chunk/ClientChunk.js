@@ -127,7 +127,7 @@ export class ClientChunk extends THREE.Group {
 
     generate(socket = null) {
 
-        if (socket && socket.getSocket()) {
+        if (!this.dataStore.contains(this.position.x, this.position.z) && socket && socket.getSocket()) {
             socket.getSocket()?.emit("getChunkData", {
                 x : this.position.x/this.chunkSize, z : this.position.z/this.chunkSize
             }, (response) => {
