@@ -109,10 +109,8 @@ export class BaseWorld {
                     byteArray.push(hasInventory ? 1 : 0);
 
                     if (hasInventory) {
-                        console.log(x,y,z);
                         for (let s = 0; s < 27; s++) {
                             const slot = block.inventory?.[s] ?? { block: 0, quantity: 0 };
-                            console.log(slot)
                             byteArray.push(
                                 (slot.block & 0xff00) >> 8,
                                 slot.block & 0x00ff,
@@ -160,7 +158,6 @@ export class BaseWorld {
 
                     if (hasInventory) {
                         inventory = [];
-                        console.log('inventory')
                         for (let s = 0; s < 27; s++) {
                             const block = view.getUint16(i); i += 2;
                             const quantity = view.getUint8(i++);
@@ -203,6 +200,8 @@ export class BaseWorld {
 
     checkRemoveTree(x, y, z) {
         const block = this.getBlock(x, y, z);
+        console.log(x, y, z);
+        console.log(block.id);
         if (block.id == 17) {
 
             for (let dx = -6; dx <= 6; dx++) {
@@ -214,7 +213,6 @@ export class BaseWorld {
 
                         // Optionnel : Exclure le point central (x, y, z) lui-même
                         if (dx === 0 && dy === 0 && dz === 0) continue;
-
                         if (this.getBlock(newX, newY, newZ)?.id == 18)
                             this.removeBlock( newX, newY, newZ );
                     }
