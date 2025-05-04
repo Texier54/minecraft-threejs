@@ -99,7 +99,7 @@ export class ClientWorld extends THREE.Group {
 
         if (!chunk || coords.block.y === 0) return;
 
-        this.checkRemoveTree(x, y, z);
+        //this.checkRemoveTree(x, y, z);
 
         chunk.removeBlock(
             coords.block.x,
