@@ -63,6 +63,11 @@ export class Client {
             this.world.removeBlock(data.x, data.y, data.z);
         });
 
+        this.socket.on('setBlockInventory', (data) => {
+            this.world.setBlockInventory(data.x, data.y, data.z, data);
+        });
+
+
 
         // Quand un joueur bouge
         this.socket.on('playerState', (allPlayers) => {
