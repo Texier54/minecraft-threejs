@@ -64,7 +64,7 @@ export class Client {
         });
 
         this.socket.on('setBlockInventory', (data) => {
-            this.world.setBlockInventory(data.x, data.y, data.z, data);
+            this.world.setBlockInventory(data.x, data.y, data.z, data.inventory);
         });
 
 
