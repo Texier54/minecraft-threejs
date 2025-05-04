@@ -80,7 +80,7 @@ export class Player {
         this.socket = socket;
 
         //this.player.position.set(0, 5, 0);
-        this.position.set(10, 120, 10);
+        this.position.set(10, 80, 10);
         scene.add(this.camera);
 
         this.scene = scene;
