@@ -5,6 +5,16 @@ import {getBlockByIdFast} from "../block.js";
 import {BaseChunk} from "./chunk/BaseChunk.js";
 
 export class ClientWorld extends THREE.Group {
+
+    static neighborOffsets = [
+        [-1, 0, 0],
+        [1, 0, 0],
+        [0, -1, 0],
+        [0, 1, 0],
+        [0, 0, -1],
+        [0, 0, 1]
+    ];
+
     constructor() {
         super();
         // On instancie BaseWorld
@@ -63,55 +73,42 @@ export class ClientWorld extends THREE.Group {
         const coords = this.worldToChunkCoords(x, y, z);
         const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
 
-        if (chunk) {
-            chunk.addBlock(
-                coords.block.x,
-                coords.block.y,
-                coords.block.z,
-                blockId,
-                direction
-            );
+        if (!chunk) return;
 
-            if (getBlockByIdFast(blockId).transparent !== true) {
-                // Hide neighboring blocks if they are completely obscured
-                this.hideBlock(x - 1, y, z);
-                this.hideBlock(x + 1, y, z);
-                this.hideBlock(x, y - 1, z);
-                this.hideBlock(x, y + 1, z);
-                this.hideBlock(x, y, z - 1);
-                this.hideBlock(x, y, z + 1);
+        chunk.addBlock(
+            coords.block.x,
+            coords.block.y,
+            coords.block.z,
+            blockId,
+            direction
+        );
+
+        const block = getBlockByIdFast(blockId);
+        if (!block.transparent) {
+
+
+            for (const [dx, dy, dz] of ClientWorld.neighborOffsets) {
+                this.hideBlock(x + dx, y + dy, z + dz);
             }
-
         }
-
-
     }
 
     removeBlock(x, y, z) {
-        //console.log(x, y, z);
-
         const coords = this.worldToChunkCoords(x, y, z);
         const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
 
-        // Don't allow removing the first layer of blocks
-        if (coords.block.y === 0) return;
+        if (!chunk || coords.block.y === 0) return;
 
-        if (chunk) {
-            this.checkRemoveTree(x, y, z);
-            chunk.removeBlock(
-                coords.block.x,
-                coords.block.y,
-                coords.block.z
-            );
+        this.checkRemoveTree(x, y, z);
 
-            // Reveal adjacent neighbors if they are hidden
-            this.revealBlock(x - 1, y, z);
-            this.revealBlock(x + 1, y, z);
-            this.revealBlock(x, y - 1, z);
-            this.revealBlock(x, y + 1, z);
-            this.revealBlock(x, y, z - 1);
-            this.revealBlock(x, y, z + 1);
+        chunk.removeBlock(
+            coords.block.x,
+            coords.block.y,
+            coords.block.z
+        );
 
+        for (const [dx, dy, dz] of ClientWorld.neighborOffsets) {
+            this.revealBlock(x + dx, y + dy, z + dz);
         }
     }
 

@@ -9,6 +9,13 @@ export class ClientChunk extends THREE.Group {
     meshs;
     activeLights = [];
 
+    // Reusable transformation objects for addBlockInstance to reduce allocations
+    static _addBlockInstanceMatrix = new THREE.Matrix4();
+    static _addBlockInstanceQuaternion = new THREE.Quaternion();
+    static _addBlockInstanceDirection = new THREE.Vector3();
+    static _addBlockInstanceSize = new THREE.Vector3();
+
+
     constructor(size, params, dataStore) {
         super();
         this.params = params;
@@ -180,11 +187,10 @@ export class ClientChunk extends THREE.Group {
 
         // Creating a lookup table where the key is the block id
         const meshes = {};
-        // Reusable transformation objects
-        const matrix = new THREE.Matrix4();
-        const quaternion = new THREE.Quaternion();
-        const direction = new THREE.Vector3();
-        const size = new THREE.Vector3();
+        // Reuse transformation objects
+        const matrix = ClientChunk._addBlockInstanceMatrix;
+        const direction = ClientChunk._addBlockInstanceDirection;
+        const size = ClientChunk._addBlockInstanceSize;
 
         // Compute bounding boxes once per block type
         Object.values(blocks)
@@ -214,23 +220,7 @@ export class ClientChunk extends THREE.Group {
                         if (block.direction) {
                             // Transformation matrix pour positionner et tourner le bloc
                             direction.set(block.direction.x, block.direction.y, block.direction.z);
-                            // Réinitialise le quaternion
-                            quaternion.identity();
-
-                            // Appliquer une rotation en fonction de la direction
-                            if (direction.equals(new THREE.Vector3(1, 0, 0))) {
-                                quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)); // Rotation à droite
-                            } else if (direction.equals(new THREE.Vector3(-1, 0, 0))) {
-                                quaternion.setFromEuler(new THREE.Euler(0, -Math.PI / 2, 0)); // Rotation à gauche
-                            } else if (direction.equals(new THREE.Vector3(0, 0, 1))) {
-                                quaternion.setFromEuler(new THREE.Euler(0, 0, 0)); // Face avant
-                            } else if (direction.equals(new THREE.Vector3(0, 0, -1))) {
-                                quaternion.setFromEuler(new THREE.Euler(0, Math.PI, 0)); // Face arrière
-                            } else if (direction.equals(new THREE.Vector3(0, 1, 0))) {
-                                quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); // Haut
-                            } else if (direction.equals(new THREE.Vector3(0, -1, 0))) {
-                                quaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)); // Bas
-                            }
+                            const quaternion = ClientChunk.getQuaternionFromDirection(direction);
 
                             matrix.compose(
                                 new THREE.Vector3(x, y, z),  // Position
@@ -247,22 +237,27 @@ export class ClientChunk extends THREE.Group {
                         const instanceId = mesh.count;
                         this.setBlockInstanceId(x, y, z, instanceId);
                         meshes[block.id].count++;
+
+                        if (block.id == blocks.torch.id) {
+                            this.addLight(x, y, z);
+                        }
                     }
                 }
             }
         }
         this.meshs = meshes;
         this.add(...Object.values(meshes));
+        this.updateBoundingSpheres();
     }
 
     disposeInstances() {
         //parcour tous les enfants du chunk, instanceMesg
         this.traverse((obj) => {
             // si ils ont la methode dispose on l'appel
-            if (obj.dipose) obj.dispose();
+            if (obj.dispose) obj.dispose();
         });
         //supprime tous les enfants
-        this.clear;
+        this.clear();
     }
 
     isBlockObscured(x, y ,z) {
@@ -323,39 +318,27 @@ export class ClientChunk extends THREE.Group {
      */
     addBlockInstance(x, y, z) {
         const block = this.getBlock(x, y, z);
-        console.log(block);
         // Verify the block exists, it isn't an empty block type, and it doesn't already have an instance
         if (!block || block.id === blocks.empty.id || block.instanceId > 1) {
             return;
         }
 
         // Get the mesh and instance id of the block
-        const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
+        //const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
+        // Accès direct
+        const mesh = this.meshs[block.id];
 
         const instanceId = mesh.count++;
         this.setBlockInstanceId(x, y, z, instanceId);
 
         // Transformation matrix pour positionner et tourner le bloc
-        const matrix = new THREE.Matrix4();
-        const quaternion = new THREE.Quaternion();
-        const direction = new THREE.Vector3();
+        // Reuse transformation objects
+        const matrix = ClientChunk._addBlockInstanceMatrix;
+        const direction = ClientChunk._addBlockInstanceDirection;
+        const size = ClientChunk._addBlockInstanceSize;
         direction.set(block.direction.x, block.direction.y, block.direction.z);
-        quaternion.identity();
 
-        // Appliquer une rotation en fonction de la direction
-        if (direction.x === 1 && direction.y === 0 && direction.z === 0) {
-            quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)); // Rotation à droite
-        } else if (direction.x === -1 && direction.y === 0 && direction.z === 0) {
-            quaternion.setFromEuler(new THREE.Euler(0, -Math.PI / 2, 0)); // Rotation à gauche
-        } else if (direction.x === 0 && direction.y === 0 && direction.z === 1) {
-            quaternion.setFromEuler(new THREE.Euler(0, 0, 0)); // Face avant
-        } else if (direction.x === 0 && direction.y === 0 && direction.z === -1) {
-            quaternion.setFromEuler(new THREE.Euler(0, Math.PI, 0)); // Face arrière
-        } else if (direction.x === 0 && direction.y === 1 && direction.z === 0) {
-            quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); // Haut
-        } else if (direction.x === 0 && direction.y === -1 && direction.z === 0) {
-            quaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)); // Bas
-        }
+        const quaternion = ClientChunk.getQuaternionFromDirection(direction);
 
         matrix.compose(
             new THREE.Vector3(x, y, z),  // Position
@@ -366,10 +349,10 @@ export class ClientChunk extends THREE.Group {
         //const offsetHeight = (1-mesh.geometry.parameters.height)/2;
 
 
-        let geometry = getBlockByIdFast(block.id).geometry;
+        //let geometry = getBlockByIdFast(block.id).geometry;
+        const geometry = this.meshs[block.id]?.geometry;
         //geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
 
-        const size = new THREE.Vector3();
         geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
 
         const offsetHeight = (1-(size.y))/2;
@@ -398,4 +381,35 @@ export class ClientChunk extends THREE.Group {
         this.activeLights.push(light);
     }
 
+    static getQuaternionFromDirection(direction) {
+        const q = ClientChunk._addBlockInstanceQuaternion;
+        // Reset orientation
+        q.identity();
+
+        if (direction.x === 1 && direction.y === 0 && direction.z === 0) {
+            q.setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)); // droite
+        } else if (direction.x === -1 && direction.y === 0 && direction.z === 0) {
+            q.setFromEuler(new THREE.Euler(0, -Math.PI / 2, 0)); // gauche
+        } else if (direction.x === 0 && direction.y === 0 && direction.z === 1) {
+            q.setFromEuler(new THREE.Euler(0, 0, 0)); // avant
+        } else if (direction.x === 0 && direction.y === 0 && direction.z === -1) {
+            q.setFromEuler(new THREE.Euler(0, Math.PI, 0)); // arrière
+        } else if (direction.x === 0 && direction.y === 1 && direction.z === 0) {
+            q.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); // haut
+        } else if (direction.x === 0 && direction.y === -1 && direction.z === 0) {
+            q.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)); // bas
+        }
+
+        return q;
+    }
+
+    updateBoundingSpheres() {
+        /*
+        Ceci force Three.js à recalculer la bounding sphere (sphère englobante) du mesh instancié.
+        C’est essentiel pour certaines fonctionnalités — notamment le raycasting (clic sur un bloc) et l’optimisation du rendu.
+         */
+        for (const mesh of Object.values(this.meshs)) {
+            mesh.computeBoundingSphere();
+        }
+    }
 }
