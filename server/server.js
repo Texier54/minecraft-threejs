@@ -64,9 +64,10 @@ io.on('connection', (socket) => {
         console.log(await world.getBlock(data.x, data.y, data.z)+data.x, data.y, data.z);
     });
 
-    socket.on("removeBlock", (data) => {
+    socket.on("removeBlock", async (data) => {
         // Diffuser l’état du joueur à tous les autres
         log('Remove block' + data);
+        await world.removeBlock(data.x, data.y, data.z);
         io.emit("removeBlock", data);
     });
 

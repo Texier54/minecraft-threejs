@@ -1,3 +1,4 @@
+
 export class BaseChunk {
 
     chunkSize;
@@ -25,6 +26,19 @@ export class BaseChunk {
         if (this.inBounds(x, y, z)) {
             this.setBlockId(x, y, z, blockId);
             this.setBlockDirection(x, y, z, direction);
+        }
+    }
+
+    /**
+     * Removes the block at (x, y, z)
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    removeBlock(x, y, z) {
+        const block = this.getBlock(x, y, z);
+        if (block && block.id !== 0) {
+            this.setBlockId(x, y, z, 0);
         }
     }
 

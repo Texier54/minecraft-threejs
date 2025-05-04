@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { TouchControls } from './touchControls.js';
 import {blocks, getBlockByIdFast} from "./block.js";
+import { AudioManager } from "./AudioManager.js"
 
 export class Player {
 
@@ -142,6 +143,8 @@ export class Player {
         document.addEventListener('mousedown', this.onMouseDown.bind(this));
         document.addEventListener('mouseup', this.onMouseUp.bind(this));
         this.isDestroying = false;
+
+        this.audioManager = new AudioManager();
     }
 
     getPlacementDirection(faceNormal) {
@@ -189,13 +192,14 @@ export class Player {
             return;
 
         const selectedBlock = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
+        const block = getBlockByIdFast(this.inventory.getSelectedItem()?.block);
 
-        if (this.inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && getBlockByIdFast(this.inventory.getSelectedItem()?.block).type === 'block') {
+        if (this.inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && block.type === 'block') {
             const direction = this.getPlacementDirection(this.selectedNormal);
             this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block, direction);
             this.inventory.removeBlock(this.inventory.getSelectedItem().block);
-            var audio = new Audio('audio/dirt1.ogg');
-            audio.play();
+
+            this.audioManager.playBlockSound(block, 'place');
 
             this.socket.getSocket()?.emit("addBlock", {
                 x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block, direction: direction
@@ -265,8 +269,7 @@ export class Player {
                 this.socket.getSocket()?.emit("removeBlock", {
                      x: this.selectedCoords.x, y: this.selectedCoords.y, z: this.selectedCoords.z
                 });
-                var audio = new Audio('audio/dirt1.ogg');
-                audio.play();
+                this.audioManager.playBlockSound(blockToRemoveO, 'break');
                 this.isDestroying = false;
                 clearInterval(this.destructionInterval);
 

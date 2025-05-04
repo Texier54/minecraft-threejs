@@ -27,12 +27,15 @@ export class ServerChunk extends BaseChunk {
                 console.log(e);
                 this.error = e;
                 worker.terminate();
+                reject(e); //Promise échoue proprement
             });
 
 
             worker.on('messageerror', (e) => {
                 this.error = e;
                 console.log('Message error in Worker:', e);
+                worker.terminate();
+                reject(e); //Promise échoue proprement
             });
 
 

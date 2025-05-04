@@ -30,10 +30,7 @@ export class ServerWorld extends BaseWorld {
             z : z * this.chunkSize.width
         };
         await chunk.generate(); // worker ou pas
-        await this.saveChunkToDisk(x, z, {
-            data: chunk.data,
-            biomes: chunk.biomes,
-        });
+        await this.saveChunk(x, z, chunk);
 
         this.chunks.set(this._chunkKey(x, z), chunk);
         return chunk;
@@ -80,12 +77,22 @@ export class ServerWorld extends BaseWorld {
             blockId,
             direction
         );
-        this.saveChunkToDisk(chunk.x, chunk.z, {
-            data: targetChunk.data,
-            biomes: targetChunk.biomes,
-        });
+        await this.saveChunk(chunk.x, chunk.z, targetChunk);
         return true;
     }
+
+    async removeBlock(x, y, z) {
+        const { chunk, block } = this.worldToChunkCoords(x, y, z);
+        console.log(chunk);
+        let targetChunk = await this.getChunk(chunk.x, chunk.z);
+        targetChunk.removeBlock(block.x,
+            block.y,
+            block.z,
+        );
+        await this.saveChunk(chunk.x, chunk.z, targetChunk);
+        return true;
+    }
+
 
     async saveChunkToDisk(x, z, data) {
         const dir = path.resolve('worlddata');
@@ -108,21 +115,25 @@ export class ServerWorld extends BaseWorld {
 
     async setBlockInventory(x, y, z, inventory) {
         const coords = this.worldToChunkCoords(x, y, z);
-        const chunk = await this.getChunk(coords.chunk.x, coords.chunk.z);
-        if (chunk) {
-            chunk.setBlockInventory(
-                coords.block.x,
-                coords.block.y,
-                coords.block.z,
-                inventory
-            );
+        const targetChunk = await this.getChunk(coords.chunk.x, coords.chunk.z);
+        if (!targetChunk) return false;
 
-            this.saveChunkToDisk(coords.chunk.x, coords.chunk.z, {
-                data: chunk.data,
-                biomes: chunk.biomes,
-            });
-        }
+        targetChunk.setBlockInventory(
+            coords.block.x,
+            coords.block.y,
+            coords.block.z,
+            inventory
+        );
 
+        await this.saveChunk(coords.chunk.x, coords.chunk.z, targetChunk);
+        return true;
 
+    }
+
+    async saveChunk(x, z, chunk) {
+        await this.saveChunkToDisk(x, z, {
+            data: chunk.data,
+            biomes: chunk.biomes,
+        });
     }
 }

@@ -19,7 +19,7 @@ export class Client {
         window.addEventListener('keyup', this.onKeyUp.bind(this));
 
         if (process.env.NODE_ENV !== 'production') {
-            //this.serverAddress = 'http://localhost:3000';
+            this.serverAddress = 'http://localhost:3000';
         }
     }
 

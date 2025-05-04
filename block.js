@@ -98,6 +98,7 @@ export const blocks = {
         tool: TOOL_TYPES.SHOVEL,
         need_tool: false,
         geometry: geometryBlock,
+        soundGroup: 'grass',
     },
     dirt: {
         id: 2,
@@ -110,6 +111,7 @@ export const blocks = {
         tool: TOOL_TYPES.SHOVEL,
         need_tool: false,
         geometry: geometryBlock,
+        soundGroup: 'grass',
     },
     stone: {
         id: 3,
@@ -122,7 +124,8 @@ export const blocks = {
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
         geometry: geometryBlock,
-        drops: 4
+        drops: 4,
+        soundGroup: 'stone',
     },
     cobblestone: {
         id: 4,
@@ -135,6 +138,7 @@ export const blocks = {
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
         geometry: geometryBlock,
+        soundGroup: 'stone',
     },
     planks: {
         id: 6,
@@ -146,6 +150,7 @@ export const blocks = {
         icon: 'images/block-icon/wood.png',
         tool: TOOL_TYPES.AXE,
         geometry: geometryBlock,
+        soundGroup: 'wood',
     },
     bedrock: {
         id: 7,
@@ -166,6 +171,7 @@ export const blocks = {
         icon: 'images/block-icon/sand.webp',
         tool: TOOL_TYPES.SHOVEL,
         geometry: geometryBlock,
+        soundGroup: 'gravel',
     },
     gravel: {
         id: 13,
@@ -177,6 +183,7 @@ export const blocks = {
         icon: 'images/block-icon/gravel.webp',
         tool: TOOL_TYPES.SHOVEL,
         geometry: geometryBlock,
+        soundGroup: 'gravel',
     },
     ironOre: {
         id: 15,
@@ -191,6 +198,7 @@ export const blocks = {
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
         geometry: geometryBlock,
+        soundGroup: 'stone',
     },
     coalOre: {
         id: 16,
@@ -205,7 +213,8 @@ export const blocks = {
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
         geometry: geometryBlock,
-        drops: 302
+        drops: 302,
+        soundGroup: 'stone',
     },
     log: {
         id: 17,
@@ -224,6 +233,7 @@ export const blocks = {
         icon: 'images/block-icon/log.png',
         tool: TOOL_TYPES.AXE,
         geometry: geometryBlock,
+        soundGroup: 'wood',
     },
     leaves: {
         id: 18,
@@ -234,6 +244,7 @@ export const blocks = {
         material: new THREE.MeshLambertMaterial({ map: textures.leaves }),
         icon: 'images/block-icon/leaves.webp',
         geometry: geometryBlock,
+        soundGroup: 'grass',
     },
     glass: {
         id: 20,
@@ -245,6 +256,7 @@ export const blocks = {
         transparent: false,
         icon: 'images/block-icon/glass.webp',
         geometry: geometryBlock,
+        soundGroup: 'glass',
     },
     torch: {
         id: 50,
@@ -263,6 +275,7 @@ export const blocks = {
         transparent: true,
         icon: 'images/block-icon/torch.webp',
         geometry: geometryTorch,
+        soundGroup: 'wood',
     },
     oak_stairs: {
         id: 53,
@@ -274,6 +287,7 @@ export const blocks = {
         icon: 'images/block-icon/oak_stairs.png',
         tool: TOOL_TYPES.AXE,
         geometry: geometryStair,
+        soundGroup: 'wood',
     },
     chest: {
         id: 54,
@@ -293,6 +307,7 @@ export const blocks = {
         interface: true,
         tool: TOOL_TYPES.AXE,
         geometry: geometryBlock,
+        soundGroup: 'wood',
     },
     diamondOre: {
         id: 56,
@@ -307,7 +322,8 @@ export const blocks = {
         tool: TOOL_TYPES.PICKAXE,
         need_tool: true,
         geometry: geometryBlock,
-        drops: 304
+        drops: 304,
+        soundGroup: 'stone',
     },
     craftingTable: {
         id: 58,
@@ -327,6 +343,7 @@ export const blocks = {
         interface: true,
         tool: TOOL_TYPES.AXE,
         geometry: geometryBlock,
+        soundGroup: 'wood',
     },
     furnace: {
         id: 61,
@@ -346,6 +363,7 @@ export const blocks = {
         interface: true,
         tool: TOOL_TYPES.PICKAXE,
         geometry: geometryBlock,
+        soundGroup: 'stone',
     },
     cobblestone_stairs: {
         id: 67,
@@ -357,6 +375,7 @@ export const blocks = {
         icon: 'images/block-icon/cobblestone_stairs.png',
         tool: TOOL_TYPES.PICKAXE,
         geometry: geometryStair,
+        soundGroup: 'stone',
     },
     iron_pickaxe: {
         id: 297,
