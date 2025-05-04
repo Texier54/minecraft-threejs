@@ -53,6 +53,8 @@ export class Client {
             console.log('Joueurs déconnecté:', id);
             this.chat.add(id+' left the game');
             this.scene.remove(this.playersMesh[id]);
+            delete(this.playersMesh[id]);
+            delete(this.players[id]);
         });
 
         this.socket.on('addBlock', (data) => {
@@ -163,7 +165,7 @@ export class Client {
             content += '<span>'+this.socket.id+'</span><br>';
             for (const key in this.players) {
                 if (this.players.hasOwnProperty(key)) {
-                    console.log(`Clé: ${key}, UUID: ${this.players[key].uuid}, Type: ${this.players[key].type}`);
+                    //console.log(`Clé: ${key}, UUID: ${this.players[key].uuid}, Type: ${this.players[key].type}`);
                     content += '<span>'+key+'</span><br>';
                 }
             }
@@ -171,8 +173,6 @@ export class Client {
             element.innerHTML = content;
             element.style.display = 'block';
         }
-
-
 
     }
 
