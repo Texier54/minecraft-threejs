@@ -62,7 +62,15 @@ export class ClientChunk extends THREE.Group {
             this.deleteBlockInstance(x, y, z);
             this.setBlockId(x, y, z, blocks.empty.id);
             //this.dataStore.set(this.position.x, this.position.z, x, y, z, blocks.empty.id);
-            this.dataStore.set(this.position.x, this.position.z, this.data)
+            this.dataStore.set(this.position.x, this.position.z, this.data);
+            //suprimme lumière
+            this.activeLights = this.activeLights.filter(l => {
+                if (Math.abs(l.position.x - x) < 1 && Math.abs(l.position.y - y) < 1 && Math.abs(l.position.z - z) < 1) {
+                    this.remove(l);
+                    return false;
+                }
+                return true;
+            });
         }
     }
 
@@ -171,9 +179,17 @@ export class ClientChunk extends THREE.Group {
 
         // Creating a lookup table where the key is the block id
         const meshes = {};
+        // Reusable transformation objects
+        const matrix = new THREE.Matrix4();
+        const quaternion = new THREE.Quaternion();
+        const direction = new THREE.Vector3();
+        const size = new THREE.Vector3();
+
+        // Compute bounding boxes once per block type
         Object.values(blocks)
             .filter(blockType => blockType.id !== blocks.empty.id && blockType.type === 'block')
             .forEach(blockType => {
+                blockType.geometry.computeBoundingBox(); // Ensure bounding box is computed once
                 const mesh = new THREE.InstancedMesh(blockType.geometry, blockType.material, maxBlock);
                 mesh.name = blockType.id;
                 mesh.count = 0;
@@ -182,25 +198,23 @@ export class ClientChunk extends THREE.Group {
                 meshes[blockType.id] = mesh;
             });
 
-        const matrix = new THREE.Matrix4();
         for (let x = 0; x < this.chunkSize; x++) {
             for (let z = 0; z < this.chunkSize; z++) {
-
                 for (let y = 0; y < this.height; y++) {
-
                     const block = this.getBlock(x, y, z);
-                    if (!this.isBlockObscured(x, y, z) && block != null && block.id != blocks.empty.id) {
+                    // Use a single truthy check for block and skip empty
+                    if (!this.isBlockObscured(x, y, z) && block && block.id !== blocks.empty.id) {
 
                         let geometry = getBlockByIdFast(block.id).geometry;
-                        geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
+                        //geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
 
-                        let size = new THREE.Vector3();
                         geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
 
                         if (block.direction) {
                             // Transformation matrix pour positionner et tourner le bloc
-                            const quaternion = new THREE.Quaternion();
-                            const direction = new THREE.Vector3(block.direction.x, block.direction.y, block.direction.z);
+                            direction.set(block.direction.x, block.direction.y, block.direction.z);
+                            // Réinitialise le quaternion
+                            quaternion.identity();
 
                             // Appliquer une rotation en fonction de la direction
                             if (direction.equals(new THREE.Vector3(1, 0, 0))) {
@@ -234,13 +248,10 @@ export class ClientChunk extends THREE.Group {
                         meshes[block.id].count++;
                     }
                 }
-                //chunk.add(mesh);
             }
         }
         this.meshs = meshes;
         this.add(...Object.values(meshes));
-
-
     }
 
     disposeInstances() {
@@ -313,62 +324,77 @@ export class ClientChunk extends THREE.Group {
         const block = this.getBlock(x, y, z);
 
         // Verify the block exists, it isn't an empty block type, and it doesn't already have an instance
-        if (block && block.id !== blocks.empty.id && block.instanceId === null) {
-            // Get the mesh and instance id of the block
-            const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
-
-            const instanceId = mesh.count++;
-            this.setBlockInstanceId(x, y, z, instanceId);
-
-            // Transformation matrix pour positionner et tourner le bloc
-            const matrix = new THREE.Matrix4();
-            const quaternion = new THREE.Quaternion();
-            const direction = new THREE.Vector3(block.direction.x, block.direction.y, block.direction.z);
-
-            // Appliquer une rotation en fonction de la direction
-            if (direction.equals(new THREE.Vector3(1, 0, 0))) {
-                quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)); // Rotation à droite
-            } else if (direction.equals(new THREE.Vector3(-1, 0, 0))) {
-                quaternion.setFromEuler(new THREE.Euler(0, -Math.PI / 2, 0)); // Rotation à gauche
-            } else if (direction.equals(new THREE.Vector3(0, 0, 1))) {
-                quaternion.setFromEuler(new THREE.Euler(0, 0, 0)); // Face avant
-            } else if (direction.equals(new THREE.Vector3(0, 0, -1))) {
-                quaternion.setFromEuler(new THREE.Euler(0, Math.PI, 0)); // Face arrière
-            } else if (direction.equals(new THREE.Vector3(0, 1, 0))) {
-                quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); // Haut
-            } else if (direction.equals(new THREE.Vector3(0, -1, 0))) {
-                quaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)); // Bas
-            }
-
-            matrix.compose(
-                new THREE.Vector3(x, y, z),  // Position
-                quaternion,                  // Rotation
-                new THREE.Vector3(1, 1, 1)    // Échelle
-            );
-
-            //const offsetHeight = (1-mesh.geometry.parameters.height)/2;
-
-
-            let geometry = getBlockByIdFast(block.id).geometry;
-            geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
-
-            let size = new THREE.Vector3();
-            geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
-
-            const offsetHeight = (1-(size.y))/2;
-
-            matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
-            mesh.setMatrixAt(instanceId, matrix);
-            mesh.instanceMatrix.needsUpdate = true;
-            mesh.computeBoundingSphere();
-
-            if (block.id == blocks.torch.id) {
-                const light = new THREE.PointLight(0xfffee0, 2, 14, 0.1); // Couleur orange, intensité, distance, atténuation
-                light.position.set(x, y + 0.1, z); // Légèrement au-dessus de la torche
-                light.castShadow = false; // Permettre les ombres si activé dans la scène
-                this.add(light);
-            }
+        if (!block || block.id === blocks.empty.id || block.instanceId !== null) {
+            return;
         }
+
+        // Get the mesh and instance id of the block
+        const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
+
+        const instanceId = mesh.count++;
+        this.setBlockInstanceId(x, y, z, instanceId);
+
+        // Transformation matrix pour positionner et tourner le bloc
+        const matrix = new THREE.Matrix4();
+        const quaternion = new THREE.Quaternion();
+        const direction = new THREE.Vector3();
+        direction.set(block.direction.x, block.direction.y, block.direction.z);
+        quaternion.identity();
+
+        // Appliquer une rotation en fonction de la direction
+        if (direction.x === 1 && direction.y === 0 && direction.z === 0) {
+            quaternion.setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)); // Rotation à droite
+        } else if (direction.x === -1 && direction.y === 0 && direction.z === 0) {
+            quaternion.setFromEuler(new THREE.Euler(0, -Math.PI / 2, 0)); // Rotation à gauche
+        } else if (direction.x === 0 && direction.y === 0 && direction.z === 1) {
+            quaternion.setFromEuler(new THREE.Euler(0, 0, 0)); // Face avant
+        } else if (direction.x === 0 && direction.y === 0 && direction.z === -1) {
+            quaternion.setFromEuler(new THREE.Euler(0, Math.PI, 0)); // Face arrière
+        } else if (direction.x === 0 && direction.y === 1 && direction.z === 0) {
+            quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); // Haut
+        } else if (direction.x === 0 && direction.y === -1 && direction.z === 0) {
+            quaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)); // Bas
+        }
+
+        matrix.compose(
+            new THREE.Vector3(x, y, z),  // Position
+            quaternion,                  // Rotation
+            new THREE.Vector3(1, 1, 1)    // Échelle
+        );
+
+        //const offsetHeight = (1-mesh.geometry.parameters.height)/2;
+
+
+        let geometry = getBlockByIdFast(block.id).geometry;
+        //geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
+
+        const size = new THREE.Vector3();
+        geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
+
+        const offsetHeight = (1-(size.y))/2;
+
+        matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
+        mesh.setMatrixAt(instanceId, matrix);
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingSphere();
+
+        if (block.id == blocks.torch.id) {
+            this.addLight(x, y, z);
+        }
+
+    }
+
+    addLight(x, y, z) {
+        if (!this.activeLights) this.activeLights = [];
+
+        if (this.activeLights.length >= 8) return; // max reached
+
+        const light = new THREE.PointLight(0xfffee0, 2, 14, 0.1);
+        light.position.set(x, y + 0.1, z);
+        light.castShadow = false;
+
+        this.add(light);
+        this.activeLights.push(light);
     }
 
 }
