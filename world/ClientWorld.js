@@ -86,8 +86,6 @@ export class ClientWorld extends THREE.Group {
 
         const block = getBlockByIdFast(blockId);
         if (!block.transparent) {
-
-
             for (const [dx, dy, dz] of ClientWorld.neighborOffsets) {
                 this.hideBlock(x + dx, y + dy, z + dz);
             }
