@@ -127,7 +127,12 @@ export class ClientChunk extends THREE.Group {
 
     generate(socket = null) {
 
-        if (!this.dataStore.contains(this.position.x, this.position.z) && socket && socket.getSocket()) {
+        // si déjà en RAM
+        if (this.dataStore.contains(this.position.x, this.position.z)) {
+            this.data = this.dataStore.get(this.position.x, this.position.z)
+            this.generateMesh();
+        } else if (socket && socket.getSocket()) {
+        // Sinon demander au serveur
             socket.getSocket()?.emit("getChunkData", {
                 x : this.position.x/this.chunkSize, z : this.position.z/this.chunkSize
             }, (response) => {
@@ -140,11 +145,8 @@ export class ClientChunk extends THREE.Group {
                 this.dataStore.set(this.position.x, this.position.z, this.data);
                 this.generateMesh();
             });
-
-        } else if (this.dataStore.contains(this.position.x, this.position.z)) {
-            this.data = this.dataStore.get(this.position.x, this.position.z)
-            this.generateMesh();
         } else {
+        // Sinon générer en local
             // Créer un Worker pour déporter la génération
             const worker = new Worker(new URL('../../chunkWorker.js', import.meta.url), { type: 'module' });
 
@@ -251,7 +253,7 @@ export class ClientChunk extends THREE.Group {
     }
 
     disposeInstances() {
-        //parcour tous les enfants du chunk, instanceMesg
+        //parcour tous les enfants du chunk, instanceMesh
         this.traverse((obj) => {
             // si ils ont la methode dispose on l'appel
             if (obj.dispose) obj.dispose();
@@ -260,25 +262,27 @@ export class ClientChunk extends THREE.Group {
         this.clear();
     }
 
-    isBlockObscured(x, y ,z) {
-        //console.log(x+'-'+ y+'-' +z);
-        const up = this.getBlock(x, y + 1, z)?.id ?? blocks.empty.id;
-        const down = this.getBlock(x, y - 1, z)?.id ?? blocks.empty.id;
-        const left = this.getBlock(x + 1, y, z)?.id ?? blocks.empty.id;
-        const right = this.getBlock(x - 1, y, z)?.id ?? blocks.empty.id;
-        const forward = this.getBlock(x, y, z + 1)?.id ?? blocks.empty.id;
-        const back = this.getBlock(x, y, z - 1)?.id ?? blocks.empty.id;
+    isBlockObscured(x, y, z) {
+        // Check all six directions for empty or transparent blocks
+        const upBlock = this.getBlock(x, y + 1, z);
+        const up = !upBlock || upBlock.id === blocks.empty.id || getBlockByIdFast(upBlock.id).transparent;
+        const downBlock = this.getBlock(x, y - 1, z);
+        const down = !downBlock || downBlock.id === blocks.empty.id || getBlockByIdFast(downBlock.id).transparent;
+        const leftBlock = this.getBlock(x + 1, y, z);
+        const left = !leftBlock || leftBlock.id === blocks.empty.id || getBlockByIdFast(leftBlock.id).transparent;
+        const rightBlock = this.getBlock(x - 1, y, z);
+        const right = !rightBlock || rightBlock.id === blocks.empty.id || getBlockByIdFast(rightBlock.id).transparent;
+        const forwardBlock = this.getBlock(x, y, z + 1);
+        const forward = !forwardBlock || forwardBlock.id === blocks.empty.id || getBlockByIdFast(forwardBlock.id).transparent;
+        const backBlock = this.getBlock(x, y, z - 1);
+        const back = !backBlock || backBlock.id === blocks.empty.id || getBlockByIdFast(backBlock.id).transparent;
 
 
         //console.log('up'+this.getBlock(x, y + 1, z).id);
         //console.log('b'+blocks.empty.id);
         // If any of the block's sides is exposed, it is not obscured
-        if (up === blocks.empty.id ||
-            down === blocks.empty.id ||
-            left === blocks.empty.id ||
-            right === blocks.empty.id ||
-            forward === blocks.empty.id ||
-            back === blocks.empty.id) {
+        // If any of the block's sides is exposed (empty or transparent), it is not obscured
+        if (up || down || left || right || forward || back) {
             return false;
         } else {
             return true;
