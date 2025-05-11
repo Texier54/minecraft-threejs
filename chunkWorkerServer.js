@@ -10,7 +10,15 @@ let onMessageUniversal;
 
 if (isNode) {
     // Pour Node.js
-    const { parentPort } = await import('node:worker_threads');
+    //const { parentPort } = await import('node:worker_threads');
+
+    let parentPort;
+    async function loadWorkerThreads() {
+        const m = await import('node:worker_threads');
+        parentPort = m.parentPort;
+    }
+    await loadWorkerThreads();
+
     postMessageUniversal = (data) => parentPort.postMessage(data);
     onMessageUniversal = (callback) => parentPort.on('message', callback);
 } else {
