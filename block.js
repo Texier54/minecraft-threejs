@@ -54,6 +54,8 @@ const textures = {
     torch: loadTexture('images/torch.png'),
     torch_top: loadTexture('images/torch_top.png'),
     diamondOre: loadTexture('images/diamond_ore.png'),
+    cactus_side: loadTexture('images/cactus_side.png'),
+    cactus_top: loadTexture('images/cactus_top.png'),
 };
 
 const TOOL_TYPES = {
@@ -377,6 +379,25 @@ export const blocks = {
         icon: 'images/block-icon/cobblestone_stairs.png',
         tool: TOOL_TYPES.PICKAXE,
         geometry: geometryStair,
+        soundGroup: 'stone',
+    },
+    cactus: {
+        id: 81,
+        name: 'cactus',
+        type: 'block',
+        stackable: true,
+        hardness: 0.4,
+        material: [
+            new THREE.MeshLambertMaterial({ map: textures.cactus_side }), // right
+            new THREE.MeshLambertMaterial({ map: textures.cactus_side }), // left
+            new THREE.MeshLambertMaterial({ map: textures.cactus_top }), // top
+            new THREE.MeshLambertMaterial({ map: textures.cactus_top }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.cactus_side }), // front
+            new THREE.MeshLambertMaterial({ map: textures.cactus_side })  // back
+        ],
+        icon: 'images/block-icon/cactus.png',
+        tool: TOOL_TYPES.AXE,
+        geometry: geometryBlock,
         soundGroup: 'stone',
     },
     iron_pickaxe: {

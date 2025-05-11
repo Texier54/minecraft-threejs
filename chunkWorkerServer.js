@@ -154,8 +154,8 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
                     if (biome == 'mountains')
                         multiTree = 0.5;
                     // Randomly generate a tree
-                    if (biome != 'desert' && Math.random() < params.trees.frequency * multiTree) {
-                        generateTree(params.seed, 1, x, height + 1, z, params);
+                    if (Math.random() < params.trees.frequency * multiTree) {
+                        generateTree(params.seed, 1, biome, height + 1, z, params);
                     }
                 }
                 /*
@@ -191,11 +191,15 @@ function generateTree(seed, biome, x, y, z, params) {
     const h = Math.round(minH + (maxH - minH) * Math.random() +1);
 
     for (let treeY = y; treeY < y + h; treeY++) {
-        setBlockId(x, treeY, z, blocks.log.id);
+        if (biome == 'desert')
+            setBlockId(x, treeY, z, blocks.cactus.id);
+        else
+            setBlockId(x, treeY, z, blocks.log.id);
     }
 
-    generateTreeCanopy(biome, x, y + h, z, params);
-
+    if (biome != 'desert') {
+        generateTreeCanopy(biome, x, y + h, z, params);
+    }
 
 }
 
