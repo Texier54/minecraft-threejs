@@ -17,12 +17,15 @@ export class BaseWorld {
             plains: { scale: 80, magnitude: 0.1, offset: 0.5 },
             forest: { scale: 40, magnitude: 0.1, offset: 0.5 },
             desert: { scale: 120, magnitude: 0.1, offset: 0.5 },
+            ocean: { scale: 160, magnitude: 0.12, offset: 0.46 }, //	•	magnitude: 0.2 → crée plus d’amplitude dans le terrain océanique // 	•	offset: 0.3 → centre le bruit plus bas → génère des fonds plus profonds
+            beach: { scale: 160, magnitude: 0.02, offset: 0.5 }, // magnitude Relief
         },
         trees: {
             trunk: { minHeight: 4, maxHeight: 7 },
             canopy: { minRadius: 3, maxRadius: 3, density: 0.7 },
             frequency: 0.005,
-        }
+        },
+        seaLevel: 36
     };
 
     constructor() {}

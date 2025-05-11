@@ -15,6 +15,8 @@ const blocks = {
     leaves: { id: 18, name: 'leaves' },
     craftingTable: { id: 58, name: 'Crafting Table' },
     cactus: { id: 81, name: 'cactus' },
+    water: { id: 9, name: 'water' },
+    sandstone: { id : 24, name: 'sandstone' }
 };
 
 const resources = [
@@ -64,6 +66,8 @@ export function initializeBiomes(chunkSize) {
 export function generateTerrain(chunkSize, chunkHeight, params, rng, position, data, biomes) {
 
     const simplex = new SimplexNoise(rng);
+    const seaLevel = params.seaLevel;
+    //const seaLevel = Math.floor(chunkHeight * 0.3); // 30% de la hauteur = niveau de l'eau
 
     for (let x = 0; x < chunkSize; x++) {
         for (let z = 0; z < chunkSize; z++) {
@@ -95,8 +99,13 @@ export function generateTerrain(chunkSize, chunkHeight, params, rng, position, d
                 biomes[x][z] = biome1;
             for (let y = 0; y < chunkHeight; y++) {
 
+                //if (biome === 'beach' && y > seaLevel + 2) continue; // plage max à seaLevel + 2
+
                 if (y < height && y > height-3 && getBlock(data, x, y, z)?.id === blocks.empty.id)
-                    setBlockId(data, x, y, z, blocks.dirt.id);
+                    if (biome == 'desert' || biome == 'beach')
+                        setBlockId(data, x, y, z, blocks.sandstone.id);
+                    else
+                        setBlockId(data, x, y, z, blocks.dirt.id);
                 if (y == 0) {
                     setBlockId(data, x, y, z, blocks.bedrock.id);
                 } else if (y < height && getBlock(data, x, y, z)?.id === blocks.empty.id) {
@@ -105,13 +114,14 @@ export function generateTerrain(chunkSize, chunkHeight, params, rng, position, d
                     //generateCaves(simplex, x, y, z, position);
                 } else if (y == height) {
 
-
                     if (biome == 'plains')
                         setBlockId(data, x, y, z, blocks.grass.id);
                     else if (biome == 'forest')
                         setBlockId(data, x, y, z, blocks.grass.id);
                     else if (biome == 'mountains')
                         setBlockId(data, x, y, z, blocks.grass.id);
+                    else if (biome == 'beach')
+                        setBlockId(data, x, y, z, blocks.sand.id);
                     else
                         setBlockId(data, x, y, z, blocks.sand.id);
 
@@ -123,9 +133,13 @@ export function generateTerrain(chunkSize, chunkHeight, params, rng, position, d
                     if (biome == 'mountains')
                         multiTree = 0.5;
                     // Randomly generate a tree
-                    if (Math.random() < params.trees.frequency * multiTree) {
+                    if (biome != 'ocean' && biome != 'beach' && Math.random() < params.trees.frequency * multiTree) {
                         generateTree(params.seed, biome, x, height + 1, z, params, data);
                     }
+                } else if (biome === 'ocean' && y < height) {
+                    setBlockId(data, x, y, z, blocks.stone.id);
+                } else if (biome === 'ocean' && y >= height && y < seaLevel) {
+                    setBlockId(data, x, y, z, blocks.water?.id || 9);
                 }
                 /*
                 else if (y > height)
@@ -228,10 +242,13 @@ export function getBiome(simplex, x, z, position) {
     •	Si noiseValue = 0.1, alors blend = (0.1 - 0.1) / 0.2 = 0, donc 100% “plains”.
 	•	Si noiseValue = 0.2, alors blend = (0.2 - 0.1) / 0.2 = 0.5, donc 50% “plains”, 50% “forest”.
 	•	Si noiseValue = 0.3, alors blend = (0.3 - 0.1) / 0.2 = 1, donc 100% “forest”.
-
+        blend = (noiseValue - seuil_min) / (seuil_max - seuil_min)
      */
-    if (noiseValue < 0.2) return { biome1: 'desert', biome2: 'plains', blend: (noiseValue - 0.1) / 0.1 };
-    if (noiseValue < 0.4) return { biome1: 'plains', biome2: 'forest', blend: (noiseValue - 0.2) / 0.2 };
+    if (noiseValue < 0.07) return { biome1: 'ocean', biome2: 'ocean', blend: 0 };
+    if (noiseValue < 0.09) return { biome1: 'ocean', biome2: 'beach', blend: (noiseValue - 0.07) / 0.02 };
+    if (noiseValue < 0.115) return { biome1: 'beach', biome2: 'plains', blend: (noiseValue - 0.09) / 0.025 };
+    if (noiseValue < 0.2) return { biome1: 'plains', biome2: 'desert', blend: (noiseValue - 0.09) / 0.11 };
+    if (noiseValue < 0.4) return { biome1: 'desert', biome2: 'forest', blend: (noiseValue - 0.2) / 0.2 };
     if (noiseValue < 0.6) return { biome1: 'forest', biome2: 'mountains', blend: (noiseValue - 0.4) / 0.2 };
     return { biome1: 'mountains', biome2: 'mountains', blend: (noiseValue - 0.6) / 0.4 };
 }

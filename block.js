@@ -56,6 +56,7 @@ const textures = {
     diamondOre: loadTexture('images/diamond_ore.png'),
     cactus_side: loadTexture('images/cactus_side.png'),
     cactus_top: loadTexture('images/cactus_top.png'),
+    sandstone: loadTexture('images/sandstone.png'),
 };
 
 const TOOL_TYPES = {
@@ -169,7 +170,13 @@ export const blocks = {
         type: 'block',
         stackable: true,
         hardness: 10000,
-        material: new THREE.MeshLambertMaterial({ map: textures.water }),
+        material: new THREE.MeshLambertMaterial(new THREE.MeshLambertMaterial({
+            color: 0x9090e0,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide
+        })),
+        transparent: true,
         geometry: geometryBlock,
     },
     sand: {
@@ -268,6 +275,19 @@ export const blocks = {
         icon: 'images/block-icon/glass.webp',
         geometry: geometryBlock,
         soundGroup: 'glass',
+    },
+    sandstone: {
+        id: 24,
+        name: 'sandstone',
+        type: 'block',
+        stackable: true,
+        hardness: 0.8,
+        material: new THREE.MeshLambertMaterial({ map: textures.sandstone }),
+        transparent: false,
+        icon: 'images/block-icon/sandstone.webp',
+        tool: TOOL_TYPES.PICKAXE,
+        geometry: geometryBlock,
+        soundGroup: 'stone',
     },
     torch: {
         id: 50,
