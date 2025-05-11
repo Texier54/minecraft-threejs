@@ -404,7 +404,7 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.cactus_side }), // front
             new THREE.MeshLambertMaterial({ map: textures.cactus_side })  // back
         ],
-        icon: 'images/block-icon/cactus.png',
+        icon: 'images/block-icon/cactus.webp',
         tool: TOOL_TYPES.AXE,
         geometry: geometryBlock,
         soundGroup: 'stone',
