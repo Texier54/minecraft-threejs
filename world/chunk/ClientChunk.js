@@ -148,7 +148,7 @@ export class ClientChunk extends THREE.Group {
         } else {
         // Sinon générer en local
             // Créer un Worker pour déporter la génération
-            const worker = new Worker(new URL('../../chunkWorkerServer.js', import.meta.url), { type: 'module' });
+            const worker = new Worker(new URL('../../chunkWorker.js', import.meta.url), { type: 'module' });
 
             // Gestion du retour de données depuis le Worker
             worker.onmessage = (event) => {
