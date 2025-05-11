@@ -163,6 +163,15 @@ export const blocks = {
         material: new THREE.MeshLambertMaterial({ map: textures.bedrock }),
         geometry: geometryBlock,
     },
+    water: {
+        id: 9,
+        name: 'water',
+        type: 'block',
+        stackable: true,
+        hardness: 10000,
+        material: new THREE.MeshLambertMaterial({ map: textures.water }),
+        geometry: geometryBlock,
+    },
     sand: {
         id: 12,
         name: 'sand',

@@ -12,7 +12,7 @@ export class ServerChunk extends BaseChunk {
     async generate() {
         return new Promise((resolve, reject) => {
             // Créer un Worker pour déporter la génération
-            const worker = new Worker(new URL('../../chunkWorkerServer.js', import.meta.url), { type: 'module' });
+            const worker = new Worker(new URL('../worker/chunkWorkerServer.js', import.meta.url), { type: 'module' });
 
             // Gestion du retour de données depuis le Worker
             worker.on('message', ({ data, biomes }) => {

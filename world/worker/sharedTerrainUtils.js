@@ -1,23 +1,4 @@
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
-import {RNG} from "./rng.js";
-import * as THREE from "three";
-
-
-const isNode = typeof process !== 'undefined' && process.versions?.node;
-
-let postMessageUniversal;
-let onMessageUniversal;
-
-if (isNode) {
-    // Pour Node.js
-    const { parentPort } = await import('node:worker_threads');
-    postMessageUniversal = (data) => parentPort.postMessage(data);
-    onMessageUniversal = (callback) => parentPort.on('message', callback);
-} else {
-    // Pour navigateur
-    postMessageUniversal = (data) => self.postMessage(data);
-    onMessageUniversal = (callback) => self.onmessage = (e) => callback(e.data);
-}
 
 const blocks = {
     empty: { id: 0, name: 'empty', visible: false },
@@ -33,6 +14,7 @@ const blocks = {
     log: { id: 17, name: 'log' },
     leaves: { id: 18, name: 'leaves' },
     craftingTable: { id: 58, name: 'Crafting Table' },
+    cactus: { id: 81, name: 'cactus' },
 };
 
 const resources = [
@@ -41,23 +23,8 @@ const resources = [
     blocks.diamondOre
 ];
 
-let data = [];
-let biomes = []
-let params = [];
-onMessageUniversal((event) => {
-    const dataR = event?.data ?? event; // navigateur : event.data ; node : event
-    const { chunkData, chunkSize, chunkHeight, params, position } = dataR;
-
-    const rng = new RNG(params.seed);
-
-    const generatedData = initializeTerrain(chunkSize, chunkHeight);
-    const generatedBiomes = initializeBiomes(chunkSize);
-    const generatedTerrain = generateTerrain(chunkSize, chunkHeight, params, rng, position);
-
-    postMessageUniversal({ data, biomes });
-});
-
-function initializeTerrain(chunkSize, chunkHeight) {
+export function initializeTerrain(chunkSize, chunkHeight) {
+    let data = [];
     // Logique simplifiée pour la génération de chunks
 
     for (let x = 0; x < chunkSize; x++) {
@@ -76,11 +43,12 @@ function initializeTerrain(chunkSize, chunkHeight) {
         }
         data.push(slice);
     }
+    return data;
 }
 
-function initializeBiomes(chunkSize) {
+export function initializeBiomes(chunkSize) {
     // Logique simplifiée pour la génération de chunks
-
+    let biomes = [];
     for (let x = 0; x < chunkSize; x++) {
         let row = [];
         for (let z = 0; z < chunkSize; z++) {
@@ -88,11 +56,12 @@ function initializeBiomes(chunkSize) {
         }
         biomes.push(row);
     }
+    return biomes;
 }
 
 
 
-function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
+export function generateTerrain(chunkSize, chunkHeight, params, rng, position, data, biomes) {
 
     const simplex = new SimplexNoise(rng);
 
@@ -126,25 +95,25 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
                 biomes[x][z] = biome1;
             for (let y = 0; y < chunkHeight; y++) {
 
-                if (y < height && y > height-3 && getBlock(x, y, z)?.id === blocks.empty.id)
-                    setBlockId(x, y, z, blocks.dirt.id);
+                if (y < height && y > height-3 && getBlock(data, x, y, z)?.id === blocks.empty.id)
+                    setBlockId(data, x, y, z, blocks.dirt.id);
                 if (y == 0) {
-                    setBlockId(x, y, z, blocks.bedrock.id);
-                } else if (y < height && getBlock(x, y, z)?.id === blocks.empty.id) {
-                    setBlockId(x, y, z, blocks.stone.id);
-                    generateResources(rng, x, y, z, position);
+                    setBlockId(data, x, y, z, blocks.bedrock.id);
+                } else if (y < height && getBlock(data, x, y, z)?.id === blocks.empty.id) {
+                    setBlockId(data, x, y, z, blocks.stone.id);
+                    generateResources(rng, x, y, z, position, data);
                     //generateCaves(simplex, x, y, z, position);
                 } else if (y == height) {
 
 
                     if (biome == 'plains')
-                        setBlockId(x, y, z, blocks.grass.id);
+                        setBlockId(data, x, y, z, blocks.grass.id);
                     else if (biome == 'forest')
-                        setBlockId(x, y, z, blocks.grass.id);
+                        setBlockId(data, x, y, z, blocks.grass.id);
                     else if (biome == 'mountains')
-                        setBlockId(x, y, z, blocks.grass.id);
+                        setBlockId(data, x, y, z, blocks.grass.id);
                     else
-                        setBlockId(x, y, z, blocks.sand.id);
+                        setBlockId(data, x, y, z, blocks.sand.id);
 
 
 
@@ -155,7 +124,7 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
                         multiTree = 0.5;
                     // Randomly generate a tree
                     if (Math.random() < params.trees.frequency * multiTree) {
-                        generateTree(params.seed, 1, biome, height + 1, z, params);
+                        generateTree(params.seed, biome, x, height + 1, z, params, data);
                     }
                 }
                 /*
@@ -166,44 +135,46 @@ function generateTerrain(chunkSize, chunkHeight, params, rng, position) {
             }
         }
     }
+    return {data, biomes};
 }
 
-function setBlockId(x, y, z, id) {
-    data[x][y][z].id = id;
+export function setBlockId(data, x, y, z, id) {
+    if (inBounds(x, y, z))
+        data[x][y][z].id = id;
 }
 
-function getBlock(x, y, z) {
+export function getBlock(data, x, y, z) {
     if (inBounds(x, y, z) && typeof data[x] !== "undefined")
         return data[x][y][z];
     return null;
 }
 
-function inBounds(x, y, z) {
+export function inBounds(x, y, z) {
     if (x >= 0 && x < 16 && z >= 0 && z < 16 && y >= 0 && y < 80)
         return true;
     return false;
 }
 
 
-function generateTree(seed, biome, x, y, z, params) {
+export function generateTree(seed, biome, x, y, z, params, data) {
     const minH = params.trees.trunk.minHeight;
     const maxH = params.trees.trunk.maxHeight;
     const h = Math.round(minH + (maxH - minH) * Math.random() +1);
 
     for (let treeY = y; treeY < y + h; treeY++) {
         if (biome == 'desert')
-            setBlockId(x, treeY, z, blocks.cactus.id);
+            setBlockId(data, x, treeY, z, blocks.cactus.id);
         else
-            setBlockId(x, treeY, z, blocks.log.id);
+            setBlockId(data, x, treeY, z, blocks.log.id);
     }
 
     if (biome != 'desert') {
-        generateTreeCanopy(biome, x, y + h, z, params);
+        generateTreeCanopy(biome, x, y + h, z, params, data);
     }
 
 }
 
-function generateTreeCanopy(biome, centerX, centerY, centerZ, params) {
+export function generateTreeCanopy(biome, centerX, centerY, centerZ, params, data) {
     const minR = params.trees.canopy.minRadius;
     const maxR = params.trees.canopy.maxRadius;
     const r = Math.round(minR + (maxR - minR) * Math.random());
@@ -217,19 +188,19 @@ function generateTreeCanopy(biome, centerX, centerY, centerZ, params) {
                 // Make sure the block is within the canopy radius
                 if (x * x + y * y + z * z > r * r) continue;
                 // Don't overwrite an existing block
-                const block = getBlock(centerX + x, centerY + y, centerZ + z);
+                const block = getBlock(data, centerX + x, centerY + y, centerZ + z);
                 if (block && block.id !== blocks.empty.id) continue;
                 // Fill in the tree canopy with leaves based on the density parameter
                 if (n < params.trees.canopy.density) {
-                    if (getBlock(centerX + x, centerY + y, centerZ + z) !== null)
-                        setBlockId(centerX + x, centerY + y, centerZ + z, blocks.leaves.id);
+                    if (getBlock(data, centerX + x, centerY + y, centerZ + z) !== null)
+                        setBlockId(data, centerX + x, centerY + y, centerZ + z, blocks.leaves.id);
                 }
             }
         }
     }
 }
 
-function generateResources(seed, x, y, z, position) {
+export function generateResources(seed, x, y, z, position, data) {
 
     const simplex = new SimplexNoise(seed);
     resources.forEach(resource => {
@@ -239,16 +210,14 @@ function generateResources(seed, x, y, z, position) {
             (position.y + y) / resource.scale.y,
             (position.z + z) / resource.scale.z);
         if (value > resource.scarcity)
-            setBlockId(x, y, z, resource.id);
+            setBlockId(data, x, y, z, resource.id);
 
     })
 
 }
-function lerp(a, b, t) {
-    return a + t * (b - a);
-}
 
-function getBiome(simplex, x, z, position) {
+
+export function getBiome(simplex, x, z, position) {
     let noiseValue = simplex.noise((position.x + x) / 500, (position.z + z) / 500);
     noiseValue += 0.2 * simplex.noise((position.x + x) / 250, (position.z + z) / 250);
 
@@ -267,7 +236,11 @@ function getBiome(simplex, x, z, position) {
     return { biome1: 'mountains', biome2: 'mountains', blend: (noiseValue - 0.6) / 0.4 };
 }
 
-function generateCaves(simplex, x, y, z, position) {
+export function lerp(a, b, t) {
+    return a + t * (b - a);
+}
+
+export function generateCaves(simplex, x, y, z, position) {
 
 
     const scale = 0.02; // Fréquence du bruit, à ajuster pour la taille des filons
@@ -279,7 +252,7 @@ function generateCaves(simplex, x, y, z, position) {
 
     // Définition des types de minerai en fonction du bruit et de la profondeur
     if (finalNoise > 0.4) {
-        setBlockId(x, y, z, blocks.coalOre.id); // Diamants en profondeur
+        setBlockId(data, x, y, z, blocks.coalOre.id); // Diamants en profondeur
     }
 
 
