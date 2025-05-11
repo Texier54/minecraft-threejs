@@ -41,6 +41,8 @@ export class Client {
 
         this.socket.on('connect_error', (err) => {
             this.chat.add('Unable to connect to server');
+            this.playersMesh = {};
+            this.players = {};
         });
 
         this.socket.on('player-connect', (Player) => {

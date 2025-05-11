@@ -2,7 +2,7 @@ import fs from "fs";
 
 export class Store {
 
-    log(data) {
+    async log(data) {
         fs.appendFile('log.txt', data+'\n', err => {
             if (err) {
                 console.error(err);

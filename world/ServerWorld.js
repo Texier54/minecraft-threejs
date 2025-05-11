@@ -85,12 +85,38 @@ export class ServerWorld extends BaseWorld {
         const { chunk, block } = this.worldToChunkCoords(x, y, z);
         console.log(chunk);
         let targetChunk = await this.getChunk(chunk.x, chunk.z);
+        await this.checkRemoveTree(x, y, z);
         targetChunk.removeBlock(block.x,
             block.y,
             block.z,
         );
         await this.saveChunk(chunk.x, chunk.z, targetChunk);
         return true;
+    }
+
+    async checkRemoveTree(x, y, z) {
+        const block = await this.getBlock(x, y, z);
+        console.log(x, y, z);
+        console.log(block.id);
+        if (block.id == 17) {
+
+            for (let dx = -6; dx <= 6; dx++) {
+                for (let dy = -6; dy <= 6; dy++) {
+                    for (let dz = -6; dz <= 6; dz++) {
+                        let newX = x + dx;
+                        let newY = y + dy;
+                        let newZ = z + dz;
+
+                        // Optionnel : Exclure le point central (x, y, z) lui-même
+                        if (dx === 0 && dy === 0 && dz === 0) continue;
+
+                        if (await this.getBlock(newX, newY, newZ)?.id == 18)
+                            this.removeBlock(newX, newY, newZ);
+                    }
+                }
+            }
+
+        }
     }
 
 

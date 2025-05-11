@@ -15,6 +15,8 @@ export class ClientWorld extends THREE.Group {
         [0, 0, 1]
     ];
 
+    asyncLoading = true;
+
     constructor() {
         super();
         // On instancie BaseWorld

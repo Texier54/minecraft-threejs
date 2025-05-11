@@ -95,7 +95,6 @@ export class AudioManager {
 
     play(name, clone = true) {
         let base = this.sounds[name];
-        console.log(name);
         if (!base) {
             this.load(name);
             base = this.sounds[name];
@@ -107,7 +106,6 @@ export class AudioManager {
     }
 
     playBlockSound(block, action) {
-        console.log(block);
         const group = block?.soundGroup;
         const soundName = soundGroups[group]?.[action];
 

@@ -34,6 +34,8 @@ const io = new Server(server, {
     }
 });
 
+log(`Server start`);
+
 const players = {};
 
 io.on('connection', (socket) => {
@@ -43,7 +45,6 @@ io.on('connection', (socket) => {
         playerData.id = socket.id;
         players[socket.id] = playerData;
         io.emit('player-connect', playerData);
-        store.log('connect '+socket.id);
     });
 
     // Recevoir la position et la direction du joueur
@@ -104,12 +105,23 @@ io.on('connection', (socket) => {
         log(`Joueur déconnecté : ${socket.id}`);
         delete players[socket.id];
         io.emit('player-disconnect', socket.id);
-        store.log('disconnect '+socket.id);
     });
 });
 
-function log(message) {
+
+async function shutdownHandler(signal) {
+    await log(`Server shutdown (${signal})`);
+    // 👉 Ajoutez ici les actions à effectuer avant l'arrêt (sauvegarde, logs, etc.)
+    setTimeout(() => process.exit(0), 200); // délai de 200ms
+}
+
+process.on('SIGINT', async () => shutdownHandler('SIGINT').catch(console.error));   // Ctrl+C
+process.on('SIGTERM', async () => shutdownHandler('SIGTERM').catch(console.error)); // Arrêt système
+
+async function log(message) {
+    await store.log(`[${new Date().toLocaleString()}] `+message);
     console.log(`[${new Date().toLocaleString()}] `+message);
+    return true;
 }
 
 const world = new ServerWorld();
