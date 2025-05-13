@@ -84,7 +84,7 @@ export class Player {
         this.socket = socket;
 
         //this.player.position.set(0, 5, 0);
-        this.position.set(10, 80, 10);
+        this.position.set(10, 60, 10);
         scene.add(this.camera);
 
         this.scene = scene;
@@ -352,7 +352,7 @@ export class Player {
             this.raycaster.setFromCamera(this.mouse, this.camera);
             if (intersects.length > 0) {
                 const intersected = intersects[0];
-                if (intersected.instanceId) {
+                if (intersected.instanceId !== undefined) {
                     // Block
 
                     //récupére la position du chunk parent du bloc
@@ -547,7 +547,6 @@ export class Player {
                 // Met le joueur au-dessus de l'entité
                 this.position.copy(this.riding.position.clone().add(new THREE.Vector3(0, 1, 0)));
                 this.camera.position.copy(this.position);
-                return; // ignore les contrôles classiques
             }
         }
     }

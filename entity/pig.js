@@ -85,7 +85,7 @@ export class Pig extends Entity {
         // Déplace le cochon en fonction de la vélocité
         this.mesh.position.add(this.pigVelocity);
 
-        const speed = 0.02; // Vitesse en unités par seconde
+        const speed = 2; // Vitesse en unités par seconde
 
         // Calculer la direction vers la cible
         const direction = this.target.clone().sub(this.mesh.position).normalize();

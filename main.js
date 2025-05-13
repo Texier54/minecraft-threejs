@@ -87,6 +87,7 @@ window.addEventListener('keydown', (event) => {
                 player.riding = entity;
                 entity.driver = player; // sera conditionnel dans la logique réelle
             } else if (player.riding) {
+                player.riding.driver = null;
                 player.riding = null;
             }
         });
