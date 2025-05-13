@@ -59,6 +59,9 @@ export class Pig extends Entity {
         this.pigVelocity = new THREE.Vector3(0, 0, 0); // Vitesse du cochon (incluant la gravité)
 
         this.mesh.position.copy(this.position); // <- important
+
+        this.hitTime = 0;
+        this.originalMaterials = this.mesh.children.map(c => c.material);
     }
 
 
@@ -69,8 +72,37 @@ export class Pig extends Entity {
         return new THREE.Vector3(x, 75, z); // Y reste 0 si le sol est plat
     }
 
+    hit() {
+        console.log('hit pig');
+        this.hitTime = 0.3; // seconds
+        this.pigVelocity.y += 0.2; // small rebound
+
+        // Store the current materials only if hitTime is 0 (to avoid overwriting while already hit)
+        if (this.hitTime === 0.3) {
+            this.originalMaterials = this.mesh.children.map(c => c.material);
+        }
+
+        this.mesh.children.forEach((child, i) => {
+            if (child.material && child.material.clone) {
+                const redMaterial = child.material.clone();
+                redMaterial.color.set(0xff0000);
+                child.material = redMaterial;
+            }
+        });
+    }
 
     update(deltaTime) {
+
+        if (this.hitTime > 0) {
+            this.hitTime -= deltaTime;
+            if (this.hitTime <= 0) {
+                this.mesh.children.forEach((child, i) => {
+                    if (this.originalMaterials[i]) {
+                        child.material = this.originalMaterials[i];
+                    }
+                });
+            }
+        }
 
         if (this.world.getBlock(Math.floor(this.mesh.position.x), Math.floor(this.mesh.position.y), Math.floor(this.mesh.position.z))?.id == 0 ) {
             //console.log('down');
@@ -85,7 +117,7 @@ export class Pig extends Entity {
         // Déplace le cochon en fonction de la vélocité
         this.mesh.position.add(this.pigVelocity);
 
-        const speed = 2; // Vitesse en unités par seconde
+        const speed = 1; // Vitesse en unités par seconde
 
         // Calculer la direction vers la cible
         const direction = this.target.clone().sub(this.mesh.position).normalize();

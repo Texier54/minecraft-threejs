@@ -46,7 +46,7 @@ export class Physics {
         const candidates = this.broadPhase(player, world);
         const collisions = this.narrowPhase(candidates, player);
 
-        if (collisions.length > 0) {
+        if (collisions.length > 0 && !player.riding) {
             this.resolveCollisions(collisions, player);
         }
     }

@@ -193,6 +193,8 @@ export class Player {
             } else if (this.selectedEntity) {
                 if (event.button == 2)
                     this.selectedEntity.action(this);
+                else
+                    this.selectedEntity.hit(this);
             }
         }
     }

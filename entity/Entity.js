@@ -25,4 +25,8 @@ export class Entity {
     action() {
         console.log('Default action');
     }
+
+    hit() {
+        console.log('Default hit');
+    }
 }

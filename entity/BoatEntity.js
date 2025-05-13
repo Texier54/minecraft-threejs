@@ -54,6 +54,10 @@ export class BoatEntity extends Entity {
 
         this.speed = 0.0;
         this.rotation = 0;
+
+
+        this.shakeTime = 0;
+        this.shakeIntensity = 0;
     }
 
     setInput(inputVector) {
@@ -113,12 +117,34 @@ export class BoatEntity extends Entity {
 
         this.position.addScaledVector(this.velocity, dt);
         this.mesh.position.copy(this.position);
+
+
+        if (this.shakeTime > 0) {
+            this.shakeTime -= dt;
+            const shakeAngle = Math.sin(Date.now() * 0.05) * this.shakeIntensity;
+            this.mesh.rotation.z = shakeAngle;
+        } else {
+            this.mesh.rotation.z = 0;
+        }
+
+
         this.mesh.rotation.y = this.rotation;
 
     }
 
     action(player) {
-        player.riding = this;
-        this.driver = player; // sera conditionnel dans la logique réelle
+        if (this.driver === null) {
+            player.riding = this;
+            this.driver = player; // sera conditionnel dans la logique réelle
+        } else {
+            player.riding = null;
+            this.driver = null; // sera conditionnel dans la logique réelle
+        }
+    }
+
+
+    hit() {
+        this.shakeTime = 0.3; // seconds
+        this.shakeIntensity = 0.05; // radians
     }
 }
