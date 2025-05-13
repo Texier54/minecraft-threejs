@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 
-import {mobs} from "./mobs.js";
+import {mobs} from "../mobs.js";
+import {Entity} from "./Entity.js";
 
-export class Pig extends THREE.Group {
+export class Pig extends Entity {
 
-    constructor() {
-        super();
+    mesh = new THREE.Group();
 
+    constructor(world, position) {
+        super(world, position);
 
         // Création des parties du cochon
         const bodyGeometry = new THREE.BoxGeometry(0.9, 0.7, 1.6); // Corps (rectangle)
@@ -17,35 +19,33 @@ export class Pig extends THREE.Group {
         // Corps
         const body = new THREE.Mesh(bodyGeometry, mobs.pig.body.material);
         body.position.set(0, 0.6, 0);
-        this.add(body);
+        body.userData.entity = this;
+        this.mesh.add(body);
 
 
         // Tête
         const head = new THREE.Mesh(headGeometry, mobs.pig.head.material);
         head.position.set(0, 0.8, 1);
-        this.add(head);
+        head.userData.entity = this;
+        this.mesh.add(head);
 
         const noise = new THREE.Mesh(noiseGeometry, mobs.pig.noise.material);
         noise.position.set(0, 0.7, 1.4);
-        this.add(noise);
+        noise.userData.entity = this;
+        this.mesh.add(noise);
 
         // Pattes (quatre cubes)
         for (let i = 0; i < 4; i++) {
             const leg = new THREE.Mesh(legGeometry, mobs.pig.feet.material);
+            leg.userData.entity = this;
             leg.position.set(
                 i < 2 ? -0.25 : 0.25, // Gauche/droite
                 0, // Hauteur des pattes
                 i % 2 === 0 ? -0.7 : 0.6 // Avant/arrière
             );
             leg.isLeg = true; // Identifie cet objet comme une jambe
-            this.add(leg);
+            this.mesh.add(leg);
         }
-
-        // Position initiale du groupe
-        this.position.set(6, 69, 10);
-
-        // Ajouter le groupe à la scène
-        //scene.add(pigGroup);
 
         // Zone dans laquelle le cochon peut se déplacer
         this.BOUNDARY = {
@@ -57,6 +57,8 @@ export class Pig extends THREE.Group {
         this.target = this.getRandomTarget();
 
         this.pigVelocity = new THREE.Vector3(0, 0, 0); // Vitesse du cochon (incluant la gravité)
+
+        this.mesh.position.copy(this.position); // <- important
     }
 
 
@@ -68,14 +70,12 @@ export class Pig extends THREE.Group {
     }
 
 
-    movePig(deltaTime, world) {
+    update(deltaTime) {
 
-        this.world = world;
-
-        if (this.world.getBlock(Math.floor(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z))?.id == 0 ) {
+        if (this.world.getBlock(Math.floor(this.mesh.position.x), Math.floor(this.mesh.position.y), Math.floor(this.mesh.position.z))?.id == 0 ) {
             //console.log('down');
             this.pigVelocity.y -= 0.01;
-        } else if (this.world.getBlock(Math.floor(this.position.x), Math.ceil(this.position.y), Math.floor(this.position.z))?.id > 0) {
+        } else if (this.world.getBlock(Math.floor(this.mesh.position.x), Math.ceil(this.mesh.position.y), Math.floor(this.mesh.position.z))?.id > 0) {
             //console.log('up');
             this.pigVelocity.y += 0.05;
         } else
@@ -83,24 +83,24 @@ export class Pig extends THREE.Group {
 
 
         // Déplace le cochon en fonction de la vélocité
-        this.position.add(this.pigVelocity);
+        this.mesh.position.add(this.pigVelocity);
 
-        const speed = 2; // Vitesse en unités par seconde
+        const speed = 0.02; // Vitesse en unités par seconde
 
         // Calculer la direction vers la cible
-        const direction = this.target.clone().sub(this.position).normalize();
+        const direction = this.target.clone().sub(this.mesh.position).normalize();
 
         direction.y = 0
-        // Déplacer le groupe
-        this.position.add(direction.multiplyScalar(speed * deltaTime));
+        // Déplacer le meshe
+        this.mesh.position.add(direction.multiplyScalar(speed * deltaTime));
 
-        // Vérifier si le groupe est proche de la cible
-        if (this.position.distanceTo(this.target) < 2) {
+        // Vérifier si le meshe est proche de la cible
+        if (this.mesh.position.distanceTo(this.target) < 2) {
             this.target = this.getRandomTarget(); // Nouvelle cible aléatoire
         }
-        this.target.y = this.position.y;
-        // Faire tourner le groupe pour qu'il regarde la cible
-        this.lookAt(this.target);
+        this.target.y = this.mesh.position.y;
+        // Faire tourner le meshe pour qu'il regarde la cible
+        this.mesh.lookAt(this.target);
         this.animatePigLegs(deltaTime);
     }
 
@@ -108,7 +108,7 @@ export class Pig extends THREE.Group {
         const speed = 2; // Fréquence de l'oscillation
         const angle = Math.sin(Date.now() * 0.005 * speed); // Oscillation basée sur le temps
 
-        this.children.forEach((child) => {
+        this.mesh.children.forEach((child) => {
             if (child.isLeg) {
                 // Anime les jambes
                 child.rotation.x = angle * 0.2;

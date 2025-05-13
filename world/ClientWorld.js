@@ -17,6 +17,8 @@ export class ClientWorld extends THREE.Group {
 
     asyncLoading = true;
 
+    entities = [];
+
     constructor() {
         super();
         // On instancie BaseWorld
@@ -221,6 +223,16 @@ export class ClientWorld extends THREE.Group {
                 coords.block.y,
                 coords.block.z
             )
+        }
+    }
+
+    addEntity(entity) {
+        this.entities.push(entity);
+    }
+
+    updateEntities(dt) {
+        for (const entity of this.entities) {
+            entity.update(dt);
         }
     }
 

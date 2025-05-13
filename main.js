@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { Player } from './player.js';
 import { ClientWorld } from './world/ClientWorld.js';
 import {blocks, getBlockByIdFast} from "./block.js";
-import {Pig} from "./pig.js";
+import {Pig} from "./entity/pig.js";
 import {Physics} from "./physics.js";
 import {Inventory} from "./inventory.js";
 import {Menu} from "./menu.js";
@@ -11,6 +11,7 @@ import {UI} from "./ui.js";
 import { Sun } from '/sun.js';
 import { Client } from '/client.js';
 import { Chat } from '/chat.js';
+import { BoatEntity } from '/entity/BoatEntity.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 
@@ -47,18 +48,22 @@ const menu = new Menu(world, player, inventory, client, chat);
 const ui = new UI(player, inventory);
 const sun = new Sun(scene, player,0.20);
 
+const boat = new BoatEntity(world, new THREE.Vector3(10,50,10));
+boat.addToScene(scene);
+world.addEntity(boat);
+
+const pig = new Pig(world, new THREE.Vector3(10,45,10));
+pig.addToScene(scene);
+world.addEntity(pig);
 
 player.setInventory(inventory);
 player.setUI(ui);
 
 //DEBUG
 if (process.env.NODE_ENV !== 'production') {
-    player.load();
+    //player.load();
     inventory.load();
 }
-
-const pig = new Pig();
-scene.add(pig);
 
 window.addEventListener('keydown', (event) => {
     if (event.code === 'KeyE') {
@@ -71,6 +76,20 @@ window.addEventListener('keydown', (event) => {
             inventory.hide();
         }
 
+    }
+});
+
+window.addEventListener('keydown', (event) => {
+    if (event.code === 'KeyF') {
+        world.entities.forEach(entity => {
+            const dist = player.position.distanceTo(entity.position);
+            if (dist < 5 && !player.riding) {
+                player.riding = entity;
+                entity.driver = player; // sera conditionnel dans la logique réelle
+            } else if (player.riding) {
+                player.riding = null;
+            }
+        });
     }
 });
 
@@ -105,7 +124,8 @@ function animate() {
     world.update(player);
     player.update(world);
     prevTimeNew = now;
-
+    world.updateEntities(dt);
+    //pig.movePig(deltaTime); // Déplacer le cochon
 
     frameCount++;
     // Met à jour l'affichage FPS toutes les secondes
@@ -122,7 +142,6 @@ function animate() {
     lastTime = currentTime;
     sun.update(deltaTime1);
 
-    pig.movePig(deltaTime, world); // Déplacer le cochon
     renderer.render(scene, player.camera);
     requestAnimationFrame(animate);
 

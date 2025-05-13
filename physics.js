@@ -73,7 +73,7 @@ export class Physics {
             for (let y = minY; y <= maxY; y++) {
                 for (let z = minZ; z <= maxZ; z++) {
                     const blockId = world.getBlock(x, y, z)?.id;
-                    if (blockId && blockId !== blocks.empty.id) {
+                    if (blockId && blockId !== blocks.empty.id && blockId !== blocks.water.id) {
                         let size = {};
                         let hasStep = false;
                         if (blockId == 53 || blockId == 67) {

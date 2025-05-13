@@ -529,6 +529,13 @@ export const blocks = {
         stackable: true,
         icon: 'images/block-icon/stick.webp',
     },
+    oak_boat: {
+        id: 375,
+        name: 'Boat',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/oak_boat.webp',
+    },
 };
 
 // Générer un index par ID

@@ -3,6 +3,7 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { TouchControls } from './touchControls.js';
 import {blocks, getBlockByIdFast} from "./block.js";
 import { AudioManager } from "./AudioManager.js"
+import {BoatEntity} from "./entity/BoatEntity.js";
 
 export class Player {
 
@@ -11,6 +12,8 @@ export class Player {
     maxSpeed = 7;
     maxRun = 5;
     run = 0;
+    inWater = false;
+    riding = null;
 
     jumpSpeed = 10;
     onGround = false;
@@ -24,6 +27,7 @@ export class Player {
     controls = new PointerLockControls(this.camera, document.body);
     selectedCoords = null;
     selectedCoordsNormal = null;
+    selectedEntity = null;
 
 
     constructor(scene, world, socket) {
@@ -145,6 +149,9 @@ export class Player {
         this.isDestroying = false;
 
         this.audioManager = new AudioManager();
+
+        this.defaultFog = scene.fog; // ou ce que tu utilises par défaut
+        this.underwaterFog = new THREE.Fog(0x3399ff, 0.1, 10);
     }
 
     getPlacementDirection(faceNormal) {
@@ -183,6 +190,9 @@ export class Player {
                 } else {
                     this.startDestroyingBlock(event);
                 }
+            } else if (this.selectedEntity) {
+                if (event.button == 2)
+                    this.selectedEntity.action(this);
             }
         }
     }
@@ -206,6 +216,11 @@ export class Player {
             });
         } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
             this.ui.open(selectedBlock.id);
+        } else if (this.inventory.getSelectedItem()?.block == 375) {
+            //BATEAU
+            const boat = new BoatEntity(this.world, new THREE.Vector3(this.selectedCoords.x, this.selectedCoords.y+1, this.selectedCoords.z));
+            boat.addToScene(this.scene);
+            this.world.addEntity(boat);
         }
     }
 
@@ -318,7 +333,18 @@ export class Player {
      * @param {World} world
      */
     updateRaycaster(world) {
-        const intersects = this.raycaster.intersectObjects(world.children, true);
+        //const intersects = this.raycaster.intersectObjects(world.children, true);
+
+        const intersectObjects = [...world.children];
+        // Add entities with meshes to the raycaster target
+        for (const entity of this.world.entities || []) {
+            if (entity.mesh) {
+                intersectObjects.push(entity.mesh);
+            }
+        }
+
+        const intersects = this.raycaster.intersectObjects(intersectObjects, true);
+
 
         if (!this.usePointerLock || this.controls.isLocked) {
 
@@ -326,67 +352,80 @@ export class Player {
             this.raycaster.setFromCamera(this.mouse, this.camera);
             if (intersects.length > 0) {
                 const intersected = intersects[0];
+                if (intersected.instanceId) {
+                    // Block
 
-                //récupére la position du chunk parent du bloc
-                const chunk = intersected.object.parent;
+                    //récupére la position du chunk parent du bloc
+                    const chunk = intersected.object.parent;
 
-                // récupére transformation matrix du bloc intercepté
-                const blockMatrix = new THREE.Matrix4();
-                intersected.object.getMatrixAt(intersected.instanceId, blockMatrix);
-
-
-                // Récupère la position du chunk (grille globale)
-                this.selectedCoords = chunk.position.clone();
-
-                // Extraire la position du bloc sans la rotation
-                // decompose envoie les de blockMatrix dans des variables, nous on veut que la position
-                const blockPosition = new THREE.Vector3();
-                // Extraire le quaternion (rotation) du bloc
-                const blockQuaternion = new THREE.Quaternion();
-                blockMatrix.decompose(blockPosition, blockQuaternion, new THREE.Vector3());
-
-                // Ajoute la position du bloc à la position du chunk
-                this.selectedCoords.add(blockPosition);
-
-                // Arrondir les coordonnées à des entiers (alignement sur la grille)
-                this.selectedCoords.set(
-                    Math.round(this.selectedCoords.x),
-                    Math.round(this.selectedCoords.y),
-                    Math.round(this.selectedCoords.z)
-                );
-
-                // Clone la normale pour ne pas modifier l'original
-                this.selectedNormal = intersected.face.normal.clone();
+                    // récupére transformation matrix du bloc intercepté
+                    const blockMatrix = new THREE.Matrix4();
+                    intersected.object.getMatrixAt(intersected.instanceId, blockMatrix);
 
 
-                // Appliquer la rotation du bloc à la normale
-                this.selectedNormal.applyQuaternion(blockQuaternion).normalize();
+                    // Récupère la position du chunk (grille globale)
+                    this.selectedCoords = chunk.position.clone();
 
-                // Déterminer où placer le bloc adjacent (pour placer un bloc en face de la normale)
-                this.selectedCoordsNormal = this.selectedCoords.clone().add(this.selectedNormal);
+                    // Extraire la position du bloc sans la rotation
+                    // decompose envoie les de blockMatrix dans des variables, nous on veut que la position
+                    const blockPosition = new THREE.Vector3();
+                    // Extraire le quaternion (rotation) du bloc
+                    const blockQuaternion = new THREE.Quaternion();
+                    blockMatrix.decompose(blockPosition, blockQuaternion, new THREE.Vector3());
 
-                const blockSelected = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z)
+                    // Ajoute la position du bloc à la position du chunk
+                    this.selectedCoords.add(blockPosition);
 
-                if (blockSelected && blockSelected.id !== blocks.empty.id) {
+                    // Arrondir les coordonnées à des entiers (alignement sur la grille)
+                    this.selectedCoords.set(
+                        Math.round(this.selectedCoords.x),
+                        Math.round(this.selectedCoords.y),
+                        Math.round(this.selectedCoords.z)
+                    );
 
-                    //adapater taille mesh au block highligt
-                    let geometry = getBlockByIdFast(blockSelected.id).geometry;
-                    geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
+                    // Clone la normale pour ne pas modifier l'original
+                    this.selectedNormal = intersected.face.normal.clone();
 
-                    let size = new THREE.Vector3();
-                    geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
-                    this.selectionHelper.scale.set(size.x + 0.01, size.y + 0.01, size.z + 0.01);
 
+                    // Appliquer la rotation du bloc à la normale
+                    this.selectedNormal.applyQuaternion(blockQuaternion).normalize();
+
+                    // Déterminer où placer le bloc adjacent (pour placer un bloc en face de la normale)
+                    this.selectedCoordsNormal = this.selectedCoords.clone().add(this.selectedNormal);
+
+                    const blockSelected = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z)
+
+                    if (blockSelected && blockSelected.id !== blocks.empty.id) {
+
+                        //adapater taille mesh au block highligt
+                        let geometry = getBlockByIdFast(blockSelected.id).geometry;
+                        geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
+
+                        let size = new THREE.Vector3();
+                        geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
+                        this.selectionHelper.scale.set(size.x + 0.01, size.y + 0.01, size.z + 0.01);
+
+                        this.selectedEntity = null;
+                    }
+
+
+                    this.selectionHelper.position.copy(this.selectedCoords);
+                    this.selectionHelper.visible = true;
+
+                } else {
+                    this.selectedCoords = null;
+                    this.selectionHelper.visible = false;
+                    //Entity
+                    const entity = intersected.object.userData.entity;
+                    if (entity) {
+                        //console.log("Entité touchée :", entity);
+                        this.selectedEntity = entity;
+                    }
                 }
-
-
-                this.selectionHelper.position.copy(this.selectedCoords);
-                this.selectionHelper.visible = true;
-
-
             } else {
                 this.selectedCoords = null;
                 this.selectionHelper.visible = false;
+                this.selectedEntity = null;
             }
         }
     }
@@ -468,8 +507,19 @@ export class Player {
 
     applyInputs(dt) {
         if (!this.usePointerLock || this.controls.isLocked) {
+            const currentBlock = this.world.getBlock(
+                Math.floor(this.position.x),
+                Math.floor((this.position.y) + this.height / 2), // centre joueur
+                Math.floor(this.position.z)
+            );
+            this.inWater = currentBlock?.id === blocks.water.id;
+
             this.velocity.x = this.input.x;
             this.velocity.z = this.input.z;
+            if (this.inWater) {
+                this.velocity.x *= 0.4;
+                this.velocity.z *= 0.4;
+            }
             this.controls.moveRight(this.velocity.x * dt);
             this.controls.moveForward(this.velocity.z * dt);
             this.position.y += this.velocity.y * dt;
@@ -484,6 +534,21 @@ export class Player {
                 position: { x: this.position.x, y: this.position.y, z: this.position.z },
                 direction : { x: direction.x, y: direction.y, z: direction.z }
             });
+
+            //Apply water effect
+            this.scene.fog = this.inWater ? this.underwaterFog : this.defaultFog;
+
+            if (this.riding) {
+                // Transmet les inputs au contrôleur (ex: BoatEntity)
+                if (typeof this.riding.setInput === 'function') {
+                    this.riding.setInput(this.input);
+                }
+
+                // Met le joueur au-dessus de l'entité
+                this.position.copy(this.riding.position.clone().add(new THREE.Vector3(0, 1, 0)));
+                this.camera.position.copy(this.position);
+                return; // ignore les contrôles classiques
+            }
         }
     }
 
