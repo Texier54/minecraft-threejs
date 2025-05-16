@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import {mobs} from "./mobs.js";
+import {mobs} from "./entity/mobs.js";
 import {io} from "socket.io-client";
 
 export class Client {
@@ -87,7 +87,7 @@ export class Client {
             if (id != this.socket.id) {
                 if (!this.players[id]) {
                     // Si le joueur n’existe pas encore, on le crée
-                    const playerMesh = this.createPlayerMesh();
+                    const playerMesh = this.createPlayerMesh(allPlayers[id].username);
                     this.scene.add(playerMesh);
                     this.players[id] = playerMesh;
                     this.playersMesh[id] = playerMesh;
@@ -127,7 +127,7 @@ export class Client {
     }
 
     // Fonction pour créer un joueur (un simple cube)
-    createPlayerMesh() {
+    createPlayerMesh(name) {
         const playerMesh = new THREE.Group();
         const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 
@@ -146,6 +146,9 @@ export class Client {
         head.position.set( 0, -0.15, 0 );
         head.name = "head";  // Donne un nom unique
         playerMesh.add(head);
+        const nameTag = this.createNameTag(name); // ou Player.name si dispo
+        nameTag.name = "nameTag";
+        playerMesh.add(nameTag);
         const armRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.71, 0.25), mobs.steve.arm.material);
         armRight.position.set( -0.38, -0.75, 0 );
         playerMesh.add(armRight);
@@ -189,6 +192,24 @@ export class Client {
 
     onKeyUp(event) {
         if (event.code === 'KeyL') this.hidePlayersList();
+    }
+
+    createNameTag(name) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 64;
+        const context = canvas.getContext('2d');
+        context.fillStyle = 'white';
+        context.font = '24px Arial';
+        context.textAlign = 'center';
+        context.fillText(name, 128, 40);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+        const sprite = new THREE.Sprite(material);
+        sprite.scale.set(1.5, 0.4, 1);
+        sprite.position.set(0, 0.6, 0); // légèrement au-dessus de la tête
+        return sprite;
     }
 
 

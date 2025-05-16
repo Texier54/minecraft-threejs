@@ -42,6 +42,7 @@ io.on('connection', (socket) => {
     log(`Joueur connecté : ${socket.id}`);
 
     socket.on('join', (playerData) => {
+        console.log(playerData);
         playerData.id = socket.id;
         players[socket.id] = playerData;
         io.emit('player-connect', playerData);
@@ -50,7 +51,8 @@ io.on('connection', (socket) => {
     // Recevoir la position et la direction du joueur
     socket.on("playerState", (data) => {
         if (players[socket.id]) {
-            players[socket.id] = data;
+            players[socket.id].direction = data.direction;
+            players[socket.id].position = data.position;
             // Diffuser l’état du joueur à tous les autres
             io.emit("playerState", {[socket.id]: players[socket.id]} );
         }
