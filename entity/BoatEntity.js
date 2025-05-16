@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Entity } from '/Users/texier/Documents/repos/test/entity/Entity.js';
+import { Entity } from './Entity.js';
 
 export class BoatEntity extends Entity {
     constructor(world, position) {
