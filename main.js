@@ -3,7 +3,8 @@ import * as THREE from 'three';
 import { Player } from './player.js';
 import { ClientWorld } from './world/ClientWorld.js';
 import {blocks, getBlockByIdFast} from "./block.js";
-import {Pig} from "./entity/pig.js";
+import {Pig} from "./entity/Pig.js";
+import {Cow} from "./entity/Cow.js";
 import {Physics} from "./physics.js";
 import {Inventory} from "./inventory.js";
 import {Menu} from "./menu.js";
@@ -48,13 +49,13 @@ const menu = new Menu(world, player, inventory, client, chat);
 const ui = new UI(player, inventory);
 const sun = new Sun(scene, player,0.20);
 
-const boat = new BoatEntity(world, new THREE.Vector3(10,50,10));
-boat.addToScene(scene);
-world.addEntity(boat);
-
 const pig = new Pig(world, new THREE.Vector3(10,45,10));
 pig.addToScene(scene);
 world.addEntity(pig);
+
+const cow = new Cow(world, new THREE.Vector3(10,36,10));
+cow.addToScene(scene);
+world.addEntity(cow);
 
 player.setInventory(inventory);
 player.setUI(ui);

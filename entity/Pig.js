@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 
-import {mobs} from "../mobs.js";
+import {mobs} from "./mobs.js";
 import {Entity} from "./Entity.js";
+import {blocks} from "../block.js";
 
 export class Pig extends Entity {
 
     mesh = new THREE.Group();
+    radius = 2;
+    height = 1;
 
     constructor(world, position) {
         super(world, position);
@@ -61,7 +64,11 @@ export class Pig extends Entity {
         this.mesh.position.copy(this.position); // <- important
 
         this.hitTime = 0;
+        // Store the current materials only if hitTime is 0 (to avoid overwriting while already hit)
         this.originalMaterials = this.mesh.children.map(c => c.material);
+
+        this.redMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        this.redMaterial.needsUpdate = true;
     }
 
 
@@ -75,25 +82,25 @@ export class Pig extends Entity {
     hit() {
         console.log('hit pig');
         this.hitTime = 0.3; // seconds
+        this.runTime = 3; // seconds
         this.pigVelocity.y += 0.2; // small rebound
 
-        // Store the current materials only if hitTime is 0 (to avoid overwriting while already hit)
-        if (this.hitTime === 0.3) {
-            this.originalMaterials = this.mesh.children.map(c => c.material);
-        }
-
         this.mesh.children.forEach((child, i) => {
-            if (child.material && child.material.clone) {
-                const redMaterial = child.material.clone();
-                redMaterial.color.set(0xff0000);
-                child.material = redMaterial;
+            if (child.material) {
+                child.material = this.redMaterial;
             }
         });
+        this.target = this.getRandomTarget(); // Nouvelle cible aléatoire
     }
 
     update(deltaTime) {
+        let runSpeed = 0;
 
+        this.broadPhase();
+
+        //rouge
         if (this.hitTime > 0) {
+            runSpeed = 2;
             this.hitTime -= deltaTime;
             if (this.hitTime <= 0) {
                 this.mesh.children.forEach((child, i) => {
@@ -102,6 +109,12 @@ export class Pig extends Entity {
                     }
                 });
             }
+        }
+
+        //courir
+        if (this.runTime > 0) {
+            this.runTime -= deltaTime;
+            runSpeed = 3;
         }
 
         if (this.world.getBlock(Math.floor(this.mesh.position.x), Math.floor(this.mesh.position.y), Math.floor(this.mesh.position.z))?.id == 0 ) {
@@ -117,7 +130,7 @@ export class Pig extends Entity {
         // Déplace le cochon en fonction de la vélocité
         this.mesh.position.add(this.pigVelocity);
 
-        const speed = 1; // Vitesse en unités par seconde
+        const speed = 1+runSpeed; // Vitesse en unités par seconde
 
         // Calculer la direction vers la cible
         const direction = this.target.clone().sub(this.mesh.position).normalize();
@@ -133,12 +146,52 @@ export class Pig extends Entity {
         this.target.y = this.mesh.position.y;
         // Faire tourner le meshe pour qu'il regarde la cible
         this.mesh.lookAt(this.target);
-        this.animatePigLegs(deltaTime);
+        this.animatePigLegs(speed);
     }
 
-    animatePigLegs() {
-        const speed = 2; // Fréquence de l'oscillation
-        const angle = Math.sin(Date.now() * 0.005 * speed); // Oscillation basée sur le temps
+    broadPhase() {
+        const candidates = [];
+
+        // Get the block extents of the player
+        const minX = Math.floor(this.mesh.position.x - this.radius);
+        const maxX = Math.ceil(this.mesh.position.x + this.radius);
+        const minY = Math.floor(this.mesh.position.y - this.height);
+        const maxY = Math.ceil(this.mesh.position.y);
+        const minZ = Math.floor(this.mesh.position.z - this.radius);
+        const maxZ = Math.ceil(this.mesh.position.z + this.radius);
+
+        // Loop through all blocks next to the block the center of the player is in
+        // If they aren't empty, then they are a possible collision candidate
+        for (let x = minX; x <= maxX; x++) {
+            for (let y = minY; y <= maxY; y++) {
+                for (let z = minZ; z <= maxZ; z++) {
+                    const blockId = this.world.getBlock(x, y, z)?.id;
+                    if (blockId && blockId !== blocks.empty.id && blockId !== blocks.water.id) {
+                        let size = {};
+                        let hasStep = false;
+                        if (blockId == 53 || blockId == 67) {
+                            size = { x: 1, y: 1, z: 1 };
+                            hasStep = true; // Ajout d'une propriété pour détecter les escaliers
+                        }
+                        else if (blockId == 50)
+                            size = { x: 0.1, y: 0.1 };
+                        else
+                            size = { x: 1, y: 1, z: 1 };
+                        const block = { x, y, z,  size: size, hasStep: hasStep };
+                        candidates.push(block);
+                        //this.addCollisionHelper(block);
+                    }
+                }
+            }
+        }
+
+        console.log(`Broadphase Candidates: ${candidates.length}`);
+
+        return candidates;
+    }
+
+    animatePigLegs(speed) {
+        const angle = Math.sin(Date.now() * 0.005 * speed * 2); // Oscillation basée sur le temps
 
         this.mesh.children.forEach((child) => {
             if (child.isLeg) {

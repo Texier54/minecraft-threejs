@@ -41,6 +41,14 @@ const textures = {
     steve_leg_back: loadTexture('images/player/steve_leg_back.png'),
     steve_leg_right: loadTexture('images/player/steve_leg_right.png'),
     steve_leg_left: loadTexture('images/player/steve_leg_left.png'),
+    cow_head_front: loadTexture('images/mob/cow/cow_head_front.png'),
+    cow_head_top: loadTexture('images/mob/cow/cow_head_top.png'),
+    cow_head_left: loadTexture('images/mob/cow/cow_head_left.png'),
+    cow_head_right: loadTexture('images/mob/cow/cow_head_right.png'),
+    cow_body_left: loadTexture('images/mob/cow/cow_body_left.png'),
+    cow_body_right: loadTexture('images/mob/cow/cow_body_right.png'),
+    cow_body_top: loadTexture('images/mob/cow/cow_body_top.png'),
+    cow_body_bottom: loadTexture('images/mob/cow/cow_body_bottom.png'),
 };
 
 export const mobs = {
@@ -63,6 +71,50 @@ export const mobs = {
                 new THREE.MeshLambertMaterial({ map: textures.pig_body_side }), // left
                 new THREE.MeshLambertMaterial({ map: textures.pig_body_right }), // top
                 new THREE.MeshLambertMaterial({ map: textures.pig_body_side }), // bottom
+                new THREE.MeshLambertMaterial({ map: textures.pig_body_side }), // front
+                new THREE.MeshLambertMaterial({ map: textures.pig_body_back })  // back
+            ],
+        },
+        feet: {
+            material: [
+                new THREE.MeshLambertMaterial({ map: textures.pig_feet }), // right
+                new THREE.MeshLambertMaterial({ map: textures.pig_feet }), // left
+                new THREE.MeshLambertMaterial({ map: textures.pig_feet }), // top
+                new THREE.MeshLambertMaterial({ map: textures.pig_feet }), // bottom
+                new THREE.MeshLambertMaterial({ map: textures.pig_feet }), // front
+                new THREE.MeshLambertMaterial({ map: textures.pig_feet })  // back
+            ],
+        },
+        noise: {
+            material: [
+                new THREE.MeshLambertMaterial({ map: textures.pig_body_side }), // right
+                new THREE.MeshLambertMaterial({ map: textures.pig_body_side }), // left
+                new THREE.MeshLambertMaterial({ map: textures.pig_body_side }), // top
+                new THREE.MeshLambertMaterial({ map: textures.pig_body_side }), // bottom
+                new THREE.MeshLambertMaterial({ map: textures.pig_noise_front }), // front
+                new THREE.MeshLambertMaterial({ map: textures.pig_body_side })  // back
+            ],
+        },
+    },
+    cow: {
+        id: 2,
+        name: 'cow',
+        head: {
+            material: [
+                new THREE.MeshLambertMaterial({ map: textures.cow_head_left }), // right
+                new THREE.MeshLambertMaterial({ map: textures.pig_head_right }), // left
+                new THREE.MeshLambertMaterial({ map: textures.cow_head_top }), // top
+                new THREE.MeshLambertMaterial({ map: textures.pig_body_side }), // bottom
+                new THREE.MeshLambertMaterial({ map: textures.cow_head_front }), // front
+                new THREE.MeshLambertMaterial({ map: textures.pig_body_side })  // back
+            ],
+        },
+        body: {
+            material: [
+                new THREE.MeshLambertMaterial({ map: textures.cow_head_left }), // right
+                new THREE.MeshLambertMaterial({ map: textures.cow_head_right }), // left
+                new THREE.MeshLambertMaterial({ map: textures.cow_head_top }), // top
+                new THREE.MeshLambertMaterial({ map: textures.cow_head_bottom }), // bottom
                 new THREE.MeshLambertMaterial({ map: textures.pig_body_side }), // front
                 new THREE.MeshLambertMaterial({ map: textures.pig_body_back })  // back
             ],
