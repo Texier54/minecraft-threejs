@@ -18,6 +18,11 @@ export class Entity {
         if (this.mesh) scene.add(this.mesh);
     }
 
+    removeToScene(scene) {
+        if (this.mesh) scene.remove(this.mesh);
+    }
+
+
     removeFromScene(scene) {
         if (this.mesh) scene.remove(this.mesh);
     }

@@ -345,13 +345,13 @@ export class Player {
             }
         }
 
+        // Mettre à jour le raycaster en fonction de la position de la souris
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        this.raycaster.camera = this.camera;
+
         const intersects = this.raycaster.intersectObjects(intersectObjects, true);
 
-
         if (!this.usePointerLock || this.controls.isLocked) {
-
-            // Mettre à jour le raycaster en fonction de la position de la souris
-            this.raycaster.setFromCamera(this.mouse, this.camera);
             if (intersects.length > 0) {
                 const intersected = intersects[0];
                 if (intersected.instanceId !== undefined) {
