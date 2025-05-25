@@ -218,6 +218,14 @@ export class Player {
             });
         } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
             this.ui.open(selectedBlock.id);
+        } else if (getBlockByIdFast(selectedBlock.id).openable) {
+            if (!selectedBlock.isOpen) {
+                selectedBlock.mesh.rotation.y = -Math.PI / 2;
+                selectedBlock.isOpen = true;
+            } else {
+                selectedBlock.mesh.rotation.y = 0;
+                selectedBlock.isOpen = false;
+            }
         } else if (this.inventory.getSelectedItem()?.block == 375) {
             //BATEAU
             const boat = new BoatEntity(this.world, new THREE.Vector3(this.selectedCoords.x, this.selectedCoords.y+1, this.selectedCoords.z));

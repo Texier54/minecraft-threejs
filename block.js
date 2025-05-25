@@ -5,7 +5,8 @@ const textureLoader = new THREE.TextureLoader();
 const geometryBlock = new THREE.BoxGeometry(1, 1, 1);
 const geometryTorch = new THREE.BoxGeometry(0.12, 0.7, 0.12)
 
-
+const geometryDoor = new THREE.BoxGeometry(0.2, 1, 1); // mince et haute
+geometryDoor.translate(0.4, 0, 0); // pour faire pivoter sur un bord
 
 const step1 = new THREE.BoxGeometry(1, 0.5, 1);
 const step2 = new THREE.BoxGeometry(1, 0.5, 0.5);
@@ -57,6 +58,8 @@ const textures = {
     cactus_side: loadTexture('images/cactus_side.png'),
     cactus_top: loadTexture('images/cactus_top.png'),
     sandstone: loadTexture('images/sandstone.png'),
+    oak_door_bottom: loadTexture('images/oak_door_bottom.png'),
+    fence: loadTexture('images/fence_oak.png'),
 };
 
 const TOOL_TYPES = {
@@ -397,6 +400,20 @@ export const blocks = {
         geometry: geometryBlock,
         soundGroup: 'stone',
     },
+    oak_door: {
+        id: 64,
+        name: 'oak_door',
+        type: 'block',
+        stackable: false,
+        hardness: 1,
+        icon: 'images/block-icon/oak_door.png',
+        geometry: geometryDoor,
+        material: new THREE.MeshLambertMaterial({ map: textures.oak_door_bottom }),
+        interactive: true, // important
+        openable: true, // marqueur custom
+        transparent: true,
+        soundGroup: 'wood',
+    },
     cobblestone_stairs: {
         id: 67,
         name: 'cobblestone_stairs',
@@ -428,6 +445,19 @@ export const blocks = {
         tool: TOOL_TYPES.AXE,
         geometry: geometryBlock,
         soundGroup: 'stone',
+    },
+    oak_fence: {
+        id: 85,
+        name: 'oak_fence',
+        type: 'block',
+        stackable: true,
+        hardness: 2,
+        material: new THREE.MeshLambertMaterial({ map: textures.planks }),
+        icon: 'images/block-icon/oak_fence.webp',
+        tool: TOOL_TYPES.AXE,
+        geometry: new THREE.BoxGeometry(0.3, 1, 0.3), // simple pilier vertical
+        transparent: true,
+        soundGroup: 'wood',
     },
     iron_pickaxe: {
         id: 297,

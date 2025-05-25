@@ -185,7 +185,7 @@ export class Pig extends Entity {
             }
         }
 
-        console.log(`Broadphase Candidates: ${candidates.length}`);
+        //console.log(`Broadphase Candidates: ${candidates.length}`);
 
         return candidates;
     }

@@ -189,6 +189,28 @@ export const RecipesList = {
             id: blocks.oak_boat.id,
             quantity: 1,
         },
+    },
+    oak_door: {
+        pattern: [
+            [blocks.planks.id, blocks.planks.id, null],
+            [blocks.planks.id, blocks.planks.id, null],
+            [blocks.planks.id, blocks.planks.id, null],
+        ],
+        output: {
+            id: blocks.oak_door.id,
+            quantity: 1,
+        },
+    },
+    oak_fence: {
+        pattern: [
+            [null, null, null],
+            [blocks.planks.id, blocks.stick.id, blocks.planks.id],
+            [blocks.planks.id, blocks.stick.id, blocks.planks.id],
+        ],
+        output: {
+            id: blocks.oak_fence.id,
+            quantity: 3,
+        },
     }
 }
 
