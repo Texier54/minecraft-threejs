@@ -83,10 +83,11 @@ export class Cow extends Entity {
             }
         });
         this.target = this.getRandomTarget(); // Nouvelle cible aléatoire
+        this.audioManager.playBlockSound('cow', 'hurt');
     }
 
     update(deltaTime) {
-return;
+
         let runSpeed = 0;
 
         //rouge
@@ -101,7 +102,7 @@ return;
                 });
             }
         }
-
+        return;
         //courir
         if (this.runTime > 0) {
             this.runTime -= deltaTime;

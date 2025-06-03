@@ -57,7 +57,9 @@ const textures = {
     diamondOre: loadTexture('images/diamond_ore.png'),
     cactus_side: loadTexture('images/cactus_side.png'),
     cactus_top: loadTexture('images/cactus_top.png'),
-    sandstone: loadTexture('images/sandstone.png'),
+    sandstone_top: loadTexture('images/sandstone_top.png'),
+    sandstone_side: loadTexture('images/sandstone_side.png'),
+    sandstone_bottom: loadTexture('images/sandstone_bottom.png'),
     oak_door_bottom: loadTexture('images/oak_door_bottom.png'),
     fence: loadTexture('images/fence_oak.png'),
 };
@@ -192,7 +194,7 @@ export const blocks = {
         icon: 'images/block-icon/sand.webp',
         tool: TOOL_TYPES.SHOVEL,
         geometry: geometryBlock,
-        soundGroup: 'gravel',
+        soundGroup: 'sand',
     },
     gravel: {
         id: 13,
@@ -285,7 +287,14 @@ export const blocks = {
         type: 'block',
         stackable: true,
         hardness: 0.8,
-        material: new THREE.MeshLambertMaterial({ map: textures.sandstone }),
+        material: [
+            new THREE.MeshLambertMaterial({ map: textures.sandstone_side }), // right
+            new THREE.MeshLambertMaterial({ map: textures.sandstone_side }), // left
+            new THREE.MeshLambertMaterial({ map: textures.sandstone_top }), // top
+            new THREE.MeshLambertMaterial({ map: textures.sandstone_bottom }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.sandstone_side }), // front
+            new THREE.MeshLambertMaterial({ map: textures.sandstone_side })  // back
+        ],
         transparent: false,
         icon: 'images/block-icon/sandstone.webp',
         tool: TOOL_TYPES.PICKAXE,
@@ -457,6 +466,7 @@ export const blocks = {
         tool: TOOL_TYPES.AXE,
         geometry: new THREE.BoxGeometry(0.3, 1, 0.3), // simple pilier vertical
         transparent: true,
+        connectable: true,
         soundGroup: 'wood',
     },
     iron_pickaxe: {

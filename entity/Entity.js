@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import {AudioManager} from "../AudioManager.js";
+
 export class Entity {
     constructor(world, position) {
         this.world = world;
@@ -7,6 +9,7 @@ export class Entity {
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.mesh = null;
         this.boundingBox = new THREE.Box3();
+        this.audioManager = new AudioManager();
     }
 
     update(dt) {

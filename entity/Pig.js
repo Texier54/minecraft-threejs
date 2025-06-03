@@ -91,6 +91,7 @@ export class Pig extends Entity {
             }
         });
         this.target = this.getRandomTarget(); // Nouvelle cible aléatoire
+        this.audioManager.playBlockSound('pig', 'hurt');
     }
 
     update(deltaTime) {

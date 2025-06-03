@@ -211,7 +211,7 @@ export class Player {
             this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block, direction);
             this.inventory.removeBlock(this.inventory.getSelectedItem().block);
 
-            this.audioManager.playBlockSound(block, 'place');
+            this.audioManager.playBlockSound(block.soundGroup, 'place');
 
             this.socket.getSocket()?.emit("addBlock", {
                 x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block, direction: direction
@@ -294,7 +294,7 @@ export class Player {
                 this.socket.getSocket()?.emit("removeBlock", {
                      x: this.selectedCoords.x, y: this.selectedCoords.y, z: this.selectedCoords.z
                 });
-                this.audioManager.playBlockSound(blockToRemoveO, 'break');
+                this.audioManager.playBlockSound(blockToRemoveO.soundGroup, 'break');
                 this.isDestroying = false;
                 clearInterval(this.destructionInterval);
 
