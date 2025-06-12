@@ -5,7 +5,7 @@ const textureLoader = new THREE.TextureLoader();
 const geometryBlock = new THREE.BoxGeometry(1, 1, 1);
 const geometryTorch = new THREE.BoxGeometry(0.12, 0.7, 0.12)
 
-const geometryDoor = new THREE.BoxGeometry(0.2, 1, 1); // mince et haute
+const geometryDoor = new THREE.BoxGeometry(0.2, 2, 1); // mince et haute
 geometryDoor.translate(0.4, 0, 0); // pour faire pivoter sur un bord
 
 const step1 = new THREE.BoxGeometry(1, 0.5, 1);
@@ -62,6 +62,7 @@ const textures = {
     sandstone_bottom: loadTexture('images/sandstone_bottom.png'),
     oak_door_bottom: loadTexture('images/oak_door_bottom.png'),
     fence: loadTexture('images/fence_oak.png'),
+    obsidian: loadTexture('images/obsidian.png'),
 };
 
 const TOOL_TYPES = {
@@ -297,6 +298,19 @@ export const blocks = {
         ],
         transparent: false,
         icon: 'images/block-icon/sandstone.webp',
+        tool: TOOL_TYPES.PICKAXE,
+        geometry: geometryBlock,
+        soundGroup: 'stone',
+    },
+    obsidian: {
+        id: 49,
+        name: 'obsidian',
+        type: 'block',
+        stackable: true,
+        hardness: 50,
+        material: new THREE.MeshLambertMaterial({ map: textures.obsidian }),
+        transparent: false,
+        icon: 'images/block-icon/obsidian.webp',
         tool: TOOL_TYPES.PICKAXE,
         geometry: geometryBlock,
         soundGroup: 'stone',
@@ -568,6 +582,20 @@ export const blocks = {
         type: 'item',
         stackable: true,
         icon: 'images/block-icon/stick.webp',
+    },
+    bucket: {
+        id: 360,
+        name: 'Bucket',
+        type: 'item',
+        stackable: true,
+        icon: 'images/block-icon/bucket.webp',
+    },
+    water_bucket: {
+        id: 362,
+        name: 'Water Bucket',
+        type: 'item',
+        stackable: true,
+        icon: 'images/block-icon/water_bucket.webp',
     },
     oak_boat: {
         id: 375,

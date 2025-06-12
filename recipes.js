@@ -211,6 +211,28 @@ export const RecipesList = {
             id: blocks.oak_fence.id,
             quantity: 3,
         },
+    },
+    sandstone: {
+        pattern: [
+            [blocks.sand.id, blocks.sand.id, null],
+            [blocks.sand.id, blocks.sand.id, null],
+            [null, null, null],
+        ],
+        output: {
+            id: blocks.sandstone.id,
+            quantity: 1,
+        },
+    },
+    bucket: {
+        pattern: [
+            [blocks.iron_ingot.id, null, blocks.iron_ingot.id],
+            [null, blocks.iron_ingot.id, null],
+            [null, null, null],
+        ],
+        output: {
+            id: blocks.bucket.id,
+            quantity: 1,
+        },
     }
 }
 

@@ -218,6 +218,7 @@ export class Player {
             });
         } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
             this.ui.open(selectedBlock.id);
+            this.audioManager.playBlockSound(getBlockByIdFast(selectedBlock.id).soundGroup, 'open');
         } else if (getBlockByIdFast(selectedBlock.id).openable) {
             if (!selectedBlock.isOpen) {
                 selectedBlock.mesh.rotation.y = -Math.PI / 2;
