@@ -185,6 +185,21 @@ export const blocks = {
         transparent: true,
         geometry: geometryBlock,
     },
+    lava: {
+        id: 11,
+        name: 'lava',
+        type: 'block',
+        stackable: true,
+        hardness: 10000,
+        material: new THREE.MeshLambertMaterial(new THREE.MeshLambertMaterial({
+            color: 0xf87d09,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide
+        })),
+        transparent: true,
+        geometry: geometryBlock,
+    },
     sand: {
         id: 12,
         name: 'sand',

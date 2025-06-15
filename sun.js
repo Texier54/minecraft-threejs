@@ -11,11 +11,23 @@ export class Sun {
         this.player = player
         this.dayDuration = 1200 * 1000; // Durée d'un cycle complet (60 secondes par exemple)
 
+        /*
         const sunGeometry = new THREE.BoxGeometry(5, 5, 5);
         const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Couleur jaune éclatante
+        sunMaterial.fog = false;
         this.sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
         //this.sunMesh.rotation.set(2, 0, 0);
         this.sunMesh.position.set(50, 100, 50); // Même position que la DirectionalLight
+        scene.add(this.sunMesh);
+        */
+
+
+        const tex = new THREE.TextureLoader().load('images/environment/sun_light.png');
+        tex.magFilter = tex.minFilter = THREE.NearestFilter;
+        tex.generateMipmaps = false;
+        this.sunMesh  = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, fog: false}));
+        this.sunMesh.position.set(0, 100, 0);      // dans le champ
+        this.sunMesh.scale.set(8, 8, 1);          // carré 16×16 « pixel art »
         scene.add(this.sunMesh);
     }
 
@@ -41,7 +53,7 @@ export class Sun {
         //this.scene.add(shadownHelper);
 
         const ambient = new THREE.AmbientLight();
-        ambient.intensity = 0.2;
+        ambient.intensity = 0.1;
         this.scene.add(ambient);
     }
 
@@ -73,6 +85,8 @@ export class Sun {
 
         // Modifier l'intensité en fonction de la hauteur du soleil
         //this.sunLight.intensity = Math.max(0, Math.sin(angle)); // Plus bas = plus sombre
+
+        this.sunMesh.material.rotation = -this.player.camera.rotation.z;
 
         this.sun.target.position.copy(this.player.camera.position);
         /*

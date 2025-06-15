@@ -16,7 +16,9 @@ const blocks = {
     craftingTable: { id: 58, name: 'Crafting Table' },
     cactus: { id: 81, name: 'cactus' },
     water: { id: 9, name: 'water' },
-    sandstone: { id : 24, name: 'sandstone' }
+    lava: { id: 11, name: 'lava' },
+    sandstone: { id : 24, name: 'sandstone' },
+    obsidian: { id : 49, name: 'obsidian' }
 };
 
 const resources = [
@@ -111,7 +113,7 @@ export function generateTerrain(chunkSize, chunkHeight, params, rng, position, d
                 } else if (y < height && getBlock(data, x, y, z)?.id === blocks.empty.id) {
                     setBlockId(data, x, y, z, blocks.stone.id);
                     generateResources(rng, x, y, z, position, data);
-                    //generateCaves(simplex, x, y, z, position);
+                    generateCaves(simplex, x, y, z, position, data);
                 } else if (y == height) {
 
                     if (biome == 'plains')
@@ -257,20 +259,61 @@ export function lerp(a, b, t) {
     return a + t * (b - a);
 }
 
-export function generateCaves(simplex, x, y, z, position) {
+export function generateCaves(simplex, x, y, z, position, data) {
+    /*  Caves v3 : « spaghetti » 3-D
+     *  – moyenne de trois permutations du bruit Simplex ⇒ moins linéaire
+     *  – “gate” aléatoire pour casser les couloirs infinis
+     *  – on creuse une mini-sphère (rayon 1) pour élargir le tunnel
+     */
 
+    // Ne pas toucher à la surface, à la mer ni à la bedrock
+    if (y <= 4 || y >= 60) return;
 
-    const scale = 0.02; // Fréquence du bruit, à ajuster pour la taille des filons
-    const noiseValue = simplex.noise(position.x + x /500, position.y + y / 500, position.z + z /500);
+    // Coordonnées absolues (continuité inter-chunks)
+    const ax = position.x + x;
+    const ay = position.y + y;
+    const az = position.z + z;
 
-    let baseNoise = simplex.noise(position.x +x * 0.1, position.y+y * 0.1, position.z+z * 0.1);
-    let detailNoise = simplex.noise(position.x +x * 0.05, position.y+y * 0.05, position.z+z * 0.05) * 0.5;
-    let finalNoise = baseNoise + detailNoise;
+    // 1) Bruit combiné : trois permutations → valeurs moins directionnelles
+    const freq = 0.035;
+    const v =
+        (simplex.noise(ax * freq, ay * freq, az * freq) +
+            simplex.noise(ay * freq, az * freq, ax * freq) +
+            simplex.noise(az * freq, ax * freq, ay * freq)) / 3;
 
-    // Définition des types de minerai en fonction du bruit et de la profondeur
-    if (finalNoise > 0.4) {
-        setBlockId(data, x, y, z, blocks.coalOre.id); // Diamants en profondeur
+    // 2) Gate : évite qu’un même fil soit creusé indéfiniment
+    const gate = simplex.noise((ax + 57) * 0.11, (ay - 13) * 0.11, (az + 29) * 0.11);
+
+    // 3) Si v est dans une fine bande et que gate > 0 ⇒ on creuse
+    if (v > 0.18 && v < 0.24 && gate > 0) { //Modifier la bande (v > 0.18 && v < 0.24) pour contrôler la fréquence de ces salles.
+        const R = 2;                             // rayon élargi
+        for (let dx = -R; dx <= R; dx++) {
+            for (let dy = -R; dy <= R; dy++) {
+                for (let dz = -R; dz <= R; dz++) {
+                    if (dx * dx + dy * dy + dz * dz <= R * R) {
+                        const nx = x + dx, ny = y + dy, nz = z + dz;
+                        if (inBounds(nx, ny, nz)) {
+                            setBlockId(data, nx, ny, nz, blocks.empty.id);
+                        }
+                    }
+                }
+            }
+        }
+        /* ----- Lave occasionnelle au fond des cavernes ----- */
+        if (y <= 30 && Math.random() < 0.02) {   // 2 % de chance en dessous de Y=30
+            for (let dx2 = -R; dx2 <= R; dx2++) {
+                for (let dz2 = -R; dz2 <= R; dz2++) {
+                    if (dx2 * dx2 + dz2 * dz2 <= R * R) {
+                        const nx = x + dx2, nz = z + dz2, ny = y - 1; // couche inférieure
+                        if (inBounds(nx, ny, nz)) {
+                            const blk = getBlock(data, nx, ny, nz);
+                            if (blk && blk.id === blocks.empty.id) {
+                                setBlockId(data, nx, ny, nz, blocks.lava.id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-
-
 }
