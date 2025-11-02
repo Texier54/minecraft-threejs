@@ -7,7 +7,7 @@ import { DataStore } from './dataStore.js';
 
 export class World extends THREE.Group {
 
-    asyncLoading = true;
+    asyncLoading = false;
 
     drawDistance = 1;
 

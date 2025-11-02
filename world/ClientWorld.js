@@ -15,7 +15,7 @@ export class ClientWorld extends THREE.Group {
         [0, 0, 1]
     ];
 
-    asyncLoading = true;
+    asyncLoading = false;
 
     entities = [];
 
@@ -72,6 +72,15 @@ export class ClientWorld extends THREE.Group {
             chunk.userData.x === chunkX &&
             chunk.userData.z === chunkZ
         ));
+    }
+
+    toggleDoorAt(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (!chunk) return;
+
+        chunk.toggleDoorAt(coords.block.x, coords.block.y, coords.block.z);
     }
 
     addBlock(x, y, z, blockId, direction) {
