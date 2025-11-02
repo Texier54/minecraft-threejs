@@ -24,7 +24,7 @@ export class Player {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 
     // Contrôle en première personne avec "PointerLockControls"
-    controls = new PointerLockControls(this.camera, document.body);
+    //controls = new PointerLockControls(this.camera, document.body);
     selectedCoords = null;
     selectedCoordsNormal = null;
     selectedEntity = null;
@@ -96,7 +96,7 @@ export class Player {
         //wireframe mesh visualizing the palyer's bounding cylinder
         this.boundsHelper = new THREE.Mesh(
             new THREE.CylinderGeometry(this.radius, this.radius, this.height, 16),
-            new THREE.MeshBasicMaterial({ wireframe: true})
+            new THREE.MeshBasicMaterial({wireframe: true})
         )
         //scene.add(this.boundsHelper);
 
@@ -106,7 +106,7 @@ export class Player {
         handTexture.colorSpace = THREE.SRGBColorSpace;
         handTexture.magFilter = THREE.NearestFilter;
         handTexture.minFilter = THREE.NearestFilter;
-        const handMaterial = new THREE.MeshBasicMaterial({ map: handTexture });
+        const handMaterial = new THREE.MeshBasicMaterial({map: handTexture});
         this.handMesh = new THREE.Mesh(handGeometry, handMaterial);
 
         // Positionne la main dans le champ de vision du joueur
@@ -129,8 +129,8 @@ export class Player {
 
         });
 
-        const texture = new THREE.TextureLoader().load('images/break.png' );
-        const selectionBreakMaterial = new THREE.MeshLambertMaterial({ map: texture, transparent: true });
+        const texture = new THREE.TextureLoader().load('images/break.png');
+        const selectionBreakMaterial = new THREE.MeshLambertMaterial({map: texture, transparent: true});
         const selectionBreakGeometry = new THREE.BoxGeometry(1.01, 1.01, 1.01);
         this.selectionBreakHelper = new THREE.Mesh(selectionBreakGeometry, selectionBreakMaterial);
         this.scene.add(this.selectionBreakHelper);
@@ -172,11 +172,11 @@ export class Player {
 
         let placementDir = vector.negate();
 
-        if (placementDir.x === 1) return {x:1, y:0, z:0}; // À droite
-        if (placementDir.x === -1) return {x:-1, y:0, z:0}; // À gauche
-        if (placementDir.z === 1) return {x:0, y:0, z:1}; // Devant
-        if (placementDir.z === -1) return {x:0, y:0, z:-1}; // Derrière
-        return {x:0, y:1, z:0}; // Par défaut vers le haut
+        if (placementDir.x === 1) return {x: 1, y: 0, z: 0}; // À droite
+        if (placementDir.x === -1) return {x: -1, y: 0, z: 0}; // À gauche
+        if (placementDir.z === 1) return {x: 0, y: 0, z: 1}; // Devant
+        if (placementDir.z === -1) return {x: 0, y: 0, z: -1}; // Derrière
+        return {x: 0, y: 1, z: 0}; // Par défaut vers le haut
     }
 
     onMouseDown(event) {
@@ -214,22 +214,20 @@ export class Player {
             this.audioManager.playBlockSound(block.soundGroup, 'place');
 
             this.socket.getSocket()?.emit("addBlock", {
-                x: this.selectedCoordsNormal.x, y: this.selectedCoordsNormal.y, z: this.selectedCoordsNormal.z, blockId: this.inventory.getSelectedItem().block, direction: direction
+                x: this.selectedCoordsNormal.x,
+                y: this.selectedCoordsNormal.y,
+                z: this.selectedCoordsNormal.z,
+                blockId: this.inventory.getSelectedItem().block,
+                direction: direction
             });
         } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
             this.ui.open(selectedBlock.id);
             this.audioManager.playBlockSound(getBlockByIdFast(selectedBlock.id).soundGroup, 'open');
         } else if (getBlockByIdFast(selectedBlock.id).openable) {
-            if (!selectedBlock.isOpen) {
-                selectedBlock.mesh.rotation.y = -Math.PI / 2;
-                selectedBlock.isOpen = true;
-            } else {
-                selectedBlock.mesh.rotation.y = 0;
-                selectedBlock.isOpen = false;
-            }
+            this.toggleDoor(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
         } else if (this.inventory.getSelectedItem()?.block == 375) {
             //BATEAU
-            const boat = new BoatEntity(this.world, new THREE.Vector3(this.selectedCoords.x, this.selectedCoords.y+1, this.selectedCoords.z));
+            const boat = new BoatEntity(this.world, new THREE.Vector3(this.selectedCoords.x, this.selectedCoords.y + 1, this.selectedCoords.z));
             boat.addToScene(this.scene);
             this.world.addEntity(boat);
         }
@@ -256,7 +254,7 @@ export class Player {
                 speedMultiplier = tool.tool_material;
         }
 
-        let damage = speedMultiplier/getBlockByIdFast(blockToRemove.id).hardness;
+        let damage = speedMultiplier / getBlockByIdFast(blockToRemove.id).hardness;
 
         if (getBlockByIdFast(blockToRemove.id)?.need_tool && !(tool && tool.type == 'item' && tool.tool_type == getBlockByIdFast(blockToRemove.id).tool))
             damage /= 100;
@@ -265,7 +263,7 @@ export class Player {
 
         const ticks = Math.ceil(1 / damage)
 
-        destructionTime = (ticks / 20)*1000;
+        destructionTime = (ticks / 20) * 1000;
 
         // Instant breaking
         if (damage > 1)
@@ -293,7 +291,7 @@ export class Player {
                     this.inventory.addBlock(blockToRemove.id);
                 this.world.removeBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
                 this.socket.getSocket()?.emit("removeBlock", {
-                     x: this.selectedCoords.x, y: this.selectedCoords.y, z: this.selectedCoords.z
+                    x: this.selectedCoords.x, y: this.selectedCoords.y, z: this.selectedCoords.z
                 });
                 this.audioManager.playBlockSound(blockToRemoveO.soundGroup, 'break');
                 this.isDestroying = false;
@@ -536,14 +534,14 @@ export class Player {
             this.position.y += this.velocity.y * dt;
 
             let biome = this.world.getPlayerBiome(Math.floor(this.position.x), Math.floor(this.position.z));
-            document.getElementById('player-position').innerHTML = this.toString()+' - '+biome;
+            document.getElementById('player-position').innerHTML = this.toString() + ' - ' + biome;
 
             const direction = new THREE.Vector3();
             this.camera.getWorldDirection(direction);
             this.socket.getSocket()?.emit("playerState", {
                 id: this.socket.id, // Identifiant unique du joueur
-                position: { x: this.position.x, y: this.position.y, z: this.position.z },
-                direction : { x: direction.x, y: direction.y, z: direction.z }
+                position: {x: this.position.x, y: this.position.y, z: this.position.z},
+                direction: {x: direction.x, y: direction.y, z: direction.z}
             });
 
             //Apply water effect
@@ -564,17 +562,17 @@ export class Player {
 
     updateBoundsHelper() {
         this.boundsHelper.position.copy(this.position);
-        this.boundsHelper.position.y -= this.height /2;
+        this.boundsHelper.position.y -= this.height / 2;
     }
 
     onKeyDown(event) {
         if (event.code === 'ShiftLeft') this.run = this.maxRun;
-        if (event.code === 'KeyW') this.input.z = this.maxSpeed+this.run;
-        if (event.code === 'KeyS') this.input.z = -this.maxSpeed+this.run;
-        if (event.code === 'KeyA') this.input.x = -this.maxSpeed+this.run;
-        if (event.code === 'KeyD') this.input.x = this.maxSpeed+this.run;
+        if (event.code === 'KeyW') this.input.z = this.maxSpeed + this.run;
+        if (event.code === 'KeyS') this.input.z = -this.maxSpeed + this.run;
+        if (event.code === 'KeyA') this.input.x = -this.maxSpeed + this.run;
+        if (event.code === 'KeyD') this.input.x = this.maxSpeed + this.run;
         if (event.code === 'Space') if (this.onGround) this.velocity.y += this.jumpSpeed;
-        if (event.code === 'F5') this.camera.position.set(this.camera.position.x, this.camera.position.y+1, this.camera.position.z);
+        if (event.code === 'F5') this.camera.position.set(this.camera.position.x, this.camera.position.y + 1, this.camera.position.z);
     }
 
     onKeyUp(event) {
@@ -626,6 +624,53 @@ export class Player {
 
     setUI(ui) {
         this.ui = ui;
+    }
+
+    /**
+     * Toggle a 2-block tall door (bottom id = N, top id = N+1000, e.g. 64/1064)
+     * Falls back to single-block openable if no top part found.
+     */
+    toggleDoor(x, y, z) {
+        const baseBlk = this.world.getBlock(x, y, z);
+        if (!baseBlk) return;
+
+        // Determine base position if we clicked the upper half
+        let bx = x, by = y, bz = z;
+        const id = baseBlk.id || 0;
+        const isUpperHalf = id >= 1000; // convention: upper half = bottom id + 1000 (e.g., 1064)
+        if (isUpperHalf) by -= 1;
+
+        const lower = this.world.getBlock(bx, by, bz);
+        const upper = this.world.getBlock(bx, by + 1, bz);
+
+        // If we don't really have a 2-block pair, fallback to single openable toggle
+        if (!lower) return;
+
+        this.world.toggleDoorAt(x, y, z);
+console.log('toggle door');
+        // Decide new state
+        const newOpen = !lower.isOpen;
+
+        // Apply state & rotation on lower
+        lower.isOpen = newOpen;
+        if (lower.mesh) {
+            lower.mesh.rotation.y = newOpen ? -Math.PI / 2 : 0;
+        }
+
+        // Apply state & rotation on upper if present
+        if (upper && upper.id) {
+            upper.isOpen = newOpen;
+            if (upper.mesh) {
+                upper.mesh.rotation.y = newOpen ? -Math.PI / 2 : 0;
+            }
+        }
+
+        // Optional: sound feedback (uses the lower block's soundGroup if available)
+        try {
+            const b = getBlockByIdFast(lower.id);
+            if (b?.soundGroup) this.audioManager.playBlockSound(b.soundGroup, newOpen ? 'open_door' : 'close_door');
+        } catch (e) { /* ignore */
+        }
     }
 
 }
