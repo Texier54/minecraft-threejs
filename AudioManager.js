@@ -20,7 +20,9 @@ export const soundGroups = {
         hit: 'wood_hit',
         fall: 'wood_fall',
         open: 'chest_open',
-        close: 'chest_close'
+        close: 'chest_close',
+        open_door: 'door_open',
+        close_door: 'door_close'
     },
     gravel: {
         break: 'gravel_break',
@@ -99,6 +101,8 @@ const sources = {
     cow_hurt_3 : 'audio/cow/cowhurt3.ogg',
     chest_open : 'audio/chestopen.ogg',
     chest_close : 'audio/chestclose.ogg',
+    door_close : 'audio/door_close.ogg',
+    door_open : 'audio/door_open.ogg',
 }
 
 export class AudioManager {

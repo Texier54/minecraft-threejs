@@ -4,6 +4,7 @@ import { TouchControls } from './touchControls.js';
 import {blocks, getBlockByIdFast} from "./block.js";
 import { AudioManager } from "./AudioManager.js"
 import {BoatEntity} from "./entity/BoatEntity.js";
+import {DoorEntity} from "./entity/DoorEntity.js";
 
 export class Player {
 
@@ -223,14 +224,19 @@ export class Player {
         } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
             this.ui.open(selectedBlock.id);
             this.audioManager.playBlockSound(getBlockByIdFast(selectedBlock.id).soundGroup, 'open');
-        } else if (getBlockByIdFast(selectedBlock.id).openable) {
-            this.toggleDoor(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
         } else if (this.inventory.getSelectedItem()?.block == 375) {
             //BATEAU
             const boat = new BoatEntity(this.world, new THREE.Vector3(this.selectedCoords.x, this.selectedCoords.y + 1, this.selectedCoords.z));
             boat.addToScene(this.scene);
             this.world.addEntity(boat);
+        } else if (this.inventory.getSelectedItem()?.block == 64) {
+            //Porte
+            this.audioManager.playBlockSound(block.soundGroup, 'place');
+            const door = new DoorEntity(this.world, new THREE.Vector3(this.selectedCoords.x, this.selectedCoords.y + 1, this.selectedCoords.z));
+            door.addToScene(this.scene);
+            this.world.addEntity(door);
         }
+
     }
 
     startDestroyingBlock(event) {

@@ -5,9 +5,6 @@ const textureLoader = new THREE.TextureLoader();
 const geometryBlock = new THREE.BoxGeometry(1, 1, 1);
 const geometryTorch = new THREE.BoxGeometry(0.12, 0.7, 0.12)
 
-const geometryDoor = new THREE.BoxGeometry(0.2, 2, 1); // mince et haute
-geometryDoor.translate(0.4, 0, 0); // pour faire pivoter sur un bord
-
 const step1 = new THREE.BoxGeometry(1, 0.5, 1);
 const step2 = new THREE.BoxGeometry(1, 0.5, 0.5);
 step2.translate(0, 0.25, -0.25); // Déplacer la petite marche
@@ -61,6 +58,7 @@ const textures = {
     sandstone_side: loadTexture('images/sandstone_side.png'),
     sandstone_bottom: loadTexture('images/sandstone_bottom.png'),
     oak_door_bottom: loadTexture('images/oak_door_bottom.png'),
+    oak_door_top: loadTexture('images/oak_door_top.png'),
     fence: loadTexture('images/fence_oak.png'),
     obsidian: loadTexture('images/obsidian.png'),
 };
@@ -445,8 +443,20 @@ export const blocks = {
         stackable: false,
         hardness: 1,
         icon: 'images/block-icon/oak_door.png',
-        geometry: geometryDoor,
         material: new THREE.MeshLambertMaterial({ map: textures.oak_door_bottom }),
+        interactive: true, // important
+        openable: true, // marqueur custom
+        transparent: true,
+        soundGroup: 'wood',
+    },
+    oak_door_top: {
+        id: 1064,
+        name: 'oak_door',
+        type: 'block',
+        stackable: false,
+        hardness: 1,
+        icon: 'images/block-icon/oak_door.png',
+        material: new THREE.MeshLambertMaterial({ map: textures.oak_door_top }),
         interactive: true, // important
         openable: true, // marqueur custom
         transparent: true,
