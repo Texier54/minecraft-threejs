@@ -439,7 +439,7 @@ export const blocks = {
     oak_door: {
         id: 64,
         name: 'oak_door',
-        type: 'block',
+        type: 'item',
         stackable: false,
         hardness: 1,
         icon: 'images/block-icon/oak_door.png',
@@ -448,6 +448,7 @@ export const blocks = {
         openable: true, // marqueur custom
         transparent: true,
         soundGroup: 'wood',
+        geometry: geometryBlock,
     },
     oak_door_top: {
         id: 1064,
@@ -461,6 +462,7 @@ export const blocks = {
         openable: true, // marqueur custom
         transparent: true,
         soundGroup: 'wood',
+        geometry: geometryBlock,
     },
     cobblestone_stairs: {
         id: 67,
