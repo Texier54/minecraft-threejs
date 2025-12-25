@@ -1,0 +1,56 @@
+#hud{
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    user-select: none;
+    pointer-events: none;
+    left: 35%;
+    top: 84%;
+}
+
+.hearts{
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 18px;
+    gap: 4px;
+}
+
+.heart{
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    position: relative;
+    image-rendering: pixelated;
+
+    /* Base layer: container is ALWAYS visible */
+    background-image: url('/images/gui/heart/container.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 18px 18px;
+}
+
+/* Overlay layer (full/half) */
+.heart::after{
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 18px 18px;
+}
+
+/* Optional: slightly larger like MC (tweak if you want) */
+/* .heart{ width: 20px; height: 20px; background-size: 20px 20px; } */
+
+/* Minecraft vanilla-like sprites (full / half / container(empty)) */
+.heart.full::after{
+    background-image: url('/images/gui/heart/full.png');
+}
+
+.heart.half::after{
+    background-image: url('/images/gui/heart/half.png');
+}
+
+.heart.empty::after{
+    background-image: none;
+}

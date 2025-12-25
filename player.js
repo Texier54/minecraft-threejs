@@ -5,6 +5,7 @@ import {blocks, getBlockByIdFast} from "./block.js";
 import { AudioManager } from "./AudioManager.js"
 import {BoatEntity} from "./entity/BoatEntity.js";
 import {DoorEntity} from "./entity/DoorEntity.js";
+import { Health } from './player/health.js';
 
 export class Player {
 
@@ -32,6 +33,8 @@ export class Player {
 
 
     constructor(scene, world, socket) {
+
+        this.health = new Health(document.getElementById('hearts'), 20, 20);
 
         const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
