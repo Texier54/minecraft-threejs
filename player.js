@@ -682,6 +682,19 @@ console.log('toggle door');
         }
     }
 
+    takeDamage(amount, meta = {}) {
+        if (!this.health) return;
+
+        // plus tard: armor, invincibility frames, etc.
+        this.health.remove(amount);
+
+        this.audioManager.playBlockSound('player', 'hurt');
+        // hooks futurs
+        // this.playHurtSound();
+        // this.hurtTimer = 10;
+        // if (this.health.health <= 0) this.die();
+    }
+
 }
 
 const dbName = 'minecraftDB';

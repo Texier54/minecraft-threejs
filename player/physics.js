@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { blocks } from './block.js';
+import { blocks } from '../block.js';
 
 const collisionMaterial = new THREE.MeshBasicMaterial({
     color: 0xff0000,
@@ -18,6 +18,9 @@ export class Physics {
     accumulator = 0;
     gravity = 32;
 
+    // Fall damage (Minecraft-like): damage starts after N blocks.
+    fallDamageThreshold = 3; // blocks
+
     constructor(scene) {
         this.helpers = new THREE.Group();
         scene.add(this.helpers);
@@ -26,12 +29,60 @@ export class Physics {
     update(dt, player, world) {
         this.accumulator += dt;
         while (this.accumulator >= this.timestep) {
-            //console.log(world.getBlock(Math.round(player.position.x), 0, Math.round(player.position.z))?.id);
             if((!player.usePointerLock || player.controls.isLocked) && world.isload(player.position.x, player.position.y, player.position.z))
                 player.velocity.y -= this.gravity * this.timestep;
+
+            // Initialize fall tracking on the player (stored on the player instance)
+            if (player.fallDistance === undefined) player.fallDistance = 0;
+            if (player._wasOnGround === undefined) player._wasOnGround = false;
+
+            const prevY = player.position.y;
+
             player.applyInputs(this.timestep);
             player.updateBoundsHelper();
+
+            // Collisions will set player.onGround appropriately
             this.detectCollisions(player, world);
+
+            // Accumulate fall distance while in the air (only when moving downward)
+            if (!player.onGround) {
+                const dy = prevY - player.position.y;
+                if (dy > 0) player.fallDistance += dy;
+            }
+
+            // When landing: apply fall damage (ignore if landing in water)
+            if (!player._wasOnGround && player.onGround) {
+                const feetX = Math.floor(player.position.x);
+                const feetY = Math.floor(player.position.y - player.height);
+                const feetZ = Math.floor(player.position.z);
+                const feetBlockId = world.getBlock(feetX, feetY, feetZ)?.id;
+
+                const landedInWater = (feetBlockId === blocks.water.id);
+
+                if (!landedInWater) {
+                    const fallBlocks = player.fallDistance; // 1 world unit == 1 block
+                    const damage = Math.floor(fallBlocks - this.fallDamageThreshold);
+                    if (damage > 0) {
+                        // Health is assumed to be in HP (20 = 10 hearts). 1 damage = half-heart.
+                        if (typeof player.takeDamage === 'function') {
+                            player.takeDamage(damage);
+                        } else {
+                            console.warn('[Physics] Fall damage computed but no health handler found on player');
+                        }
+                    }
+                }
+
+                // Reset after landing
+                player.fallDistance = 0;
+            }
+
+            // If we are grounded, keep fall distance at 0
+            if (player.onGround) {
+                player.fallDistance = 0;
+            }
+
+            player._wasOnGround = player.onGround;
+
             this.accumulator -= this.timestep;
         }
 

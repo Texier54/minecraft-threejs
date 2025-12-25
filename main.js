@@ -5,7 +5,7 @@ import { ClientWorld } from './world/ClientWorld.js';
 import {blocks, getBlockByIdFast} from "./block.js";
 import {Pig} from "./entity/Pig.js";
 import {Cow} from "./entity/Cow.js";
-import {Physics} from "./physics.js";
+import {Physics} from "./player/physics.js";
 import {Inventory} from "./inventory.js";
 import {Menu} from "./menu.js";
 import {UI} from "./ui.js";
@@ -63,7 +63,7 @@ player.setUI(ui);
 //DEBUG
 if (process.env.NODE_ENV !== 'production') {
     //player.load();
-    inventory.load();
+    //inventory.load();
 }
 
 window.addEventListener('keydown', (event) => {

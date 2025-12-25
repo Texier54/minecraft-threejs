@@ -72,6 +72,9 @@ export const soundGroups = {
     cow: {
         hurt: ['cow_hurt_1','cow_hurt_2','cow_hurt_3']
     },
+    player: {
+        hurt: ['classic_hurt','classic_hurt2']
+    }
 };
 
 const sources = {
@@ -103,6 +106,8 @@ const sources = {
     chest_close : 'audio/chestclose.ogg',
     door_close : 'audio/door_close.ogg',
     door_open : 'audio/door_open.ogg',
+    classic_hurt : 'audio/damage/classic_hurt.ogg',
+    classic_hurt2 : 'audio/damage/classic_hurt2.ogg',
 }
 
 export class AudioManager {
