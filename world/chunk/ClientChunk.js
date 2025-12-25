@@ -277,6 +277,11 @@ export class ClientChunk extends THREE.Group {
         const backBlock = this.getBlock(x, y, z - 1);
         const back = !backBlock || backBlock.id === blocks.empty.id || getBlockByIdFast(backBlock.id).transparent;
 
+        //si c'est un block d'eau
+        if (this.getBlock(x, y, z).id === 9) {
+            if (upBlock.id === 9)
+                return true;
+        }
 
         //console.log('up'+this.getBlock(x, y + 1, z).id);
         //console.log('b'+blocks.empty.id);

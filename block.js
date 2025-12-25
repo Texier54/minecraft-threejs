@@ -174,12 +174,21 @@ export const blocks = {
         type: 'block',
         stackable: true,
         hardness: 10000,
-        material: new THREE.MeshLambertMaterial(new THREE.MeshLambertMaterial({
-            color: 0x9090e0,
-            transparent: true,
-            opacity: 0.5,
-            side: THREE.DoubleSide
-        })),
+        material:
+            [
+                new THREE.MeshBasicMaterial({transparent: true, opacity: 0}), // right
+                new THREE.MeshBasicMaterial({transparent: true, opacity: 0}), // left
+                new THREE.MeshLambertMaterial(new THREE.MeshLambertMaterial({
+                    color: 0x9090e0,
+                    transparent: true,
+                    opacity: 0.5,
+                    side: THREE.DoubleSide
+                })), // top
+                new THREE.MeshBasicMaterial({transparent: true, opacity: 0}), // bottom
+                new THREE.MeshBasicMaterial({transparent: true, opacity: 0}), // front
+                new THREE.MeshBasicMaterial({transparent: true, opacity: 0})  // back
+            ]
+        ,
         transparent: true,
         geometry: geometryBlock,
     },
