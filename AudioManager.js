@@ -73,7 +73,9 @@ export const soundGroups = {
         hurt: ['cow_hurt_1','cow_hurt_2','cow_hurt_3']
     },
     player: {
-        hurt: ['classic_hurt','classic_hurt2']
+        hurt: ['classic_hurt','classic_hurt2'],
+        fall: ['fall_big', 'fall_small'],
+        hit: ['hit1', 'hit2', 'hit3']
     }
 };
 
@@ -108,6 +110,11 @@ const sources = {
     door_open : 'audio/door_open.ogg',
     classic_hurt : 'audio/damage/classic_hurt.ogg',
     classic_hurt2 : 'audio/damage/classic_hurt2.ogg',
+    fall_big : 'audio/damage/fallbig.ogg',
+    fall_small : 'audio/damage/fallsmall.ogg',
+    hit1 : 'audio/damage/hit1.ogg',
+    hit2 : 'audio/damage/hit2.ogg',
+    hit3 : 'audio/damage/hit3.ogg',
 }
 
 export class AudioManager {
