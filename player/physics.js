@@ -18,6 +18,11 @@ export class Physics {
     accumulator = 0;
     gravity = 32;
 
+    // Movement feel (Minecraft-ish)
+    gravityWaterFactor = 0.6;     // Multiplie la gravité appliquée dans l’eau
+    waterVerticalDrag = 0.95;     // Freine la vitesse verticale existante
+    swimUpSpeed = 8;              // upward speed when swimming
+
     // Fall damage (Minecraft-like): damage starts after N blocks.
     fallDamageThreshold = 3; // blocks
 
@@ -29,16 +34,41 @@ export class Physics {
     update(dt, player, world) {
         this.accumulator += dt;
         while (this.accumulator >= this.timestep) {
-            if((!player.usePointerLock || player.controls.isLocked) && world.isload(player.position.x, player.position.y, player.position.z))
-                player.velocity.y -= this.gravity * this.timestep;
+            // Gravity is applied after inputs so we can use updated player.inWater
 
             // Initialize fall tracking on the player (stored on the player instance)
             if (player.fallDistance === undefined) player.fallDistance = 0;
             if (player._wasOnGround === undefined) player._wasOnGround = false;
 
+            // Damage cooldowns (stored on the player instance)
+            if (player._cactusDamageCooldown === undefined) player._cactusDamageCooldown = 0;
+            if (player._cactusDamageCooldown > 0) player._cactusDamageCooldown = Math.max(0, player._cactusDamageCooldown - this.timestep);
+
             const prevY = player.position.y;
 
             player.applyInputs(this.timestep);
+
+            // Apply gravity/drag now that player.inWater is known
+            if((!player.usePointerLock || player.controls.isLocked) && world.isload(player.position.x, player.position.y, player.position.z)) {
+                const inWater = !!player.inWater;
+
+                // Swimming up: accept a few common flags for "jump" without forcing your input system
+                const swimUp = !!(player.input?.jump || player.inputJump || player.jumpPressed);
+
+                if (inWater) {
+                    // Reduced gravity + vertical drag (buoyancy feel)
+                    player.velocity.y -= (this.gravity * this.gravityWaterFactor) * this.timestep;
+                    player.velocity.y *= this.waterVerticalDrag;
+
+                    if (swimUp) {
+                        // Move upward while holding jump in water
+                        player.velocity.y = Math.max(player.velocity.y, this.swimUpSpeed);
+                    }
+                } else {
+                    player.velocity.y -= this.gravity * this.timestep;
+                }
+            }
+
             player.updateBoundsHelper();
 
             // Collisions will set player.onGround appropriately
@@ -64,11 +94,7 @@ export class Physics {
                     const damage = Math.floor(fallBlocks - this.fallDamageThreshold);
                     if (damage > 0) {
                         // Health is assumed to be in HP (20 = 10 hearts). 1 damage = half-heart.
-                        if (typeof player.takeDamage === 'function') {
-                            player.takeDamage(damage);
-                        } else {
-                            console.warn('[Physics] Fall damage computed but no health handler found on player');
-                        }
+                        player.takeDamage(damage, { type: 'fall', fallDistance: fallBlocks });
                     }
                 }
 
@@ -135,7 +161,7 @@ export class Physics {
                             size = { x: 0.1, y: 0.1 };
                         else
                             size = { x: 1, y: 1, z: 1 };
-                        const block = { x, y, z,  size: size, hasStep: hasStep };
+                        const block = { id: blockId, x, y, z,  size: size, hasStep: hasStep };
                         candidates.push(block);
                         //this.addCollisionHelper(block);
                     }
@@ -174,6 +200,21 @@ export class Physics {
             const dz = closestPoint.z - player.position.z;
 
             if (this.pointInPlayerBoundingCylinder(closestPoint, player)) {
+                // Cactus damage: apply on contact, but rate-limited by a cooldown
+                const cactusId = (blocks.cactus && blocks.cactus.id) ? blocks.cactus.id : 81;
+                if (block.id === cactusId) {
+                    if (player._cactusDamageCooldown === undefined) player._cactusDamageCooldown = 0;
+                    if (player._cactusDamageCooldown <= 0) {
+                        // Knockback direction away from the cactus contact (XZ only)
+                        const kb = new THREE.Vector3(-dx, 0, -dz);
+                        if (kb.lengthSq() > 1e-6) kb.normalize().multiplyScalar(4); // tweak strength
+
+                        player.takeDamage(1, { type: 'cactus', knockback: { x: kb.x, y: kb.y, z: kb.z } });
+
+                        // Minecraft-like: damage tick every ~0.5s while touching
+                        player._cactusDamageCooldown = 0.5;
+                    }
+                }
                 // Compute the overlap between the point and the player's bounding
                 // cylinder along the y-axis and in the xz-plane
                 const overlapY = (player.height / 2) - Math.abs(dy);
