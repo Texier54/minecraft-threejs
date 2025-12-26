@@ -6,6 +6,7 @@ import {Entity} from "./Entity.js";
 export class Cow extends Entity {
 
     mesh = new THREE.Group();
+    health = 10;
 
     constructor(world, position) {
         super(world, position);
@@ -84,6 +85,11 @@ export class Cow extends Entity {
         });
         this.target = this.getRandomTarget(); // Nouvelle cible aléatoire
         this.audioManager.playBlockSound('cow', 'hurt');
+
+        this.health -= 0.5;
+        if (this.health <= 0) {
+            this.world.removeEntity(this);
+        }
     }
 
     update(deltaTime) {

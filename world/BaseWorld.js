@@ -5,6 +5,8 @@ export class BaseWorld {
     drawDistance = 2;
     dataStore = new DataStore();
 
+    entities = [];
+
     params = {
         seed: 456789986,
         terrain: {
@@ -231,6 +233,25 @@ export class BaseWorld {
         if (chunk && chunk.data.length !== 0 )
             return true;
         return false;
+    }
+
+    addEntity(entity) {
+        this.entities.push(entity);
+    }
+
+    removeEntity(entity) {
+        const idx = this.entities.indexOf(entity);
+        if (idx !== -1) {
+            this.entities.splice(idx, 1);
+            return true;
+        }
+        return false;
+    }
+
+    updateEntities(dt) {
+        for (const entity of this.entities) {
+            entity.update(dt);
+        }
     }
 
 }

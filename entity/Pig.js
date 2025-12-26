@@ -10,6 +10,15 @@ export class Pig extends Entity {
     radius = 2;
     height = 1;
 
+    // Pathfinding state
+    path = [];
+    pathIndex = 0;
+    repathCooldown = 0; // seconds before trying to recompute a path
+    stuckTime = 60;      // seconds being nearly stationary
+    lastPos = new THREE.Vector3();
+
+    health = 10;
+
     constructor(world, position) {
         super(world, position);
 
@@ -63,6 +72,9 @@ export class Pig extends Entity {
 
         this.mesh.position.copy(this.position); // <- important
 
+        // init pathfinding trackers
+        this.lastPos.copy(this.mesh.position);
+
         this.hitTime = 0;
         // Store the current materials only if hitTime is 0 (to avoid overwriting while already hit)
         this.originalMaterials = this.mesh.children.map(c => c.material);
@@ -76,7 +88,8 @@ export class Pig extends Entity {
     getRandomTarget() {
         const x = Math.random() * (this.BOUNDARY.maxX - this.BOUNDARY.minX) + this.BOUNDARY.minX;
         const z = Math.random() * (this.BOUNDARY.maxZ - this.BOUNDARY.minZ) + this.BOUNDARY.minZ;
-        return new THREE.Vector3(x, 75, z); // Y reste 0 si le sol est plat
+        const y = this.getGroundYAt(Math.round(x), Math.round(z), Math.round(this.mesh.position.y));
+        return new THREE.Vector3(x, y, z);
     }
 
     hit() {
@@ -92,10 +105,30 @@ export class Pig extends Entity {
         });
         this.target = this.getRandomTarget(); // Nouvelle cible aléatoire
         this.audioManager.playBlockSound('pig', 'hurt');
+        // reset current path so it replans away from the hitter
+        this.path = [];
+        this.pathIndex = 0;
+
+        this.health -= 0.5;
+        if (this.health <= 0) {
+            this.world.removeEntity(this);
+        }
+
     }
 
     update(deltaTime) {
         let runSpeed = 0;
+
+        // --- simple stuck detector (helps trigger replanning) ---
+        if (this.lastPos.distanceToSquared(this.mesh.position) < 0.0004) { // ~2 cm
+            this.stuckTime += deltaTime;
+        } else {
+            this.stuckTime = 0;
+            this.lastPos.copy(this.mesh.position);
+        }
+
+        // cooldown before recomputing a path (prevents heavy A* every frame)
+        if (this.repathCooldown > 0) this.repathCooldown -= deltaTime;
 
         this.broadPhase();
 
@@ -118,6 +151,33 @@ export class Pig extends Entity {
             runSpeed = 3;
         }
 
+        // --- PATHFINDING: compute path if needed ---
+        const distToTarget = this.mesh.position.distanceTo(this.target);
+        if ((this.path.length === 0 && distToTarget > 2) || this.stuckTime > 0.75) {
+            if (this.repathCooldown <= 0) {
+                const start = new THREE.Vector3(
+                    Math.round(this.mesh.position.x),
+                    Math.round(this.mesh.position.y),
+                    Math.round(this.mesh.position.z)
+                );
+                const goal = new THREE.Vector3(
+                    Math.round(this.target.x),
+                    Math.round(this.target.y),
+                    Math.round(this.target.z)
+                );
+                const newPath = this.findPath(start, goal, 3000, 32);
+                if (newPath && newPath.length) {
+                    this.path = newPath;
+                    this.pathIndex = 0;
+                } else {
+                    // fallback: pick a new random target if no path
+                    this.target = this.getRandomTarget();
+                }
+                this.repathCooldown = 0.5; // limit A* frequency
+                this.stuckTime = 0;
+            }
+        }
+
         if (this.world.getBlock(Math.floor(this.mesh.position.x), Math.floor(this.mesh.position.y), Math.floor(this.mesh.position.z))?.id == 0 ) {
             //console.log('down');
             this.pigVelocity.y -= 0.01;
@@ -131,22 +191,40 @@ export class Pig extends Entity {
         // Déplace le cochon en fonction de la vélocité
         this.mesh.position.add(this.pigVelocity);
 
-        const speed = 1+runSpeed; // Vitesse en unités par seconde
+        const speed = 1 + runSpeed; // base speed
 
-        // Calculer la direction vers la cible
-        const direction = this.target.clone().sub(this.mesh.position).normalize();
+        // Decide current steering target: waypoint or raw target
+        let steeringTarget = this.target;
+        if (this.path.length > 0 && this.pathIndex < this.path.length) {
+            const wp = this.path[this.pathIndex];
+            steeringTarget = new THREE.Vector3(wp.x + 0.5, wp.y, wp.z + 0.5);
+            if (this.mesh.position.distanceTo(steeringTarget) < 0.5) {
+                this.pathIndex++;
+                if (this.pathIndex >= this.path.length) {
+                    // reached goal
+                    this.path = [];
+                    this.pathIndex = 0;
+                }
+            }
+        }
 
-        direction.y = 0
-        // Déplacer le meshe
+        // Horizontal steering (ignore Y so gravity logic rules vertical axis)
+        const direction = steeringTarget.clone().sub(this.mesh.position);
+        direction.y = 0;
+        if (direction.lengthSq() > 0.000001) direction.normalize();
         this.mesh.position.add(direction.multiplyScalar(speed * deltaTime));
 
-        // Vérifier si le meshe est proche de la cible
-        if (this.mesh.position.distanceTo(this.target) < 2) {
-            this.target = this.getRandomTarget(); // Nouvelle cible aléatoire
+        // If we reached the final target, pick another
+        if (this.path.length === 0 && this.mesh.position.distanceTo(this.target) < 2) {
+            this.target = this.getRandomTarget();
         }
         this.target.y = this.mesh.position.y;
         // Faire tourner le meshe pour qu'il regarde la cible
-        this.mesh.lookAt(this.target);
+        this.mesh.lookAt(new THREE.Vector3(
+            steeringTarget.x,
+            this.mesh.position.y, // garde la tête horizontale
+            steeringTarget.z
+        ));
         this.animatePigLegs(speed);
     }
 
@@ -189,6 +267,110 @@ export class Pig extends Entity {
         //console.log(`Broadphase Candidates: ${candidates.length}`);
 
         return candidates;
+    }
+
+    // ---- PATHFINDING HELPERS ----
+    getGroundYAt(x, z, aroundY) {
+        // search small vertical window around current Y for a valid walkable cell
+        const y0 = Math.max(aroundY - 3, 1);
+        const y1 = aroundY + 3;
+        for (let y = y1; y >= y0; y--) {
+            if (this.isWalkable(x, y, z)) return y;
+        }
+        // fallback to aroundY
+        return aroundY;
+    }
+
+    isWalkable(x, y, z) {
+        const below = this.world.getBlock(x, y - 1, z)?.id || 0;
+        const body  = this.world.getBlock(x, y, z)?.id || 0;
+        const head  = this.world.getBlock(x, y + 1, z)?.id || 0;
+        // floor must be solid (not empty/water), and body/head empty
+        const solidFloor = (below && below !== blocks.empty.id && below !== blocks.water.id);
+        const freeBody   = (body === 0 || body === blocks.empty.id || body === blocks.water.id);
+        const freeHead   = (head === 0 || head === blocks.empty.id || head === blocks.water.id);
+        return solidFloor && freeBody && freeHead;
+    }
+
+    neighbors(x, y, z) {
+        const n = [];
+        const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+        for (const [dx, dz] of dirs) {
+            // same level
+            if (this.isWalkable(x + dx, y, z + dz)) { n.push({x: x + dx, y, z: z + dz}); continue; }
+            // step up
+            if (this.isWalkable(x + dx, y + 1, z + dz)) { n.push({x: x + dx, y: y + 1, z: z + dz}); continue; }
+            // step down
+            if (this.isWalkable(x + dx, y - 1, z + dz)) { n.push({x: x + dx, y: y - 1, z: z + dz}); continue; }
+        }
+        return n;
+    }
+
+    findPath(start, goal, maxNodes = 3000, maxRadius = 32) {
+        // Guard: if start/goal not walkable, project to nearest ground
+        const sY = this.getGroundYAt(start.x, start.z, start.y);
+        const gY = this.getGroundYAt(goal.x, goal.z, goal.y);
+        start = { x: start.x, y: sY, z: start.z };
+        goal  = { x: goal.x,  y: gY,  z: goal.z  };
+
+        const key = (p) => `${p.x}|${p.y}|${p.z}`;
+        const h = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.z - b.z) + Math.abs(a.y - b.y) * 0.5; // favor flat
+
+        const open = new Map();
+        const openPQ = [];
+        const came = new Map();
+        const gScore = new Map();
+
+        const push = (p, f) => {
+            open.set(key(p), p);
+            openPQ.push({ p, f });
+        };
+        const popBest = () => {
+            let best = 0;
+            for (let i = 1; i < openPQ.length; i++) if (openPQ[i].f < openPQ[best].f) best = i;
+            const item = openPQ.splice(best, 1)[0];
+            open.delete(key(item.p));
+            return item.p;
+        };
+
+        push(start, 0);
+        gScore.set(key(start), 0);
+        const closed = new Set();
+        let nodes = 0;
+
+        while (openPQ.length && nodes++ < maxNodes) {
+            const current = popBest();
+            if (current.x === goal.x && current.y === goal.y && current.z === goal.z) {
+                // reconstruct
+                const path = [];
+                let k = key(current);
+                let cur = current;
+                while (came.has(k)) {
+                    path.push(cur);
+                    cur = came.get(k);
+                    k = key(cur);
+                }
+                path.reverse();
+                return path; // array of {x,y,z}
+            }
+            closed.add(key(current));
+
+            // bound search within a square around start
+            if (Math.abs(current.x - start.x) > maxRadius || Math.abs(current.z - start.z) > maxRadius) continue;
+
+            for (const nb of this.neighbors(current.x, current.y, current.z)) {
+                const nk = key(nb);
+                if (closed.has(nk)) continue;
+                const tentative = (gScore.get(key(current)) || 0) + 1;
+                if (!open.has(nk) || tentative < (gScore.get(nk) || Infinity)) {
+                    came.set(nk, current);
+                    gScore.set(nk, tentative);
+                    const f = tentative + h(nb, goal);
+                    if (!open.has(nk)) push(nb, f);
+                }
+            }
+        }
+        return [];
     }
 
     animatePigLegs(speed) {
