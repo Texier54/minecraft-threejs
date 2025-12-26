@@ -12,20 +12,27 @@ const store = new Store();
 const app = express();
 app.use(cors({ origin: '*' }));  // ✅ Autorise toutes les origines
 
+
+
+if (process.env.NODE_ENV === 'production') {
 // Lis les fichiers de certificat SSL (assurez-vous que les fichiers existent)
 // Lis les fichiers de certificat SSL
-
 // Lis les fichiers du certificat SSL
-const options = {
-    cert: fs.readFileSync('/etc/letsencrypt/live/baptiste-texier.ddns.net/fullchain.pem'),
-    key: fs.readFileSync('/etc/letsencrypt/live/baptiste-texier.ddns.net/privkey.pem'),
-};
+    const options = {
+        cert: fs.readFileSync('/etc/letsencrypt/live/baptiste-texier.ddns.net/fullchain.pem'),
+        key: fs.readFileSync('/etc/letsencrypt/live/baptiste-texier.ddns.net/privkey.pem'),
+    };
+}
 
-// Crée un serveur HTTPS
-const server = https.createServer(options, app);
+let server;
+if (process.env.NODE_ENV === 'production') {
+    // Crée un serveur HTTPS
+    server = https.createServer(options, app);
+} else {
+    //Crée serveur HTTP
+    server = createServer(app);
+}
 
-//Crée serveur HTTP
-//const server = createServer(app);
 
 const io = new Server(server, {
     cors: {
