@@ -328,7 +328,7 @@ export class ClientChunk extends THREE.Group {
     addBlockInstance(x, y, z) {
         const block = this.getBlock(x, y, z);
         // Verify the block exists, it isn't an empty block type, and it doesn't already have an instance
-        if (!block || block.id === blocks.empty.id || block.instanceId !== null) {
+        if (!block || block.id === blocks.empty.id || (block.instanceId !== null && block.instanceId !== -1)) {
             return;// ne rien faire si le bloc est vide ou déjà instancié
         }
 
@@ -336,6 +336,8 @@ export class ClientChunk extends THREE.Group {
         //const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
         // Accès direct
         const mesh = this.meshs[block.id];
+
+        console.log(mesh);
 
         const instanceId = mesh.count++;
         this.setBlockInstanceId(x, y, z, instanceId);
