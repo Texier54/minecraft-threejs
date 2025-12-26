@@ -125,6 +125,7 @@ function animate() {
     physics.update(dt, player, world);
     world.update(player);
     player.update(world);
+    inventory.update(dt);
     prevTimeNew = now;
     world.updateEntities(dt);
     //pig.movePig(deltaTime); // Déplacer le cochon

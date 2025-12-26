@@ -34,7 +34,8 @@ export class Inventory {
         { block: blocks.stick.id, quantity: 40 }, // Log
         { block: blocks.oak_door.id, quantity: 1 }, // Door
         { block: blocks.oak_fence.id, quantity: 10 }, // Fence
-        { block: blocks.oak_boat.id, quantity: 1 }, // Fence
+        { block: blocks.oak_boat.id, quantity: 1 }, // Boat
+        { block: blocks.coal.id, quantity: 32 }, // Coal
     ];
 
 
@@ -64,6 +65,7 @@ export class Inventory {
         this.inventory[33] = this.items[9]; // Table de craft au premier slot
         this.inventory[34] = this.items[10]; // Table de craft au premier slot
         this.inventory[35] = this.items[11]; // Table de craft au premier slot
+        this.inventory[4] = this.items[12]; // Table de craft au premier slot
         this.renderInventory();
         this.renderBar();
         // Gestion du mouvement de la souris pour suivre le curseur
@@ -108,6 +110,16 @@ export class Inventory {
             });
         }
         this.isShow = false;
+    }
+
+    update(dt) {
+        // Run time-based furnace logic while the furnace UI is open
+        if (this.isShow && this.UIID === blocks.furnace.id) {
+            const changed = this.furnace.tick(dt, this.blockInventory);
+            if (changed) {
+                this.renderInventory();
+            }
+        }
     }
 
     getBlock(position) {
@@ -208,6 +220,50 @@ export class Inventory {
 
             }
         }
+        // Furnace progress bar
+        if (this.UIID === blocks.furnace.id) {
+            const p = this.furnace.getProgress(this.blockInventory);
+
+            const wrap = document.createElement('div');
+            wrap.classList.add('furnace-progress');
+            wrap.style.display = 'flex';
+            wrap.style.flexDirection = 'column';
+            wrap.style.gap = '6px';
+            wrap.style.padding = '8px';
+
+            // Cook progress
+            const cookLabel = document.createElement('div');
+            cookLabel.style.fontSize = '12px';
+            cookLabel.style.opacity = '0.85';
+            cookLabel.textContent = `Cuisson: ${Math.round(p.cookPct * 100)}%`;
+
+            const cookBar = document.createElement('div');
+            cookBar.style.height = '10px';
+            cookBar.style.width = '140px';
+            cookBar.style.border = '1px solid rgba(255,255,255,0.35)';
+            cookBar.style.background = 'rgba(0,0,0,0.35)';
+
+            const cookFill = document.createElement('div');
+            cookFill.style.height = '100%';
+            cookFill.style.width = `${Math.round(p.cookPct * 100)}%`;
+            cookFill.style.background = 'rgba(255,255,255,0.85)';
+
+            cookBar.appendChild(cookFill);
+
+            // Burn indicator (optional)
+            const burnLabel = document.createElement('div');
+            burnLabel.style.fontSize = '12px';
+            burnLabel.style.opacity = '0.85';
+            burnLabel.textContent = `Combustible: ${p.burnLeft > 0 ? 'actif' : 'inactif'}`;
+
+            wrap.appendChild(cookLabel);
+            wrap.appendChild(cookBar);
+            wrap.appendChild(burnLabel);
+
+            // Place the progress UI in the right panel (output area) so it's visible
+            this.inventoryOutput.appendChild(wrap);
+        }
+
         //si pas d'ouput on affiche pas
         if (this.inventoryOutput.innerHTML == '')
             this.inventoryOutput.style.display = 'none';
@@ -388,7 +444,8 @@ export class Inventory {
             else
                 this.blockInventory[this.output] = null;
         } else if (this.UIID == blocks.furnace.id) {
-            this.furnace.handle(this.blockInventory);
+            // Furnace is time-based now; the smelt happens in update(dt)
+            // We can optionally force a render here, but update(dt) will handle it.
         }
 
 
