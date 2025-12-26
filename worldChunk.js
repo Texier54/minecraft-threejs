@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 import {blocks, getBlockByIdFast, resources} from './block.js';
-import { RNG } from './rng.js';
+import { RNG } from './world/rng.js';
 import pako from 'pako';
 
 export class WorldChunk extends THREE.Group {

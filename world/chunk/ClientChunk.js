@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { BaseChunk } from './BaseChunk.js';
 import {blocks, getBlockByIdFast} from "../../block.js";
 import pako from "pako";
-import {RNG} from "../../rng.js";
+import {RNG} from "../rng.js";
 
 export class ClientChunk extends THREE.Group {
 

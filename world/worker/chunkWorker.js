@@ -1,4 +1,4 @@
-import {RNG} from "../../rng.js";
+import {RNG} from "../rng.js";
 import { initializeTerrain, initializeBiomes, generateTerrain, setBlockId, getBlock, inBounds, generateTree, generateTreeCanopy, generateResources, getBiome, lerp, generateCaves } from './sharedTerrainUtils.js';
 
 

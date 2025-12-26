@@ -1,5 +1,5 @@
 import { BaseChunk } from './BaseChunk.js';
-import { RNG } from '../../rng.js';
+import { RNG } from '../rng.js';
 import { Worker } from 'node:worker_threads';
 
 export class ServerChunk extends BaseChunk {

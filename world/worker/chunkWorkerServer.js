@@ -1,5 +1,5 @@
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
-import {RNG} from "../../rng.js";
+import {RNG} from "../rng.js";
 import { initializeTerrain, initializeBiomes, generateTerrain, setBlockId, getBlock, inBounds, generateTree, generateTreeCanopy, generateResources, getBiome, lerp, generateCaves } from './sharedTerrainUtils.js';
 
 const isNode = typeof process !== 'undefined' && process.versions?.node;

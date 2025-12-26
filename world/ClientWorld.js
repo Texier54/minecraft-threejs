@@ -72,15 +72,6 @@ export class ClientWorld extends THREE.Group {
         ));
     }
 
-    toggleDoorAt(x, y, z) {
-        const coords = this.worldToChunkCoords(x, y, z);
-        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
-
-        if (!chunk) return;
-
-        chunk.toggleDoorAt(coords.block.x, coords.block.y, coords.block.z);
-    }
-
     addBlock(x, y, z, blockId, direction) {
         const coords = this.worldToChunkCoords(x, y, z);
         const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
