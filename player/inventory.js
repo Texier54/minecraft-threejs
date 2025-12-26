@@ -1,10 +1,10 @@
 
 
-import {blocks, getBlockByIdFast, resources} from './block.js';
-import { Recipes } from './recipes.js';
-import { Smelting } from './smelting.js';
-import { Furnace } from './furnace.js';
-import {UIList} from "./ui.js";
+import {blocks, getBlockByIdFast, resources} from '../block.js';
+import { Recipes } from '../recipes.js';
+import { Smelting } from '../smelting.js';
+import { Furnace } from '../furnace.js';
+import {UIList} from "../ui.js";
 
 export class Inventory {
 

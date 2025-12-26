@@ -6,7 +6,7 @@ import {blocks, getBlockByIdFast} from "./block.js";
 import {Pig} from "./entity/Pig.js";
 import {Cow} from "./entity/Cow.js";
 import {Physics} from "./player/physics.js";
-import {Inventory} from "./inventory.js";
+import {Inventory} from "./player/inventory.js";
 import {Menu} from "./menu.js";
 import {UI} from "./ui.js";
 import { Sun } from '/sun.js';
