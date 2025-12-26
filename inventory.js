@@ -13,6 +13,7 @@ export class Inventory {
     inventoryCrafter = document.getElementById('crafter');
     inventoryOutput = document.getElementById('output');
     bar = document.getElementById('bar');
+    hearts = document.getElementById('hearts');
 
     selectedItemId = 27;
 
@@ -82,6 +83,7 @@ export class Inventory {
         this.isShow = true;
         this.inventoryContainer.style.display = 'block';
         this.bar.style.display = 'none';
+        this.hearts.style.display = 'none';
         this.UIID = id;
         console.log(this.player.selectedCoords);
         this.blockInventory = Array(41).fill(null);
@@ -97,6 +99,7 @@ export class Inventory {
     hide() {
         this.inventoryContainer.style.display = 'none';
         this.bar.style.display = 'grid';
+        this.hearts.style.display = 'grid';
         this.renderBar();
         if (this.UIID) {
             this.world.setBlockInventory(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z, this.blockInventory);
