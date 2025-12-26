@@ -130,6 +130,11 @@ function animate() {
     world.updateEntities(dt);
     //pig.movePig(deltaTime); // Déplacer le cochon
 
+    const online = client.getSocket()?.connected;
+    if (!online) {
+        world.updateBlockEntities(dt); // offline only
+    }
+
     frameCount++;
     // Met à jour l'affichage FPS toutes les secondes
     if (now - prevTime > 1000) {

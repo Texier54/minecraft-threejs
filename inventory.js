@@ -21,6 +21,9 @@ export class Inventory {
 
     output = 0;
 
+    // UI refresh throttle (prevents rebuilding DOM every frame)
+    _lastUiRefreshMs = 0;
+
     // Configuration des items
     items = [
         { block: blocks.grass.id, quantity: 20 }, // grass
@@ -36,6 +39,7 @@ export class Inventory {
         { block: blocks.oak_fence.id, quantity: 10 }, // Fence
         { block: blocks.oak_boat.id, quantity: 1 }, // Boat
         { block: blocks.coal.id, quantity: 32 }, // Coal
+        { block: blocks.sand.id, quantity: 32 }, // Sand
     ];
 
 
@@ -66,6 +70,7 @@ export class Inventory {
         this.inventory[34] = this.items[10]; // Table de craft au premier slot
         this.inventory[35] = this.items[11]; // Table de craft au premier slot
         this.inventory[4] = this.items[12]; // Table de craft au premier slot
+        this.inventory[5] = this.items[13]; // Table de craft au premier slot
         this.renderInventory();
         this.renderBar();
         // Gestion du mouvement de la souris pour suivre le curseur
@@ -87,6 +92,7 @@ export class Inventory {
         this.bar.style.display = 'none';
         this.hearts.style.display = 'none';
         this.UIID = id;
+        this._lastUiRefreshMs = 0;
         console.log(this.player.selectedCoords);
         this.blockInventory = Array(41).fill(null);
         if (this.UIID) {
@@ -113,10 +119,12 @@ export class Inventory {
     }
 
     update(dt) {
-        // Run time-based furnace logic while the furnace UI is open
+        // Furnace logic is now ticked by the world (client offline) or the server (online).
+        // Here we only refresh the UI while it is open.
         if (this.isShow && this.UIID === blocks.furnace.id) {
-            const changed = this.furnace.tick(dt, this.blockInventory);
-            if (changed) {
+            const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            if (nowMs - this._lastUiRefreshMs > 100) { // ~10 fps UI refresh
+                this._lastUiRefreshMs = nowMs;
                 this.renderInventory();
             }
         }
@@ -220,47 +228,29 @@ export class Inventory {
 
             }
         }
-        // Furnace progress bar
+        // Furnace progress (Minecraft-ish: flame + arrow)
         if (this.UIID === blocks.furnace.id) {
             const p = this.furnace.getProgress(this.blockInventory);
 
             const wrap = document.createElement('div');
             wrap.classList.add('furnace-progress');
-            wrap.style.display = 'flex';
-            wrap.style.flexDirection = 'column';
-            wrap.style.gap = '6px';
-            wrap.style.padding = '8px';
+            wrap.style.setProperty('--cook', String(p.cookPct));
+            wrap.style.setProperty('--burn', String(p.burnPct));
 
-            // Cook progress
-            const cookLabel = document.createElement('div');
-            cookLabel.style.fontSize = '12px';
-            cookLabel.style.opacity = '0.85';
-            cookLabel.textContent = `Cuisson: ${Math.round(p.cookPct * 100)}%`;
+            const flame = document.createElement('div');
+            flame.classList.add('fp-flame', 'fp-frame');
 
-            const cookBar = document.createElement('div');
-            cookBar.style.height = '10px';
-            cookBar.style.width = '140px';
-            cookBar.style.border = '1px solid rgba(255,255,255,0.35)';
-            cookBar.style.background = 'rgba(0,0,0,0.35)';
+            const arrow = document.createElement('div');
+            arrow.classList.add('fp-arrow', 'fp-frame');
 
-            const cookFill = document.createElement('div');
-            cookFill.style.height = '100%';
-            cookFill.style.width = `${Math.round(p.cookPct * 100)}%`;
-            cookFill.style.background = 'rgba(255,255,255,0.85)';
+            const fill = document.createElement('div');
+            fill.classList.add('fp-arrow-fill');
 
-            cookBar.appendChild(cookFill);
+            arrow.appendChild(fill);
+            wrap.appendChild(flame);
+            wrap.appendChild(arrow);
 
-            // Burn indicator (optional)
-            const burnLabel = document.createElement('div');
-            burnLabel.style.fontSize = '12px';
-            burnLabel.style.opacity = '0.85';
-            burnLabel.textContent = `Combustible: ${p.burnLeft > 0 ? 'actif' : 'inactif'}`;
-
-            wrap.appendChild(cookLabel);
-            wrap.appendChild(cookBar);
-            wrap.appendChild(burnLabel);
-
-            // Place the progress UI in the right panel (output area) so it's visible
+            // Put it in the output panel so it shows next to the result slot
             this.inventoryOutput.appendChild(wrap);
         }
 

@@ -1,0 +1,94 @@
+.furnace-progress {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    user-select: none;
+}
+
+/* Pixel-ish frame */
+.furnace-progress .fp-frame {
+    background: rgba(0,0,0,0.35);
+    border: 2px solid rgba(255,255,255,0.28);
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.35) inset;
+    image-rendering: pixelated;
+}
+
+/* Flame (vertical) */
+.furnace-progress .fp-flame {
+    width: 22px;
+    height: 22px;
+    position: relative;
+    overflow: hidden;
+}
+.furnace-progress .fp-flame::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background:
+            linear-gradient(to top,
+            rgba(255,180,60,0.95),
+            rgba(255,120,30,0.95),
+            rgba(255,60,30,0.95)
+            );
+    transform-origin: bottom;
+    transform: scaleY(var(--burn, 0));
+}
+.furnace-progress .fp-flame::after {
+    /* small pixel highlight */
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 6px;
+    top: 6px;
+    background: rgba(255,255,255,0.25);
+}
+
+/* Arrow (horizontal) */
+.furnace-progress .fp-arrow {
+    height: 14px;
+    width: 150px;
+    position: relative;
+    overflow: hidden;
+}
+.furnace-progress .fp-arrow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* arrow outline */
+    background:
+            linear-gradient(to right,
+            rgba(255,255,255,0.20) 0%,
+            rgba(255,255,255,0.20) 70%,
+            transparent 70%
+            );
+    clip-path: polygon(
+            0 25%,
+            78% 25%,
+            78% 0%,
+            100% 50%,
+            78% 100%,
+            78% 75%,
+            0 75%
+    );
+    opacity: 0.75;
+}
+.furnace-progress .fp-arrow-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: calc(var(--cook, 0) * 100%);
+    background: rgba(255,255,255,0.85);
+    clip-path: polygon(
+            0 25%,
+            78% 25%,
+            78% 0%,
+            100% 50%,
+            78% 100%,
+            78% 75%,
+            0 75%
+    );
+}

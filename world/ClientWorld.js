@@ -233,4 +233,8 @@ export class ClientWorld extends THREE.Group {
         }
     }
 
+    getLoadedChunks() {
+        return this.children;
+    }
+
 }

@@ -1,4 +1,5 @@
 import { DataStore } from '../dataStore.js';
+import { Furnace } from '../furnace.js';
 
 export class BaseWorld {
     chunkSize = { width: 16, height: 80 };
@@ -6,6 +7,9 @@ export class BaseWorld {
     dataStore = new DataStore();
 
     entities = [];
+
+    // Block-entity logic (furnace, etc.)
+    furnace = new Furnace();
 
     params = {
         seed: 456789986,
@@ -237,6 +241,67 @@ export class BaseWorld {
 
     addEntity(entity) {
         this.entities.push(entity);
+
+    }
+
+    /**
+     * Returns an iterable of currently loaded chunks.
+     * Works with common storage patterns: Map, Array, or plain object.
+     */
+    getLoadedChunks() {
+
+        // Prefer explicit child override
+        if (typeof this.parent?.getLoadedChunks === 'function') {
+            return this.parent.getLoadedChunks();
+        }
+
+        const c = this.chunks ?? this.parent?.chunks;
+        if (!c) return [];
+
+        if (c instanceof Map) return c.values();
+        if (Array.isArray(c)) return c;
+        if (typeof c === 'object') return Object.values(c);
+        return [];
+    }
+
+    /**
+     * Tick block-entities (e.g., furnaces) for all loaded chunks.
+     * Called from the main loop (client offline) or from the server tick loop.
+     */
+    updateBlockEntities(dt) {
+        const chunks = this.getLoadedChunks();
+        for (const chunk of chunks) {
+            const data = chunk?.data;
+            if (!data || data.length === 0) continue;
+
+            let changed = false;
+
+            // Iterate chunk blocks
+            for (let x = 0; x < this.chunkSize.width; x++) {
+                const colX = data[x];
+                if (!colX) continue;
+                for (let y = 0; y < this.chunkSize.height; y++) {
+                    const colY = colX[y];
+                    if (!colY) continue;
+                    for (let z = 0; z < this.chunkSize.width; z++) {
+                        const block = colY[z];
+                        if (!block) continue;
+
+                        // Furnace block-entity: has inventory array
+                        if (block.id === 61 && Array.isArray(block.inventory)) {
+                            const didChange = this.furnace.tick(dt, block.inventory);
+                            if (didChange) changed = true;
+                        }
+                    }
+                }
+            }
+
+            // If the chunk has a dirty flag / save mechanism, mark it
+            if (changed) {
+                if (typeof chunk.setDirty === 'function') chunk.setDirty(true);
+                else chunk.dirty = true;
+            }
+        }
     }
 
     removeEntity(entity) {
