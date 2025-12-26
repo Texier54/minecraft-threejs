@@ -270,6 +270,7 @@ export class BaseWorld {
      */
     updateBlockEntities(dt) {
         const chunks = this.getLoadedChunks();
+        let updates = [];
         for (const chunk of chunks) {
             const data = chunk?.data;
             if (!data || data.length === 0) continue;
@@ -291,6 +292,17 @@ export class BaseWorld {
                         if (block.id === 61 && Array.isArray(block.inventory)) {
                             const didChange = this.furnace.tick(dt, block.inventory);
                             if (didChange) changed = true;
+
+
+                            // si ton tick met à jour un état interne sur inventory :
+                            const state = block.inventory?._furnaceState;
+
+                            const isActive = state && (state.burnLeftSec > 0 || state.cookProgress > 0);
+                            const coordX = x + ((chunk?.position?.x ?? 0)*this.chunkSize.width);
+                            const coordZ = z + ((chunk?.position?.z ?? 0)*this.chunkSize.width);
+                            if (didChange || isActive) {
+                                updates.push({ x: coordX, y: y, z: coordZ, inventory: block.inventory, state });
+                            }
                         }
                     }
                 }
@@ -302,6 +314,8 @@ export class BaseWorld {
                 else chunk.dirty = true;
             }
         }
+
+        return updates;
     }
 
     removeEntity(entity) {

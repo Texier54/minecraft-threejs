@@ -1,5 +1,5 @@
 import { Smelting } from "./smelting.js";
-import { blocks, getBlockByIdFast } from "./block.js";
+//import { getBlockByIdFast } from "./block.js";
 
 export class Furnace {
 
@@ -13,7 +13,7 @@ export class Furnace {
 
     // Fuel burn durations (seconds of burn for 1 fuel item)
     fuelBurnSecById = {
-        [blocks.coal.id]: 40,
+        [302]: 40,
     };
 
     constructor() {
@@ -44,9 +44,11 @@ export class Furnace {
         if (!recipeOutput) return false;
         if (!outputItem) return true;
         if (outputItem.block !== recipeOutput.id) return false;
-
+/*
         const blockObj = getBlockByIdFast(outputItem.block);
         const maxStack = blockObj?.stackable ? 64 : 1;
+*/
+        const maxStack = 64;
         return (outputItem.quantity + recipeOutput.quantity) <= maxStack;
     }
 

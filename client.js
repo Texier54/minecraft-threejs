@@ -69,7 +69,10 @@ export class Client {
             this.world.setBlockInventory(data.x, data.y, data.z, data.inventory);
         });
 
-
+        this.socket.on("furnaceUpdate", ({x,y,z,inventory,state}) => {
+            inventory._furnaceState = state;
+            this.world.setBlockInventory(x,y,z,inventory);
+        });
 
         // Quand un joueur bouge
         this.socket.on('playerState', (allPlayers) => {

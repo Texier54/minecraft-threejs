@@ -14,11 +14,9 @@ app.use(cors({ origin: '*' }));  // ✅ Autorise toutes les origines
 
 
 
+let options;
 if (process.env.NODE_ENV === 'production') {
-// Lis les fichiers de certificat SSL (assurez-vous que les fichiers existent)
-// Lis les fichiers de certificat SSL
-// Lis les fichiers du certificat SSL
-    const options = {
+    options = {
         cert: fs.readFileSync('/etc/letsencrypt/live/baptiste-texier.ddns.net/fullchain.pem'),
         key: fs.readFileSync('/etc/letsencrypt/live/baptiste-texier.ddns.net/privkey.pem'),
     };
@@ -136,7 +134,25 @@ async function log(message) {
 const world = new ServerWorld();
 world.generate();
 
+// Server tick loop (client-like): compute dt each tick
+let prevTickMs = Date.now();
+const TICK_MS = 1000 / 60; // ~60 FPS like the client
 
+setInterval(() => {
+    const nowMs = Date.now();
+    const dt = (nowMs - prevTickMs) / 1000;
+    prevTickMs = nowMs;
+
+    // Safety clamp to avoid huge dt after pauses
+    const clampedDt = Math.min(dt, 0.25);
+
+    const updates = world.updateBlockEntities(clampedDt);
+    for (const u of updates) {
+        io.emit("furnaceUpdate", u);
+    }
+    // Optional: if your server simulates entities too, uncomment:
+    // world.updateEntities(clampedDt);
+}, TICK_MS);
 
 // Configure une route pour vérifier que le serveur fonctionne
 app.get('/d', (req, res) => {

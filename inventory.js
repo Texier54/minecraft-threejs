@@ -93,13 +93,19 @@ export class Inventory {
         this.hearts.style.display = 'none';
         this.UIID = id;
         this._lastUiRefreshMs = 0;
-        console.log(this.player.selectedCoords);
+        // Always use the same inventory array reference as the block in the world
         this.blockInventory = Array(41).fill(null);
         if (this.UIID) {
-            console.log(this.world.getBlock(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z));
-            let content = this.world.getBlock(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z).inventory;
-            if (content)
-                this.blockInventory = content;
+            const block = this.world.getBlock(this.player.selectedCoords.x, this.player.selectedCoords.y, this.player.selectedCoords.z);
+            console.log(block);
+
+            // If the block has no inventory yet, create and attach an inventory to the block. Do NOT call world.setBlockInventory here,
+            // because some implementations replace/clone the array (and drop _furnaceState).
+            if (!block.inventory) {
+                block.inventory = Array(41).fill(null);
+            }
+
+            this.blockInventory = block.inventory;
         }
         this.renderInventory();
     }
@@ -122,6 +128,16 @@ export class Inventory {
         // Furnace logic is now ticked by the world (client offline) or the server (online).
         // Here we only refresh the UI while it is open.
         if (this.isShow && this.UIID === blocks.furnace.id) {
+            // Always re-bind to the current block inventory reference in the world
+            const block = this.world.getBlock(
+                this.player.selectedCoords.x,
+                this.player.selectedCoords.y,
+                this.player.selectedCoords.z
+            );
+            if (block?.inventory && block.inventory !== this.blockInventory) {
+                this.blockInventory = block.inventory;
+            }
+
             const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
             if (nowMs - this._lastUiRefreshMs > 100) { // ~10 fps UI refresh
                 this._lastUiRefreshMs = nowMs;

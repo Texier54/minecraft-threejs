@@ -1,10 +1,10 @@
-import { blocks } from './block.js';
+
 
 // Smelting recipes: key = input block id, value = { id, quantity }
 export const SmeltingList = {
-  [blocks.ironOre.id]: { id: blocks.iron_ingot.id, quantity: 1 },
-  [blocks.sand.id]: { id: blocks.glass.id, quantity: 1 },
-  [blocks.cobblestone.id]: { id: blocks.stone.id, quantity: 1 },
+    15: { id: 305, quantity: 1 }, // ironOre -> iron_ingot
+    12: { id: 20,  quantity: 1 }, // sand -> glass
+    4:  { id: 3,   quantity: 1 }, // cobblestone -> stone
 };
 
 export class Smelting {
@@ -17,4 +17,5 @@ export class Smelting {
     if (!item?.block) return null;
     return SmeltingList[item.block] ?? null;
   }
+
 }
