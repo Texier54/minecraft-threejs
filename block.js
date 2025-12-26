@@ -519,6 +519,13 @@ export const blocks = {
         connectable: true,
         soundGroup: 'wood',
     },
+    beef: {
+        id: 273,
+        name: 'Raw Beef',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/beef.webp',
+    },
     iron_pickaxe: {
         id: 297,
         name: 'Iron Pickaxe',
