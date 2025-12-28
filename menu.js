@@ -11,17 +11,21 @@ export class Menu {
         this.client = client;
         this.chat = chat;
 
-        const btnBTG = document.getElementById('backToGame');
-        btnBTG.addEventListener('click', () => this.backToGame());
+        const bind = (id, fn) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('click', fn);
+            // Mobile: pointerdown fires immediately and does not rely on synthetic click
+            el.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                fn();
+            });
+        };
 
-        const btnSave = document.getElementById('save');
-        btnSave.addEventListener('click', () => this.save());
-
-        const btnLoad = document.getElementById('load');
-        btnLoad.addEventListener('click', () => this.load());
-
-        const btnConnect = document.getElementById('connect');
-        btnConnect.addEventListener('click', () => this.connect());
+        bind('backToGame', () => this.backToGame());
+        bind('save', () => this.save());
+        bind('load', () => this.load());
+        bind('connect', () => this.connect());
 
         window.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && this.inventory.isShow === false) {

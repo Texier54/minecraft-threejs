@@ -1,6 +1,10 @@
-html, body, canvas {
-    touch-action: none;
+html, body {
     overflow: hidden;
+}
+
+/* Only the game surface should disable browser gestures */
+canvas {
+    touch-action: none;
 }
 
 @font-face {
@@ -9,6 +13,7 @@ html, body, canvas {
 }
 .mc-menu {
 
+    z-index: 2000;
     transform: translate(-50%, -50%);
 
     --btn-size: 30pt;
@@ -89,6 +94,10 @@ canvas {
     display: block;
     width: 100vw;
     height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
 }
 
 .fps {
