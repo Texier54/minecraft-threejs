@@ -33,6 +33,7 @@ html, body, canvas {
     grid-template-rows: 1fr;
     grid-template-areas: 'left right';
     grid-gap: 8px;
+    z-index: 2000;
 }
 
 }
