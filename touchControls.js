@@ -11,8 +11,10 @@ export class TouchControls {
         this.enabled = true;
         this.rotationSpeed = 0.005;
 
-        this.isTouching = false;
+        // ✅ on suit UN doigt pour la rotation, même si un autre doigt est sur les boutons
+        this.lookTouchId = null;
         this.lastTouch = { x: 0, y: 0 };
+
         this.yaw = 0;
         this.pitch = 0;
 
@@ -20,24 +22,39 @@ export class TouchControls {
     }
 
     init() {
-        this.domElement.addEventListener('touchstart', this.onTouchStart.bind(this), false);
-        this.domElement.addEventListener('touchmove', this.onTouchMove.bind(this), false);
-        this.domElement.addEventListener('touchend', this.onTouchEnd.bind(this), false);
+        this.domElement.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
+        this.domElement.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false });
+        this.domElement.addEventListener('touchend', this.onTouchEnd.bind(this), { passive: false });
+        this.domElement.addEventListener('touchcancel', this.onTouchEnd.bind(this), { passive: false });
     }
 
     onTouchStart(event) {
-        if (event.touches.length === 1) {
-            this.isTouching = true;
-            this.lastTouch.x = event.touches[0].clientX;
-            this.lastTouch.y = event.touches[0].clientY;
+        if (!this.enabled) return;
+        event.preventDefault();
+
+        // Si on n’a pas encore de doigt “look”, on prend le premier touch qui commence sur le canvas
+        if (this.lookTouchId === null && event.changedTouches.length > 0) {
+            const t = event.changedTouches[0];
+            this.lookTouchId = t.identifier;
+            this.lastTouch.x = t.clientX;
+            this.lastTouch.y = t.clientY;
         }
     }
 
     onTouchMove(event) {
-        if (!this.enabled || !this.isTouching) return;
-        if (event.touches.length !== 1) return;
+        if (!this.enabled || this.lookTouchId === null) return;
+        event.preventDefault();
 
-        const touch = event.touches[0];
+        // Retrouver le touch qu’on suit (même si event.touches.length === 2+)
+        let touch = null;
+        for (let i = 0; i < event.touches.length; i++) {
+            const t = event.touches[i];
+            if (t.identifier === this.lookTouchId) {
+                touch = t;
+                break;
+            }
+        }
+        if (!touch) return;
 
         const deltaX = touch.clientX - this.lastTouch.x;
         const deltaY = touch.clientY - this.lastTouch.y;
@@ -52,12 +69,18 @@ export class TouchControls {
         this.updateCameraRotation();
     }
 
-    onTouchEnd() {
-        this.isTouching = false;
+    onTouchEnd(event) {
+        if (this.lookTouchId === null) return;
+
+        for (let i = 0; i < event.changedTouches.length; i++) {
+            if (event.changedTouches[i].identifier === this.lookTouchId) {
+                this.lookTouchId = null;
+                break;
+            }
+        }
     }
 
     updateCameraRotation() {
-        //this.camera.rotation.set(this.pitch, this.yaw, 0);
         this.camera.rotation.x = this.pitch;
         this.camera.rotation.y = this.yaw;
         this.camera.rotation.z = 0;
