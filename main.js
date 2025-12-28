@@ -172,31 +172,28 @@ window.addEventListener('resize', () => {
 
 });
 
-// Mobile: prevent page scroll/zoom while keeping true multi-touch (move button + look on canvas).
+// Mobile (iOS/Android): prevent scroll/pinch-zoom WITHOUT breaking multi-touch (move + look)
 const el = renderer.domElement;
 el.style.touchAction = 'none';
 
 const mobileControls = document.getElementById('mobile-controls');
 if (mobileControls) mobileControls.style.touchAction = 'none';
 
-// Capture-phase blockers so the *first* touch (even on a UI button) doesn't start browser gesture mode.
-const shouldBlock = (target) => {
-    if (!target) return false;
-    // Block gestures on the canvas and on the mobile controls overlay
-    return target === el || el.contains(target) || (mobileControls && mobileControls.contains(target));
-};
+// IMPORTANT: On iOS (Chrome = WebKit), multi-touch can break if you rely on document-level blockers.
+// Block defaults only on the game surfaces (canvas + controls), and block iOS gesture events globally.
+const prevent = (e) => e.preventDefault();
 
-const blockTouch = (e) => {
-    // Always block default behavior for touches starting/moving on our game surfaces.
-    if (shouldBlock(e.target)) {
-        e.preventDefault();
-        return;
-    }
-    // Additionally, block pinch-zoom anywhere (2+ fingers)
-    if (e.touches && e.touches.length >= 2) {
-        e.preventDefault();
-    }
-};
+// Block pan/scroll on canvas
+el.addEventListener('touchstart', prevent, { passive: false });
+el.addEventListener('touchmove', prevent, { passive: false });
 
-document.addEventListener('touchstart', blockTouch, { passive: false, capture: true });
-document.addEventListener('touchmove', blockTouch, { passive: false, capture: true });
+// Block pan/scroll on mobile controls (so starting on a button doesn't trigger a page gesture)
+if (mobileControls) {
+    mobileControls.addEventListener('touchstart', prevent, { passive: false });
+    mobileControls.addEventListener('touchmove', prevent, { passive: false });
+}
+
+// iOS pinch events (not covered reliably by touch-action)
+window.addEventListener('gesturestart', prevent, { passive: false });
+window.addEventListener('gesturechange', prevent, { passive: false });
+window.addEventListener('gestureend', prevent, { passive: false });
