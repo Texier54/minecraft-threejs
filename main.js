@@ -172,25 +172,31 @@ window.addEventListener('resize', () => {
 
 });
 
-// Mobile: allow multi-touch (move button + look on canvas) while preventing scroll/pinch.
+// Mobile: prevent page scroll/zoom while keeping true multi-touch (move button + look on canvas).
 const el = renderer.domElement;
-el.style.touchAction = "none";
+el.style.touchAction = 'none';
 
-// Prevent default on BOTH touchstart and touchmove; on some browsers preventing only touchmove
-// can still trigger gesture handling that cancels the second touch.
-const preventGestures = (e) => {
-    // If the touch is on the canvas, always prevent default to avoid page pan/zoom.
-    // This keeps the other finger (on a UI button) working at the same time.
-    e.preventDefault();
+const mobileControls = document.getElementById('mobile-controls');
+if (mobileControls) mobileControls.style.touchAction = 'none';
+
+// Capture-phase blockers so the *first* touch (even on a UI button) doesn't start browser gesture mode.
+const shouldBlock = (target) => {
+    if (!target) return false;
+    // Block gestures on the canvas and on the mobile controls overlay
+    return target === el || el.contains(target) || (mobileControls && mobileControls.contains(target));
 };
 
-el.addEventListener("touchstart", preventGestures, { passive: false });
-el.addEventListener("touchmove", preventGestures, { passive: false });
+const blockTouch = (e) => {
+    // Always block default behavior for touches starting/moving on our game surfaces.
+    if (shouldBlock(e.target)) {
+        e.preventDefault();
+        return;
+    }
+    // Additionally, block pinch-zoom anywhere (2+ fingers)
+    if (e.touches && e.touches.length >= 2) {
+        e.preventDefault();
+    }
+};
 
-// Also disable touch gestures on the on-screen controls container
-const mobileControls = document.getElementById('mobile-controls');
-if (mobileControls) {
-    mobileControls.style.touchAction = 'none';
-    mobileControls.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
-    mobileControls.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-}
+document.addEventListener('touchstart', blockTouch, { passive: false, capture: true });
+document.addEventListener('touchmove', blockTouch, { passive: false, capture: true });
