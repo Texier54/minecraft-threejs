@@ -1,3 +1,7 @@
+html, body, canvas {
+    touch-action: none;
+    overflow: hidden;
+}
 
 @font-face {
     font-family: Minecraftia;
