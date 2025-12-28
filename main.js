@@ -24,7 +24,12 @@ world.generate();
 scene.add(world)
 
 //bloquer evenements tactile mobile
-window.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+const el = renderer.domElement; // ton canvas
+el.style.touchAction = "none";
+// Empêche scroll/pinch uniquement quand le doigt est sur le canvas
+el.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+}, { passive: false });
 
 scene.fog = new THREE.Fog(0x80a0e0, world.chunkSize.width*world.drawDistance*0.9, world.chunkSize.width*world.drawDistance);
 

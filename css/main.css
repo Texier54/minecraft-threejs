@@ -333,6 +333,7 @@ canvas {
     border-radius: 10px;
     background: #555;
     color: white;
+    touch-action: none;
 }
 button {
     user-select: none;
