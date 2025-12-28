@@ -323,6 +323,8 @@ canvas {
     gap: 10px;
     z-index: 999;
     display: none;
+    touch-action: none;
+    -webkit-touch-callout: none;
 }
 #mobile-controls button {
     width: 60px;

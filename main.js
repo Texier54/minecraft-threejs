@@ -172,10 +172,25 @@ window.addEventListener('resize', () => {
 
 });
 
-//bloquer evenements tactile mobile
-const el = renderer.domElement; // ton canvas
+// Mobile: allow multi-touch (move button + look on canvas) while preventing scroll/pinch.
+const el = renderer.domElement;
 el.style.touchAction = "none";
-// Empêche scroll/pinch uniquement quand le doigt est sur le canvas
-el.addEventListener("touchmove", (e) => {
+
+// Prevent default on BOTH touchstart and touchmove; on some browsers preventing only touchmove
+// can still trigger gesture handling that cancels the second touch.
+const preventGestures = (e) => {
+    // If the touch is on the canvas, always prevent default to avoid page pan/zoom.
+    // This keeps the other finger (on a UI button) working at the same time.
     e.preventDefault();
-}, { passive: false });
+};
+
+el.addEventListener("touchstart", preventGestures, { passive: false });
+el.addEventListener("touchmove", preventGestures, { passive: false });
+
+// Also disable touch gestures on the on-screen controls container
+const mobileControls = document.getElementById('mobile-controls');
+if (mobileControls) {
+    mobileControls.style.touchAction = 'none';
+    mobileControls.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+    mobileControls.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+}
