@@ -4,7 +4,7 @@ import {DoorEntity} from "../entity/DoorEntity.js";
 import {BoatEntity} from "../entity/BoatEntity.js";
 import * as THREE from "three";
 
-export function useItemOnBlock(world, player, itemId, x, y, z, direction, scene) {
+export function useItemOnBlock(world, player, itemId, x, y, z, direction, scene, inventory) {
     const audioManager = new AudioManager();
 
     const target = world.getBlock(x, y, z);
@@ -34,6 +34,8 @@ export function useItemOnBlock(world, player, itemId, x, y, z, direction, scene)
         const door = new DoorEntity(world, new THREE.Vector3(x, y + 1, z));
         door.addToScene(scene);
         world.addEntity(door);
+        inventory.removeBlock(itemDef.id);
+        return true;
     }
 
     // LEVER
@@ -47,10 +49,20 @@ export function useItemOnBlock(world, player, itemId, x, y, z, direction, scene)
 
     // BATEAU
     if (itemDef.id == 375) {
-        console.log("qzf");
         const boat = new BoatEntity(world, new THREE.Vector3(x, y + 1, z));
         boat.addToScene(scene);
         world.addEntity(boat);
+        inventory.removeBlock(itemDef.id);
+        return true;
+    }
+
+    // SEEDS
+    if (itemDef.id == 291) {
+        if (target.id == blocks.farmland.id) {
+            world.addBlock(x, y+1, z, blocks.wheat.id, direction);
+            inventory.removeBlock(itemDef.id);
+        }
+        return true;
     }
 
     return false;

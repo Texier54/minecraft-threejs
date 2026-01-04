@@ -46,6 +46,7 @@ export class Inventory {
         { block: blocks.redstone_lamp.id, quantity: 10 }, // lamp
         { block: blocks.ice.id, quantity: 10 }, // ice
         { block: blocks.iron_ingot.id, quantity: 10 }, // iron ingot
+        { block: blocks.wheat_seeds.id, quantity: 10 }, // seed
     ];
 
 
@@ -83,6 +84,7 @@ export class Inventory {
         this.inventory[9] = this.items[17]; // Table de craft au premier slot
         this.inventory[10] = this.items[18]; // Table de craft au premier slot
         this.inventory[11] = this.items[19]; // Table de craft au premier slot
+        this.inventory[12] = this.items[20]; // Table de craft au premier slot
         this.renderInventory();
         this.renderBar();
         // Gestion du mouvement de la souris pour suivre le curseur

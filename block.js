@@ -79,6 +79,7 @@ const textures = {
     iron_furnace_front: loadTexture('images/mod/iron_furnace_front_off.png'),
     iron_furnace_side: loadTexture('images/mod/iron_furnace_top.png'),
     farmland: loadTexture('images/farmland.png'),
+    wheat: loadTexture('images/wheat_stage0.png'),
 };
 
 const TOOL_TYPES = {
@@ -472,6 +473,27 @@ export const blocks = {
         geometry: geometryBlock,
         soundGroup: 'wood',
     },
+    wheat: {
+        id: 59,
+        name: 'Wheat',
+        type: 'block',
+        stackable: true,
+        hardness: 2.5,
+        material: [
+            new THREE.MeshLambertMaterial({ map: textures.wheat, transparent: true }), // right
+            new THREE.MeshLambertMaterial({ map: textures.wheat, transparent: true }), // left
+            new THREE.MeshLambertMaterial({ map: textures.wheat, transparent: true }), // top
+            new THREE.MeshLambertMaterial({ map: textures.wheat, transparent: true }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.wheat, transparent: true }), // front
+            new THREE.MeshLambertMaterial({ map: textures.wheat, transparent: true })  // back
+        ],
+        icon: 'images/block-icon/wheat_seeds.webp',
+        tool: TOOL_TYPES.AXE,
+        geometry: geometryBlock,
+        transparent: true,
+        nonSolid: true,
+        soundGroup: 'wood',
+    },
     farmland: {
         id: 60,
         name: 'Farmland',
@@ -701,6 +723,13 @@ export const blocks = {
         type: 'item',
         stackable: false,
         icon: 'images/block-icon/beef.webp',
+    },
+    wheat_seeds: {
+        id: 291,
+        name: 'Wheat Seeds',
+        type: 'item',
+        stackable: true,
+        icon: 'images/block-icon/wheat_seeds.png',
     },
     iron_pickaxe: {
         id: 297,

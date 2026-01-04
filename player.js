@@ -239,7 +239,8 @@ export class Player {
             this.selectedCoords.y,
             this.selectedCoords.z,
             direction,
-            this.scene
+            this.scene,
+            this.inventory
         );
 
         if (used) {
