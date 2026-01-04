@@ -64,6 +64,11 @@ Le serveur est responsable de :
 - La logique du monde
 - La persistance des données
 
+### Lancement en local (test)
+```bash
+node server/server.js
+```
+
 ### Sauvegarde du monde
 - Le monde est sauvegardé **par chunk**
 - Format **binaire**

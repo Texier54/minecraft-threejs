@@ -3,6 +3,7 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 
 const textureLoader = new THREE.TextureLoader();
 const geometryBlock = new THREE.BoxGeometry(1, 1, 1);
+const geometryCactus = new THREE.BoxGeometry(0.85, 1, 0.85);
 const geometryTorch = new THREE.BoxGeometry(0.12, 0.7, 0.12)
 
 const step1 = new THREE.BoxGeometry(1, 0.5, 1);
@@ -33,6 +34,8 @@ const textures = {
     bedrock: loadTexture('images/bedrock.png'),
     coalOre: loadTexture('images/coal_ore.png'),
     ironOre: loadTexture('images/iron_ore.png'),
+    goldOre: loadTexture('images/gold_ore.png'),
+    redstoneOre: loadTexture('images/redstone_ore.png'),
     crafting_table_top: loadTexture('images/crafting_table_top.png'),
     crafting_table_front: loadTexture('images/crafting_table_front.png'),
     crafting_table_side: loadTexture('images/crafting_table_side.png'),
@@ -230,6 +233,21 @@ export const blocks = {
         tool: TOOL_TYPES.SHOVEL,
         geometry: geometryBlock,
         soundGroup: 'gravel',
+    },
+    goldOre: {
+        id: 14,
+        name: 'gold_ore',
+        type: 'block',
+        stackable: true,
+        hardness: 3,
+        material: new THREE.MeshLambertMaterial({ map: textures.goldOre }),
+        scale: { x: 40, y: 40, z: 40 },
+        scarcity: 0.91,//rareté
+        icon: 'images/block-icon/gold_ore.webp',
+        tool: TOOL_TYPES.PICKAXE,
+        need_tool: true,
+        geometry: geometryBlock,
+        soundGroup: 'stone',
     },
     ironOre: {
         id: 15,
@@ -486,6 +504,21 @@ export const blocks = {
         geometry: geometryStair,
         soundGroup: 'stone',
     },
+    redstoneOre: {
+        id: 73,
+        name: 'redstone_ore',
+        type: 'block',
+        stackable: true,
+        hardness: 3,
+        material: new THREE.MeshLambertMaterial({ map: textures.redstoneOre }),
+        scale: { x: 40, y: 40, z: 40 },
+        scarcity: 0.9,//rareté
+        icon: 'images/block-icon/restone_ore.png',
+        tool: TOOL_TYPES.PICKAXE,
+        need_tool: true,
+        geometry: geometryBlock,
+        soundGroup: 'stone',
+    },
     cactus: {
         id: 81,
         name: 'cactus',
@@ -500,9 +533,10 @@ export const blocks = {
             new THREE.MeshLambertMaterial({ map: textures.cactus_side }), // front
             new THREE.MeshLambertMaterial({ map: textures.cactus_side })  // back
         ],
+        transparent: true,
         icon: 'images/block-icon/cactus.webp',
         tool: TOOL_TYPES.AXE,
-        geometry: geometryBlock,
+        geometry: geometryCactus,
         soundGroup: 'stone',
     },
     oak_fence: {
@@ -555,6 +589,13 @@ export const blocks = {
         type: 'item',
         stackable: true,
         icon: 'images/block-icon/iron_ingot.webp',
+    },
+    gold_ingot: {
+        id: 306,
+        name: 'Gold Ingot',
+        type: 'item',
+        stackable: true,
+        icon: 'images/block-icon/gold_ingot.webp',
     },
     wooden_shovel: {
         id: 309,
@@ -626,6 +667,15 @@ export const blocks = {
         stackable: true,
         icon: 'images/block-icon/stick.webp',
     },
+    gold_pickaxe: {
+        id: 324,
+        name: 'Gold Pickaxe',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/golden_pickaxe.png',
+        tool_type: TOOL_TYPES.PICKAXE,
+        tool_material: TOOL_MATERIALS.GOLD
+    },
     bucket: {
         id: 360,
         name: 'Bucket',
@@ -646,6 +696,13 @@ export const blocks = {
         type: 'item',
         stackable: false,
         icon: 'images/block-icon/oak_boat.webp',
+    },
+    green_dye: {
+        id: 397,
+        name: 'Green Dye',
+        type: 'item',
+        stackable: true,
+        icon: 'images/block-icon/cactus_green.png',
     },
 };
 

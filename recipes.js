@@ -91,6 +91,17 @@ export const RecipesList = {
             quantity: 1,
         },
     },
+    gold_pickaxe: {
+        pattern: [
+            [blocks.gold_ingot.id, blocks.gold_ingot.id, blocks.gold_ingot.id],
+            [null, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: {
+            id: blocks.gold_pickaxe.id,
+            quantity: 1,
+        },
+    },
     diamond_pickaxe: {
         pattern: [
             [blocks.diamond.id, blocks.diamond.id, blocks.diamond.id],

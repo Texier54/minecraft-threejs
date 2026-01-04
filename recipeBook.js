@@ -58,7 +58,7 @@ for (const [index, recipe] of Object.entries(SmeltingList)) {
     let slotInput = document.createElement('div');
     slotInput.classList.add('slot')
     let imgInput = document.createElement('img');
-    const blockInput = getBlockByIdFast(recipe.input);
+    const blockInput = getBlockByIdFast(index);
     imgInput.src = blockInput.icon;
     imgInput.width = 43;
     slotInput.append(imgInput);
@@ -78,7 +78,7 @@ for (const [index, recipe] of Object.entries(SmeltingList)) {
     let slotOuput = document.createElement('div');
     slotOuput.classList.add('slot')
     let imgOuput = document.createElement('img');
-    const blockOutput = getBlockByIdFast(recipe.output.id);
+    const blockOutput = getBlockByIdFast(recipe.id);
     imgOuput.src = blockOutput.icon;
     imgOuput.width = 43;
     slotOuput.append(imgOuput);

@@ -20,9 +20,28 @@ export class Player {
     jumpSpeed = 10;
     onGround = false;
 
+    // Movement feel (Minecraft-ish)
+    groundAccel = 45;
+    airAccel = 18;
+    waterAccel = 10;
+
+    groundFriction = 14; // damping per second when no input
+    airFriction = 2;
+    waterFriction = 6;
+
+    swimSpeedFactor = 0.45; // horizontal slowdown in water
+    jumpPressed = false;    // used by Physics for swimming up
+
+    // Damage handling
+    invulnMsDefault = 300;          // i-frames for most damages
+    invulnMsByType = { cactus: 500, fall: 0 };
+    _lastDamageAt = 0;
+    _lastDamageType = null;
+
     input = new THREE.Vector3();
     velocity = new THREE.Vector3(0, 0, 0);
     #wolrdVelocity = new THREE.Vector3();
+    externalVelocity = new THREE.Vector3();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 
     // Contrôle en première personne avec "PointerLockControls"
@@ -538,9 +557,9 @@ export class Player {
                 this.velocity.x *= 0.4;
                 this.velocity.z *= 0.4;
             }
-            this.controls.moveRight(this.velocity.x * dt);
-            this.controls.moveForward(this.velocity.z * dt);
-            this.position.y += this.velocity.y * dt;
+            this.controls.moveRight((this.velocity.x + this.externalVelocity.x) * dt);
+            this.controls.moveForward((this.velocity.z + this.externalVelocity.z) * dt);
+            this.position.y += (this.velocity.y + + this.externalVelocity.y) * dt;
 
             let biome = this.world.getPlayerBiome(Math.floor(this.position.x), Math.floor(this.position.z));
             document.getElementById('player-position').innerHTML = this.toString() + ' - ' + biome;
@@ -580,7 +599,10 @@ export class Player {
         if (event.code === 'KeyS') this.input.z = -this.maxSpeed + this.run;
         if (event.code === 'KeyA') this.input.x = -this.maxSpeed + this.run;
         if (event.code === 'KeyD') this.input.x = this.maxSpeed + this.run;
-        if (event.code === 'Space') if (this.onGround) this.velocity.y += this.jumpSpeed;
+        if (event.code === 'Space') {
+            this.jumpPressed = true;
+            if (!this.inWater && this.onGround) this.velocity.y += this.jumpSpeed;
+        }
         if (event.code === 'F5') this.camera.position.set(this.camera.position.x, this.camera.position.y + 1, this.camera.position.z);
     }
 
@@ -590,6 +612,7 @@ export class Player {
         if (event.code === 'KeyS') this.input.z = 0;
         if (event.code === 'KeyA') this.input.x = 0;
         if (event.code === 'KeyD') this.input.x = 0;
+        if (event.code === 'Space') this.jumpPressed = false;
     }
 
     // renvoi la position du player dans le world
@@ -636,62 +659,65 @@ export class Player {
     }
 
     /**
-     * Toggle a 2-block tall door (bottom id = N, top id = N+1000, e.g. 64/1064)
-     * Falls back to single-block openable if no top part found.
+     * Apply damage to the player.
+     * @param {number} amount - 1 = half-heart if you follow the 20 HP convention
+     * @param {{type?: string, cooldownMs?: number, fallDistance?: number}} meta
      */
-    toggleDoor(x, y, z) {
-        const baseBlk = this.world.getBlock(x, y, z);
-        if (!baseBlk) return;
-
-        // Determine base position if we clicked the upper half
-        let bx = x, by = y, bz = z;
-        const id = baseBlk.id || 0;
-        const isUpperHalf = id >= 1000; // convention: upper half = bottom id + 1000 (e.g., 1064)
-        if (isUpperHalf) by -= 1;
-
-        const lower = this.world.getBlock(bx, by, bz);
-        const upper = this.world.getBlock(bx, by + 1, bz);
-
-        // If we don't really have a 2-block pair, fallback to single openable toggle
-        if (!lower) return;
-
-        this.world.toggleDoorAt(x, y, z);
-console.log('toggle door');
-        // Decide new state
-        const newOpen = !lower.isOpen;
-
-        // Apply state & rotation on lower
-        lower.isOpen = newOpen;
-        if (lower.mesh) {
-            lower.mesh.rotation.y = newOpen ? -Math.PI / 2 : 0;
-        }
-
-        // Apply state & rotation on upper if present
-        if (upper && upper.id) {
-            upper.isOpen = newOpen;
-            if (upper.mesh) {
-                upper.mesh.rotation.y = newOpen ? -Math.PI / 2 : 0;
-            }
-        }
-
-        // Optional: sound feedback (uses the lower block's soundGroup if available)
-        try {
-            const b = getBlockByIdFast(lower.id);
-            if (b?.soundGroup) this.audioManager.playBlockSound(b.soundGroup, newOpen ? 'open_door' : 'close_door');
-        } catch (e) { /* ignore */
-        }
-    }
-
     takeDamage(amount, meta = {}) {
         if (!this.health) return;
 
-        // plus tard: armor, invincibility frames, etc.
-        this.health.remove(amount);
+        const type = meta.type || 'generic';
+        const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
 
-        this.audioManager.playBlockSound('player', 'hurt');
-        // hooks futurs
-        // this.playHurtSound();
+        // Damage cooldown / i-frames (prevents draining too fast when touching hazards)
+        const typeCd = this.invulnMsByType?.[type];
+        const cooldownMs = (meta.cooldownMs != null) ? meta.cooldownMs : (typeCd != null ? typeCd : this.invulnMsDefault);
+
+        if (cooldownMs > 0 && (now - this._lastDamageAt) < cooldownMs) {
+            return;
+        }
+
+        // Here is the place to implement reductions (armor, buffs, etc.)
+        let finalAmount = amount;
+
+        // Example: small tweak for fall damage later (keep as-is for now)
+        if (type === 'fall') {
+            finalAmount = amount;
+        }
+
+        if (finalAmount <= 0) return;
+
+        this._lastDamageAt = now;
+        this._lastDamageType = type;
+
+        this.health.remove(finalAmount);
+
+        // Feedback depending on damage type
+        try {
+            if (type === 'fall') {
+                this.audioManager.playBlockSound('player', 'fall');
+            } else if (type === 'cactus') {
+                this.audioManager.playBlockSound('player', 'hurt');
+            } else {
+                this.audioManager.playBlockSound('player', 'hurt');
+            }
+        } catch (e) {
+            // ignore audio errors
+        }
+
+        if (meta.knockback) {
+            const kb = new THREE.Vector3(
+                meta.knockback.x || 0,
+                meta.knockback.y || 0,
+                meta.knockback.z || 0
+            );
+            // Knockback is provided in WORLD space by Physics
+            this.externalVelocity.add(kb);
+        }
+
+        // Hooks futurs
         // this.hurtTimer = 10;
+        // this.flashRed();
         // if (this.health.health <= 0) this.die();
     }
 
