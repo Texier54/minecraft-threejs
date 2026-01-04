@@ -40,6 +40,12 @@ export class Inventory {
         { block: blocks.oak_boat.id, quantity: 1 }, // Boat
         { block: blocks.coal.id, quantity: 32 }, // Coal
         { block: blocks.sand.id, quantity: 32 }, // Sand
+        { block: blocks.ladder.id, quantity: 10 }, // Echelle
+        { block: blocks.oak_slab.id, quantity: 2 }, // slab
+        { block: blocks.lever.id, quantity: 2 }, // levier
+        { block: blocks.redstone_lamp.id, quantity: 10 }, // lamp
+        { block: blocks.ice.id, quantity: 10 }, // ice
+        { block: blocks.iron_ingot.id, quantity: 10 }, // iron ingot
     ];
 
 
@@ -71,6 +77,12 @@ export class Inventory {
         this.inventory[35] = this.items[11]; // Table de craft au premier slot
         this.inventory[4] = this.items[12]; // Table de craft au premier slot
         this.inventory[5] = this.items[13]; // Table de craft au premier slot
+        this.inventory[6] = this.items[14]; // Table de craft au premier slot
+        this.inventory[7] = this.items[15]; // Table de craft au premier slot
+        this.inventory[8] = this.items[16]; // Table de craft au premier slot
+        this.inventory[9] = this.items[17]; // Table de craft au premier slot
+        this.inventory[10] = this.items[18]; // Table de craft au premier slot
+        this.inventory[11] = this.items[19]; // Table de craft au premier slot
         this.renderInventory();
         this.renderBar();
         // Gestion du mouvement de la souris pour suivre le curseur

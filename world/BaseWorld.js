@@ -333,4 +333,51 @@ export class BaseWorld {
         }
     }
 
+
+    // --- Redstone-like minimal power propagation (lever -> adjacent lamps) ---
+    toggleLever(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+        if (!chunk || !chunk.data || !chunk.data[coords.block.x]?.[coords.block.y]?.[coords.block.z]) return false;
+
+        const block = chunk.data[coords.block.x][coords.block.y][coords.block.z];
+        console.log(block);
+        // Only levers
+        if (block.id !== 69) return false;
+
+        block.powered = !block.powered;
+
+        // Propagate to adjacent lamps (6-neighborhood)
+        const neighbors = [
+            [1, 0, 0], [-1, 0, 0],
+            [0, 1, 0], [0, -1, 0],
+            [0, 0, 1], [0, 0, -1]
+        ];
+
+        for (const [dx, dy, dz] of neighbors) {
+            const nx = x + dx, ny = y + dy, nz = z + dz;
+            const ncoords = this.worldToChunkCoords(nx, ny, nz);
+            const nchunk = this.getChunk(ncoords.chunk.x, ncoords.chunk.z);
+            const nblock = nchunk?.data?.[ncoords.block.x]?.[ncoords.block.y]?.[ncoords.block.z];
+            if (!nblock) continue;
+
+            // Lamp
+            if (nblock.id === 123) {
+                nblock.powered = block.powered;
+                // If the client world can refresh visuals, do it.
+                if (typeof this.refreshBlockVisual === 'function') {
+                    console.log(nblock);
+                    this.refreshBlockVisual(nx, ny, nz);
+                }
+            }
+        }
+
+        // Refresh lever visual too (optional)
+        if (typeof this.parent?.refreshBlockVisual === 'function') {
+            this.parent.refreshBlockVisual(x, y, z);
+        }
+
+        return true;
+    }
+
 }

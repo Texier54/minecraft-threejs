@@ -215,8 +215,6 @@ export class ClientChunk extends THREE.Group {
                     if (!this.isBlockObscured(x, y, z) && block && block.id !== blocks.empty.id) {
 
                         let geometry = getBlockByIdFast(block.id).geometry;
-                        //geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
-
                         geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
 
                         if (block.direction) {
@@ -232,13 +230,19 @@ export class ClientChunk extends THREE.Group {
                         }
 
                         const offsetHeight = (1-(size.y))/2;
-
                         matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
-                        meshes[block.id].setMatrixAt(meshes[block.id].count, matrix);
-                        const mesh = meshes[block.id];
+
+                        // Choose the correct instanced mesh for lamps depending on powered state
+                        let meshId = block.id;
+                        if (block.id === blocks.redstone_lamp.id && block.powered) {
+                            meshId = blocks.redstone_lamp_on.id;
+                        }
+
+                        meshes[meshId].setMatrixAt(meshes[meshId].count, matrix);
+                        const mesh = meshes[meshId];
                         const instanceId = mesh.count;
                         this.setBlockInstanceId(x, y, z, instanceId);
-                        meshes[block.id].count++;
+                        mesh.count++;
 
                         if (block.id == blocks.torch.id) {
                             this.addLight(x, y, z);
@@ -332,10 +336,12 @@ export class ClientChunk extends THREE.Group {
             return;// ne rien faire si le bloc est vide ou déjà instancié
         }
 
-        // Get the mesh and instance id of the block
-        //const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
-        // Accès direct
-        const mesh = this.meshs[block.id];
+        // Choose the correct mesh for lamps depending on powered state
+        let meshId = block.id;
+        if (block.id === blocks.redstone_lamp.id && block.powered) {
+            meshId = blocks.redstone_lamp_on.id;
+        }
+        const mesh = this.meshs[meshId];
 
         console.log(mesh);
 
@@ -357,13 +363,8 @@ export class ClientChunk extends THREE.Group {
             new THREE.Vector3(1, 1, 1)    // Échelle
         );
 
-        //const offsetHeight = (1-mesh.geometry.parameters.height)/2;
-
-
         //let geometry = getBlockByIdFast(block.id).geometry;
-        const geometry = this.meshs[block.id]?.geometry;
-        //geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
-
+        const geometry = mesh?.geometry;
         geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
 
         const offsetHeight = (1-(size.y))/2;
@@ -376,7 +377,6 @@ export class ClientChunk extends THREE.Group {
         if (block.id == blocks.torch.id) {
             this.addLight(x, y, z);
         }
-
     }
 
     addLight(x, y, z) {

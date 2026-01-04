@@ -6,6 +6,13 @@ const geometryBlock = new THREE.BoxGeometry(1, 1, 1);
 const geometryCactus = new THREE.BoxGeometry(0.85, 1, 0.85);
 const geometryTorch = new THREE.BoxGeometry(0.12, 0.7, 0.12)
 
+// Slab: half-height block
+const geometrySlab = new THREE.BoxGeometry(1, 0.5, 1);
+//geometrySlab.translate(0, -0.25, 0); // slab sits on the bottom half of the block
+
+// Thin ladder plane against a block face (default centered). Non-solid: used for visuals only.
+const geometryLadder = new THREE.BoxGeometry(1, 1, 0.125);
+
 const step1 = new THREE.BoxGeometry(1, 0.5, 1);
 const step2 = new THREE.BoxGeometry(1, 0.5, 0.5);
 step2.translate(0, 0.25, -0.25); // Déplacer la petite marche
@@ -64,6 +71,12 @@ const textures = {
     oak_door_top: loadTexture('images/oak_door_top.png'),
     fence: loadTexture('images/fence_oak.png'),
     obsidian: loadTexture('images/obsidian.png'),
+    ice: loadTexture('images/ice.png'),
+    redstone_lamp_off: loadTexture('images/redstone_lamp.png'),
+    redstone_lamp_on: loadTexture('images/redstone_lamp_on.png'),
+    ladder: loadTexture('images/ladder.png'),
+    iron_furnace_front: loadTexture('images/mod/iron_furnace_front_off.png'),
+    iron_furnace_side: loadTexture('images/mod/iron_furnace_top.png'),
 };
 
 const TOOL_TYPES = {
@@ -342,6 +355,19 @@ export const blocks = {
         geometry: geometryBlock,
         soundGroup: 'stone',
     },
+    smooth_stone_slab: {
+        id: 44,
+        name: 'Smooth Stone Slab',
+        type: 'block',
+        stackable: true,
+        hardness: 6,
+        material: new THREE.MeshLambertMaterial({ map: textures.planks }),
+        icon: 'images/block-icon/smooth_stone_slab.png',
+        tool: TOOL_TYPES.AXE,
+        geometry: geometrySlab,
+        transparent: true,
+        soundGroup: 'stone',
+    },
     obsidian: {
         id: 49,
         name: 'obsidian',
@@ -477,6 +503,22 @@ export const blocks = {
         soundGroup: 'wood',
         geometry: geometryBlock,
     },
+    ladder: {
+        id: 65,
+        name: 'ladder',
+        type: 'block',
+        stackable: true,
+        hardness: 0.4,
+        // Use a simple color for now so it works even without a texture file
+        material: new THREE.MeshLambertMaterial({ map: textures.ladder, transparent: true, opacity: 0.95, side: THREE.DoubleSide }),
+        icon: 'images/block-icon/ladder.png',
+        tool: TOOL_TYPES.AXE,
+        geometry: geometryLadder,
+        transparent: true,
+        nonSolid: true,
+        climbable: true,
+        soundGroup: 'wood',
+    },
     oak_door_top: {
         id: 1064,
         name: 'oak_door',
@@ -504,6 +546,23 @@ export const blocks = {
         geometry: geometryStair,
         soundGroup: 'stone',
     },
+    lever: {
+        id: 69,
+        name: 'lever',
+        type: 'block',
+        stackable: true,
+        hardness: 0.5,
+        material: new THREE.MeshLambertMaterial({ color: 0x7a7a7a }),
+        icon: 'images/block-icon/lever.png',
+        tool: TOOL_TYPES.PICKAXE,
+        geometry: new THREE.BoxGeometry(0.25, 0.25, 0.25),
+        transparent: true,
+        interactive: true,
+        toggleable: true,
+        emitsPower: true,
+        powered: false,
+        soundGroup: 'stone',
+    },
     redstoneOre: {
         id: 73,
         name: 'redstone_ore',
@@ -518,6 +577,21 @@ export const blocks = {
         need_tool: true,
         geometry: geometryBlock,
         soundGroup: 'stone',
+    },
+    ice: {
+        id: 79,
+        name: 'ice',
+        type: 'block',
+        stackable: true,
+        hardness: 0.5,
+        material: new THREE.MeshLambertMaterial({ map: textures.ice, transparent: true, opacity: 0.95 }),
+        icon: 'images/block-icon/ice.png',
+        tool: TOOL_TYPES.PICKAXE,
+        need_tool: false,
+        geometry: geometryBlock,
+        transparent: true,
+        friction: 0.02,
+        soundGroup: 'glass',
     },
     cactus: {
         id: 81,
@@ -553,6 +627,51 @@ export const blocks = {
         connectable: true,
         soundGroup: 'wood',
     },
+    redstone_lamp: {
+        id: 123,
+        name: 'Redstone Lamp',
+        type: 'block',
+        stackable: true,
+        hardness: 0.3,
+        material: new THREE.MeshLambertMaterial({ map: textures.redstone_lamp_off }),
+        icon: 'images/block-icon/redstone_lamp.png',
+        tool: TOOL_TYPES.PICKAXE,
+        geometry: geometryBlock,
+        transparent: false,
+        toggleable: true,
+        receivesPower: true,
+        powered: false,
+        soundGroup: 'glass',
+    },
+    redstone_lamp_on: {
+        id: 124,
+        name: 'Redstone Lamp (On)',
+        type: 'block',
+        stackable: true,
+        hardness: 0.3,
+        material: new THREE.MeshLambertMaterial({ map: textures.redstone_lamp_on, emissive: 0xfff2a0, emissiveIntensity: 1.2 }),
+        icon: 'images/block-icon/redstone_lamp.png',
+        tool: TOOL_TYPES.PICKAXE,
+        geometry: geometryBlock,
+        transparent: false,
+        toggleable: true,
+        receivesPower: true,
+        powered: true,
+        soundGroup: 'glass',
+    },
+    oak_slab: {
+        id: 158,
+        name: 'oak_slab',
+        type: 'block',
+        stackable: true,
+        hardness: 2,
+        material: new THREE.MeshLambertMaterial({ map: textures.planks }),
+        icon: 'images/block-icon/oak_slab.png',
+        tool: TOOL_TYPES.AXE,
+        geometry: geometrySlab,
+        transparent: true,
+        soundGroup: 'wood',
+    },
     beef: {
         id: 273,
         name: 'Raw Beef',
@@ -567,6 +686,15 @@ export const blocks = {
         stackable: false,
         icon: 'images/block-icon/iron_pickaxe.webp',
         tool_type: TOOL_TYPES.PICKAXE,
+        tool_material: TOOL_MATERIALS.IRON
+    },
+    iron_axe: {
+        id: 315,
+        name: 'Iron axe',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/iron_axe.webp',
+        tool_type: TOOL_TYPES.AXE,
         tool_material: TOOL_MATERIALS.IRON
     },
     coal: {
@@ -704,6 +832,26 @@ export const blocks = {
         stackable: true,
         icon: 'images/block-icon/cactus_green.png',
     },
+    iron_furnace: {
+        id: 1061,
+        name: 'Iron Furnace',
+        type: 'block',
+        stackable: true,
+        hardness: 3.5,
+        material: [
+            new THREE.MeshLambertMaterial({ map: textures.iron_furnace_side }), // right
+            new THREE.MeshLambertMaterial({ map: textures.iron_furnace_side }), // left
+            new THREE.MeshLambertMaterial({ map: textures.iron_furnace_side }), // top
+            new THREE.MeshLambertMaterial({ map: textures.iron_furnace_side }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.iron_furnace_front }), // front
+            new THREE.MeshLambertMaterial({ map: textures.iron_furnace_side })  // back
+        ],
+        icon: 'images/block-icon/iron_furnace.webp',
+        interface: true,
+        tool: TOOL_TYPES.PICKAXE,
+        geometry: geometryBlock,
+        soundGroup: 'stone',
+    },
 };
 
 // Générer un index par ID
@@ -713,8 +861,9 @@ const blockById = Object.fromEntries(
 
 // Fonction pour récupérer un bloc par ID
 export function getBlockByIdFast(id) {
-    return blockById[id] || null; // Retourne null si l'ID n'existe pas
+    return blockById[id] || null;
 }
+
 
 export const resources = [
     blocks.coalOre,

@@ -229,6 +229,16 @@ export class Player {
         const selectedBlock = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
         const block = getBlockByIdFast(this.inventory.getSelectedItem()?.block);
 
+        // Lever: right-click toggles (simple redstone: powers adjacent lamps)
+        const selectedDef = getBlockByIdFast(selectedBlock.id);
+        if (selectedDef?.toggleable && selectedBlock.id === 69) {
+            console.log('action lever');
+            const didToggle = this.world.toggleLever(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
+            if (didToggle) {
+                this.audioManager.playBlockSound(selectedDef.soundGroup, 'click');
+            }
+            return;
+        }
         if (this.inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && block.type === 'block') {
             const direction = this.getPlacementDirection(this.selectedNormal);
             this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block, direction);
@@ -399,7 +409,6 @@ export class Player {
                     const blockMatrix = new THREE.Matrix4();
                     intersected.object.getMatrixAt(intersected.instanceId, blockMatrix);
 
-
                     // Récupère la position du chunk (grille globale)
                     this.selectedCoords = chunk.position.clone();
 
@@ -423,7 +432,6 @@ export class Player {
                     // Clone la normale pour ne pas modifier l'original
                     this.selectedNormal = intersected.face.normal.clone();
 
-
                     // Appliquer la rotation du bloc à la normale
                     this.selectedNormal.applyQuaternion(blockQuaternion).normalize();
 
@@ -433,20 +441,26 @@ export class Player {
                     const blockSelected = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z)
 
                     if (blockSelected && blockSelected.id !== blocks.empty.id) {
-
                         //adapater taille mesh au block highligt
                         let geometry = getBlockByIdFast(blockSelected.id).geometry;
                         geometry.computeBoundingBox(); // Assure que la bounding box est bien calculée
 
-                        let size = new THREE.Vector3();
-                        geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
+                        const size = new THREE.Vector3();
+                        geometry.boundingBox.getSize(size); // taille réelle de l’objet
+
+                        // Store for break overlay too
+                        this._selectionSize = size.clone();
+                        // If the geometry is centered like a full block (1 high), smaller blocks need a Y offset
+                        // Example: slab (0.5 high) => offsetY = (0.5 - 1) / 2 = -0.25
+                        this._selectionOffsetY = (size.y - 1) / 2;
+
                         this.selectionHelper.scale.set(size.x + 0.01, size.y + 0.01, size.z + 0.01);
 
                         this.selectedEntity = null;
                     }
-
-
+                    // Apply Y offset so the hover overlay matches half blocks (slabs, etc.)
                     this.selectionHelper.position.copy(this.selectedCoords);
+                    this.selectionHelper.position.y += (this._selectionOffsetY || 0);
                     this.selectionHelper.visible = true;
 
                 } else {
@@ -468,9 +482,16 @@ export class Player {
     }
 
     animateBlockBreaking(duration) {
+        // Match the hovered block size/offset (slabs, etc.)
+        const s = this._selectionSize;
+        if (s) {
+            this.selectionBreakHelper.scale.set(s.x + 0.01, s.y + 0.01, s.z + 0.01);
+        } else {
+            this.selectionBreakHelper.scale.set(1.01, 1.01, 1.01);
+        }
 
         this.selectionBreakHelper.position.copy(this.selectedCoords);
-        //console.log(this.selectionBreakHelper);
+        this.selectionBreakHelper.position.y += (this._selectionOffsetY || 0);
         this.selectionBreakHelper.visible = true;
 
         const steps = 6; // Nombre d'étapes dans la grille de "cassure"

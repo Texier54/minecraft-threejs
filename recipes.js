@@ -91,6 +91,17 @@ export const RecipesList = {
             quantity: 1,
         },
     },
+    iron_axe: {
+        pattern: [
+            [blocks.iron_ingot.id, blocks.iron_ingot.id, null],
+            [blocks.iron_ingot.id, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: {
+            id: blocks.iron_axe.id,
+            quantity: 1,
+        },
+    },
     gold_pickaxe: {
         pattern: [
             [blocks.gold_ingot.id, blocks.gold_ingot.id, blocks.gold_ingot.id],
@@ -242,6 +253,50 @@ export const RecipesList = {
         ],
         output: {
             id: blocks.bucket.id,
+            quantity: 1,
+        },
+    },
+    smooth_stone_slab: {
+        pattern: [
+            [null, null, null],
+            [null, null, null],
+            [blocks.stone.id, blocks.stone.id, blocks.stone.id],
+        ],
+        output: {
+            id: blocks.smooth_stone_slab.id,
+            quantity: 6,
+        },
+    },
+    oak_slab: {
+        pattern: [
+            [null, null, null],
+            [null, null, null],
+            [blocks.planks.id, blocks.planks.id, blocks.planks.id],
+        ],
+        output: {
+            id: blocks.oak_slab.id,
+            quantity: 6,
+        },
+    },
+    ladder: {
+        pattern: [
+            [blocks.stick.id, null, blocks.stick.id],
+            [blocks.stick.id, blocks.stick.id, blocks.stick.id],
+            [blocks.stick.id, null, blocks.planks.id],
+        ],
+        output: {
+            id: blocks.ladder.id,
+            quantity: 3,
+        },
+    },
+    iron_furnace: {
+        pattern: [
+            [blocks.iron_ingot.id, blocks.iron_ingot.id, blocks.iron_ingot.id],
+            [blocks.iron_ingot.id, null, blocks.iron_ingot.id],
+            [blocks.iron_ingot.id, blocks.iron_ingot.id, blocks.iron_ingot.id],
+        ],
+        output: {
+            id: blocks.iron_furnace.id,
             quantity: 1,
         },
     }

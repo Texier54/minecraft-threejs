@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { blocks } from '../block.js';
+import { blocks, getBlockByIdFast } from '../block.js';
 
 const collisionMaterial = new THREE.MeshBasicMaterial({
     color: 0xff0000,
@@ -44,9 +44,81 @@ export class Physics {
             if (player._cactusDamageCooldown === undefined) player._cactusDamageCooldown = 0;
             if (player._cactusDamageCooldown > 0) player._cactusDamageCooldown = Math.max(0, player._cactusDamageCooldown - this.timestep);
 
+            // --- Ice sliding (Minecraft-ish) ---
+            // Detect what block is under the player's feet before we apply inputs.
+            // We use this to change movement feel on slippery surfaces like ice.
+            const feetX0 = Math.floor(player.position.x);
+            const feetY0 = Math.floor(player.position.y - player.height);
+            const feetZ0 = Math.floor(player.position.z);
+            const feetBlock0 = world.getBlock(feetX0, feetY0, feetZ0);
+            const feetDef0 = feetBlock0 ? getBlockByIdFast(feetBlock0.id) : null;
+
+            const isIceUnderFoot = !!(feetDef0 && (feetDef0.id === blocks.ice.id || (typeof feetDef0.friction === 'number' && feetDef0.friction <= 0.03)));
+
+            // init slide state
+            if (player._slideVel === undefined) player._slideVel = new THREE.Vector3(0, 0, 0); // x=right, z=forward in camera space
+
+            // If we're on ice, reduce the direct movement input so the inertia system can drive the motion.
+            let _savedInputXZ = null;
+            if (isIceUnderFoot && player.input) {
+                _savedInputXZ = { x: player.input.x, z: player.input.z };
+                player.input.x *= 0.25;
+                player.input.z *= 0.25;
+            }
+
             const prevY = player.position.y;
 
             player.applyInputs(this.timestep);
+            // Restore input values after temporary scaling
+            if (_savedInputXZ && player.input) {
+                player.input.x = _savedInputXZ.x;
+                player.input.z = _savedInputXZ.z;
+            }
+
+            // Apply ice sliding after base movement. We operate in camera space (right/forward).
+            if (isIceUnderFoot && !player.inWater && !player.onLadder && (!player.riding)) {
+                // Desired motion from input (already in your code: input.x = strafe, input.z = forward)
+                const desired = new THREE.Vector3(player.input?.x || 0, 0, player.input?.z || 0);
+
+                // Parameters: tweak to taste
+                const accel = 18;           // how fast you gain speed on ice
+                const maxSpeed = 6.5;        // cap horizontal speed from sliding
+                const friction = 0.06;       // ice friction (lower = more glide)
+
+                // Accelerate slide velocity toward desired
+                if (desired.lengthSq() > 1e-6) {
+                    // Clamp desired to maxSpeed
+                    if (desired.length() > maxSpeed) desired.setLength(maxSpeed);
+                    // Smooth accel toward desired
+                    const lerpT = 1 - Math.exp(-accel * this.timestep);
+                    player._slideVel.lerp(desired, lerpT);
+                } else {
+                    // No input: apply friction decay
+                    const decay = Math.pow(1 - friction, this.timestep * 60);
+                    player._slideVel.multiplyScalar(decay);
+                    if (player._slideVel.lengthSq() < 1e-4) player._slideVel.set(0, 0, 0);
+                }
+
+                // Move the player in world space based on camera orientation
+                const forward = new THREE.Vector3();
+                player.camera.getWorldDirection(forward);
+                forward.y = 0;
+                if (forward.lengthSq() > 1e-6) forward.normalize();
+                const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+                // slideVel.x is "right", slideVel.z is "forward"
+                const dx = right.multiplyScalar(player._slideVel.x * this.timestep);
+                const dz = forward.multiplyScalar(player._slideVel.z * this.timestep);
+                player.position.add(dx).add(dz);
+            } else {
+                // Not on ice: clear slide velocity gradually so it doesn't persist
+                if (player._slideVel) {
+                    player._slideVel.multiplyScalar(0.5);
+                    if (player._slideVel.lengthSq() < 1e-4) player._slideVel.set(0, 0, 0);
+                }
+            }
+            // Reset per-step ladder flag
+            player.onLadder = false;
 
             // Apply gravity/drag now that player.inWater is known
             if((!player.usePointerLock || player.controls.isLocked) && world.isload(player.position.x, player.position.y, player.position.z)) {
@@ -56,16 +128,19 @@ export class Physics {
                 const swimUp = !!(player.input?.jump || player.inputJump || player.jumpPressed);
 
                 if (inWater) {
-                    // Reduced gravity + vertical drag (buoyancy feel)
-                    player.velocity.y -= (this.gravity * this.gravityWaterFactor) * this.timestep;
-                    player.velocity.y *= this.waterVerticalDrag;
-
+                    if (!player.onLadder) {
+                        // Reduced gravity + vertical drag (buoyancy feel)
+                        player.velocity.y -= (this.gravity * this.gravityWaterFactor) * this.timestep;
+                        player.velocity.y *= this.waterVerticalDrag;
+                    }
                     if (swimUp) {
                         // Move upward while holding jump in water
                         player.velocity.y = Math.max(player.velocity.y, this.swimUpSpeed);
                     }
                 } else {
-                    player.velocity.y -= this.gravity * this.timestep;
+                    if (!player.onLadder) {
+                        player.velocity.y -= this.gravity * this.timestep;
+                    }
                 }
             }
 
@@ -151,16 +226,27 @@ export class Physics {
                 for (let z = minZ; z <= maxZ; z++) {
                     const blockId = world.getBlock(x, y, z)?.id;
                     if (blockId && blockId !== blocks.empty.id && blockId !== blocks.water.id) {
+                        // Ignore non-solid decorative blocks, except climbables like ladders
+                        const def = getBlockByIdFast(blockId);
+                        if (def?.nonSolid && !def?.climbable) {
+                            continue;
+                        }
                         let size = {};
                         let hasStep = false;
                         if (blockId == 53 || blockId == 67) {
                             size = { x: 1, y: 1, z: 1 };
                             hasStep = true; // Ajout d'une propriété pour détecter les escaliers
                         }
-                        else if (blockId == 50)
+                        else if (blockId == 44) {
+                            // slab: half-height collision
+                            size = { x: 1, y: 0.5, z: 1 };
+                        }
+                        else if (blockId == 50) {
                             size = { x: 0.1, y: 0.1 };
-                        else
+                        }
+                        else {
                             size = { x: 1, y: 1, z: 1 };
+                        }
                         const block = { id: blockId, x, y, z,  size: size, hasStep: hasStep };
                         candidates.push(block);
                         //this.addCollisionHelper(block);
@@ -200,6 +286,25 @@ export class Physics {
             const dz = closestPoint.z - player.position.z;
 
             if (this.pointInPlayerBoundingCylinder(closestPoint, player)) {
+                // Ladder climbing: touching a ladder enables vertical movement
+                const ladderId = (blocks.ladder && blocks.ladder.id) ? blocks.ladder.id : 65;
+                if (block.id === ladderId) {
+                    player.onLadder = true;
+
+                    // If the player is pushing into the ladder (forward/back) or holding jump, climb up.
+                    const wantsClimb = Math.abs(player.input?.z || 0) > 0.01 || !!(player.input?.jump || player.inputJump || player.jumpPressed);
+
+                    if (wantsClimb) {
+                        // Climb up at a steady speed
+                        player.velocity.y = Math.max(player.velocity.y, 5);
+                    } else {
+                        // Stick to ladder: slow down falling
+                        if (player.velocity.y < -2) player.velocity.y = -2;
+                    }
+
+                    // Do not treat ladder as a solid collision
+                    continue;
+                }
                 // Cactus damage: apply on contact, but rate-limited by a cooldown
                 const cactusId = (blocks.cactus && blocks.cactus.id) ? blocks.cactus.id : 81;
                 if (block.id === cactusId) {

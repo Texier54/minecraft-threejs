@@ -228,4 +228,22 @@ export class ClientWorld extends THREE.Group {
         return this.children;
     }
 
+    /**
+     * Force refresh of a single block instance (used for powered state visuals).
+     * Removes and re-adds the instanced mesh for that block.
+     */
+    refreshBlockVisual(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+        if (!chunk) return;
+
+        // Best effort: if chunk exposes instance helpers, use them.
+        if (typeof chunk.deleteBlockInstance === 'function') {
+            chunk.deleteBlockInstance(coords.block.x, coords.block.y, coords.block.z);
+        }
+        if (typeof chunk.addBlockInstance === 'function') {
+            chunk.addBlockInstance(coords.block.x, coords.block.y, coords.block.z);
+        }
+    }
+
 }

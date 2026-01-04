@@ -5,6 +5,7 @@ export const soundGroups = {
         step: 'stone_step',
         hit: 'stone_hit',
         fall: 'stone_fall',
+        click: 'click',
     },
     grass: {
         break: ['grass_1','grass_2','grass_3','grass_4'],
@@ -115,6 +116,7 @@ const sources = {
     hit1 : 'audio/damage/hit1.ogg',
     hit2 : 'audio/damage/hit2.ogg',
     hit3 : 'audio/damage/hit3.ogg',
+    click : 'audio/click.ogg',
 }
 
 export class AudioManager {
