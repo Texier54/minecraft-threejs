@@ -171,29 +171,3 @@ window.addEventListener('resize', () => {
     player.camera.updateProjectionMatrix();
 
 });
-
-// Mobile (iOS/Android): prevent scroll/pinch-zoom WITHOUT breaking multi-touch (move + look)
-const el = renderer.domElement;
-el.style.touchAction = 'none';
-
-const mobileControls = document.getElementById('mobile-controls');
-if (mobileControls) mobileControls.style.touchAction = 'none';
-
-// IMPORTANT: On iOS (Chrome = WebKit), multi-touch can break if you rely on document-level blockers.
-// Block defaults only on the game surfaces (canvas + controls), and block iOS gesture events globally.
-const prevent = (e) => e.preventDefault();
-
-// Block pan/scroll on canvas
-el.addEventListener('touchstart', prevent, { passive: false });
-el.addEventListener('touchmove', prevent, { passive: false });
-
-// Block pan/scroll on mobile controls (so starting on a button doesn't trigger a page gesture)
-if (mobileControls) {
-    mobileControls.addEventListener('touchstart', prevent, { passive: false });
-    mobileControls.addEventListener('touchmove', prevent, { passive: false });
-}
-
-// iOS pinch events (not covered reliably by touch-action)
-window.addEventListener('gesturestart', prevent, { passive: false });
-window.addEventListener('gesturechange', prevent, { passive: false });
-window.addEventListener('gestureend', prevent, { passive: false });
