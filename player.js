@@ -4,8 +4,8 @@ import { TouchControls } from './touchControls.js';
 import {blocks, getBlockByIdFast} from "./block.js";
 import { AudioManager } from "./AudioManager.js"
 import {BoatEntity} from "./entity/BoatEntity.js";
-import {DoorEntity} from "./entity/DoorEntity.js";
 import { Health } from './player/health.js';
+import { useItemOnBlock } from "./player/interaction.js";
 
 export class Player {
 
@@ -226,21 +226,37 @@ export class Player {
         if (this.selectedCoords === null)
             return;
 
+        const item = this.inventory.getSelectedItem();
+        if (!item) return;
+
+        const direction = this.getPlacementDirection(this.selectedNormal);
+
+        const used = useItemOnBlock(
+            this.world,
+            this,
+            item.block,
+            this.selectedCoords.x,
+            this.selectedCoords.y,
+            this.selectedCoords.z,
+            direction,
+            this.scene
+        );
+
+        if (used) {
+            this.socket.getSocket()?.emit("useItem", {
+                itemId: item.block,
+                x: this.selectedCoords.x,
+                y: this.selectedCoords.y,
+                z: this.selectedCoords.z,
+                direction
+            });
+            return;
+        }
+
         const selectedBlock = this.world.getBlock(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
         const block = getBlockByIdFast(this.inventory.getSelectedItem()?.block);
 
-        // Lever: right-click toggles (simple redstone: powers adjacent lamps)
-        const selectedDef = getBlockByIdFast(selectedBlock.id);
-        if (selectedDef?.toggleable && selectedBlock.id === 69) {
-            console.log('action lever');
-            const didToggle = this.world.toggleLever(this.selectedCoords.x, this.selectedCoords.y, this.selectedCoords.z);
-            if (didToggle) {
-                this.audioManager.playBlockSound(selectedDef.soundGroup, 'click');
-            }
-            return;
-        }
         if (this.inventory.getSelectedItem()?.block !== undefined && getBlockByIdFast(selectedBlock.id).interface !== true && block.type === 'block') {
-            const direction = this.getPlacementDirection(this.selectedNormal);
             this.world.addBlock(this.selectedCoordsNormal.x, this.selectedCoordsNormal.y, this.selectedCoordsNormal.z, this.inventory.getSelectedItem().block, direction);
             this.inventory.removeBlock(this.inventory.getSelectedItem().block);
 
@@ -256,17 +272,6 @@ export class Player {
         } else if (getBlockByIdFast(selectedBlock.id).interface === true) {
             this.ui.open(selectedBlock.id);
             this.audioManager.playBlockSound(getBlockByIdFast(selectedBlock.id).soundGroup, 'open');
-        } else if (this.inventory.getSelectedItem()?.block == 375) {
-            //BATEAU
-            const boat = new BoatEntity(this.world, new THREE.Vector3(this.selectedCoords.x, this.selectedCoords.y + 1, this.selectedCoords.z));
-            boat.addToScene(this.scene);
-            this.world.addEntity(boat);
-        } else if (this.inventory.getSelectedItem()?.block == 64) {
-            //Porte
-            this.audioManager.playBlockSound(block.soundGroup, 'place');
-            const door = new DoorEntity(this.world, new THREE.Vector3(this.selectedCoords.x, this.selectedCoords.y + 1, this.selectedCoords.z));
-            door.addToScene(this.scene);
-            this.world.addEntity(door);
         }
 
     }

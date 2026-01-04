@@ -47,6 +47,17 @@ export const RecipesList = {
             quantity: 1,
         },
     },
+    wooden_hoe: {
+        pattern: [
+            [blocks.planks.id, blocks.planks.id, null],
+            [null, blocks.stick.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: {
+            id: blocks.wooden_hoe.id,
+            quantity: 1,
+        },
+    },
     stone_pickaxe: {
         pattern: [
             [blocks.cobblestone.id, blocks.cobblestone.id, blocks.cobblestone.id],

@@ -4,6 +4,7 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 const textureLoader = new THREE.TextureLoader();
 const geometryBlock = new THREE.BoxGeometry(1, 1, 1);
 const geometryCactus = new THREE.BoxGeometry(0.85, 1, 0.85);
+const geometryFarmland = new THREE.BoxGeometry(1, 0.95, 1);
 const geometryTorch = new THREE.BoxGeometry(0.12, 0.7, 0.12)
 
 // Slab: half-height block
@@ -77,13 +78,15 @@ const textures = {
     ladder: loadTexture('images/ladder.png'),
     iron_furnace_front: loadTexture('images/mod/iron_furnace_front_off.png'),
     iron_furnace_side: loadTexture('images/mod/iron_furnace_top.png'),
+    farmland: loadTexture('images/farmland.png'),
 };
 
 const TOOL_TYPES = {
     PICKAXE: "pickaxe",
     AXE: "axe",
     SHOVEL: "shovel",
-    HAND: "hand"
+    HOE: "hoe",
+    HAND: "hand",
 };
 
 
@@ -469,6 +472,26 @@ export const blocks = {
         geometry: geometryBlock,
         soundGroup: 'wood',
     },
+    farmland: {
+        id: 60,
+        name: 'Farmland',
+        type: 'block',
+        stackable: true,
+        hardness: 0.6,
+        material: [
+            new THREE.MeshLambertMaterial({ map: textures.dirt }), // right
+            new THREE.MeshLambertMaterial({ map: textures.dirt }), // left
+            new THREE.MeshLambertMaterial({ map: textures.farmland }), // top
+            new THREE.MeshLambertMaterial({ map: textures.dirt }), // bottom
+            new THREE.MeshLambertMaterial({ map: textures.dirt }), // front
+            new THREE.MeshLambertMaterial({ map: textures.dirt })  // back
+        ],
+        icon: 'images/block-icon/dirt.webp',
+        tool: TOOL_TYPES.SHOVEL,
+        need_tool: false,
+        geometry: geometryFarmland,
+        soundGroup: 'grass',
+    },
     furnace: {
         id: 61,
         name: 'Furnace',
@@ -803,6 +826,15 @@ export const blocks = {
         icon: 'images/block-icon/golden_pickaxe.png',
         tool_type: TOOL_TYPES.PICKAXE,
         tool_material: TOOL_MATERIALS.GOLD
+    },
+    wooden_hoe: {
+        id: 329,
+        name: 'Wooden Hoe',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/wooden_hoe.png',
+        tool_type: TOOL_TYPES.HOE,
+        tool_material: TOOL_MATERIALS.WOOD
     },
     bucket: {
         id: 360,
