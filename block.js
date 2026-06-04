@@ -88,6 +88,7 @@ const TOOL_TYPES = {
     SHOVEL: "shovel",
     HOE: "hoe",
     HAND: "hand",
+    SWORD: "sword",
 };
 
 
@@ -752,6 +753,15 @@ export const blocks = {
         stackable: false,
         icon: 'images/block-icon/iron_pickaxe.webp',
         tool_type: TOOL_TYPES.PICKAXE,
+        tool_material: TOOL_MATERIALS.IRON
+    },
+    iron_sword: {
+        id: 307,
+        name: 'Iron Sword',
+        type: 'item',
+        stackable: false,
+        icon: 'images/block-icon/iron_sword.png',
+        tool_type: TOOL_TYPES.SWORD,
         tool_material: TOOL_MATERIALS.IRON
     },
     iron_axe: {

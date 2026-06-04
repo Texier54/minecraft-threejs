@@ -310,6 +310,17 @@ export const RecipesList = {
             id: blocks.iron_furnace.id,
             quantity: 1,
         },
+    },
+    iron_sword: {
+        pattern: [
+            [null, blocks.iron_ingot.id, null],
+            [null, blocks.iron_ingot.id, null],
+            [null, blocks.stick.id, null],
+        ],
+        output: {
+            id: blocks.iron_sword.id,
+            quantity: 1,
+        },
     }
 }
 
