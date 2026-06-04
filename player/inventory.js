@@ -277,11 +277,16 @@ export class Inventory {
             fill.classList.add('fp-arrow-fill');
 
             arrow.appendChild(fill);
-            wrap.appendChild(flame);
-            wrap.appendChild(arrow);
+            const flameBox = document.createElement('div');
 
-            // Put it in the output panel so it shows next to the result slot
-            this.inventoryOutput.appendChild(wrap);
+            flameBox.classList.add('fp-flame-box');
+            flameBox.appendChild(flame);
+            arrow.appendChild(fill);
+            wrap.appendChild(flameBox);
+            wrap.appendChild(arrow);
+            this.inventoryOutput.insertBefore(wrap, this.inventoryOutput.firstChild);
+
+            this.inventoryOutput.classList.add('furnace-output');
         }
 
         //si pas d'ouput on affiche pas

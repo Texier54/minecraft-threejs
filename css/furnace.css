@@ -1,8 +1,8 @@
 .furnace-progress {
     display: grid;
-    grid-template-columns: 22px 1fr;
+    grid-template-columns: 28px 42px;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 8px;
     user-select: none;
 }
@@ -19,7 +19,9 @@
 .furnace-progress .fp-flame {
     width: 22px;
     height: 22px;
-    position: relative;
+    position: absolute;
+    left: 0;
+    bottom: 0;
     overflow: hidden;
 }
 .furnace-progress .fp-flame::before {
@@ -48,10 +50,10 @@
 
 /* Arrow (horizontal) */
 .furnace-progress .fp-arrow {
-    height: 14px;
-    width: 150px;
     position: relative;
     overflow: hidden;
+    width: 38px;
+    height: 24px;
 }
 .furnace-progress .fp-arrow::before {
     content: '';
@@ -91,4 +93,15 @@
             78% 75%,
             0 75%
     );
+}
+#output.furnace-output {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+.furnace-progress .fp-flame-box {
+    width: 28px;
+    height: 50px;
+    position: relative;
 }
