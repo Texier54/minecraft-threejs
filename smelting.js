@@ -7,6 +7,7 @@ export const SmeltingList = {
     12: { id: 20,  quantity: 1 }, // sand -> glass
     4:  { id: 3,   quantity: 1 }, // cobblestone -> stone
     81:  { id: 397,   quantity: 1 }, // cobblestone -> stone
+    262:  { id: 263,   quantity: 1 }, // raw porkchop -> cooked porkchop
 };
 
 export class Smelting {

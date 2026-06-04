@@ -724,6 +724,13 @@ export const blocks = {
         stackable: true,
         icon: 'images/block-icon/raw_porkchop.png',
     },
+    cooked_porkchop: {
+        id: 263,
+        name: 'Cooked Porkchop',
+        type: 'item',
+        stackable: true,
+        icon: 'images/block-icon/cooked_porkchop.png',
+    },
     beef: {
         id: 273,
         name: 'Raw Beef',
