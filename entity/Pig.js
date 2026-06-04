@@ -17,7 +17,7 @@ export class Pig extends Entity {
     stuckTime = 60;      // seconds being nearly stationary
     lastPos = new THREE.Vector3();
 
-    health = 10;
+    health = 1;
     drops = [
         { block: blocks.porkchop.id, min: 1, max: 1 }
     ];

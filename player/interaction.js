@@ -65,5 +65,12 @@ export function useItemOnBlock(world, player, itemId, x, y, z, direction, scene,
         return true;
     }
 
+    // FOOD
+    if (itemDef.id == 263) {
+        inventory.removeBlock(itemDef.id);
+        player.health.add(4);
+        return true;
+    }
+
     return false;
 }
