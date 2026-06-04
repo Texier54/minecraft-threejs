@@ -2,11 +2,15 @@ import * as THREE from 'three';
 
 import {mobs} from "./mobs.js";
 import {Entity} from "./Entity.js";
+import {blocks} from "../block.js";
 
 export class Cow extends Entity {
 
     mesh = new THREE.Group();
     health = 10;
+    drops = [
+        { block: blocks.beef.id, min: 1, max: 1 }
+    ];
 
     constructor(world, position) {
         super(world, position);
@@ -72,7 +76,7 @@ export class Cow extends Entity {
         return new THREE.Vector3(x, 75, z); // Y reste 0 si le sol est plat
     }
 
-    hit() {
+    hit(player) {
         console.log('hit cow');
         this.hitTime = 0.3; // seconds
         this.runTime = 3; // seconds
@@ -86,10 +90,7 @@ export class Cow extends Entity {
         this.target = this.getRandomTarget(); // Nouvelle cible aléatoire
         this.audioManager.playBlockSound('cow', 'hurt');
 
-        this.health -= 0.5;
-        if (this.health <= 0) {
-            this.world.removeEntity(this);
-        }
+        super.hit(player);
     }
 
     update(deltaTime) {

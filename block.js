@@ -717,12 +717,19 @@ export const blocks = {
         transparent: true,
         soundGroup: 'wood',
     },
+    porkchop: {
+        id: 262,
+        name: 'Raw Porkchop',
+        type: 'item',
+        stackable: true,
+        icon: 'images/block-icon/raw_porkchop.png',
+    },
     beef: {
         id: 273,
         name: 'Raw Beef',
         type: 'item',
-        stackable: false,
-        icon: 'images/block-icon/beef.webp',
+        stackable: true,
+        icon: 'images/block-icon/beef.png',
     },
     wheat_seeds: {
         id: 291,

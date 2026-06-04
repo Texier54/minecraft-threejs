@@ -34,7 +34,22 @@ export class Entity {
         console.log('Default action');
     }
 
-    hit() {
-        console.log('Default hit');
+    hit(player) {
+        this.health -= 0.5;
+        if (this.health <= 0) {
+            this.dropLoot(player);
+            this.world.removeEntity(this);
+        }
+    }
+    dropLoot(player) {
+        if (!this.drops) return;
+        for (const drop of this.drops) {
+            const qty = Math.floor(
+                Math.random() * (drop.max - drop.min + 1)
+            ) + drop.min;
+            for (let i = 0; i < qty; i++) {
+                player.inventory.addBlock(drop.block);
+            }
+        }
     }
 }

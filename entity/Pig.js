@@ -18,6 +18,9 @@ export class Pig extends Entity {
     lastPos = new THREE.Vector3();
 
     health = 10;
+    drops = [
+        { block: blocks.porkchop.id, min: 1, max: 1 }
+    ];
 
     constructor(world, position) {
         super(world, position);
@@ -92,7 +95,7 @@ export class Pig extends Entity {
         return new THREE.Vector3(x, y, z);
     }
 
-    hit() {
+    hit(player) {
         console.log('hit pig');
         this.hitTime = 0.3; // seconds
         this.runTime = 3; // seconds
@@ -109,11 +112,7 @@ export class Pig extends Entity {
         this.path = [];
         this.pathIndex = 0;
 
-        this.health -= 0.5;
-        if (this.health <= 0) {
-            this.world.removeEntity(this);
-        }
-
+        super.hit(player);
     }
 
     update(deltaTime) {
