@@ -320,11 +320,15 @@ export class BaseWorld {
 
     removeEntity(entity) {
         const idx = this.entities.indexOf(entity);
-        if (idx !== -1) {
-            this.entities.splice(idx, 1);
-            return true;
+        if (idx === -1) return false;
+
+        this.entities.splice(idx, 1);
+
+        if (entity.mesh?.parent) {
+            entity.mesh.parent.remove(entity.mesh);
         }
-        return false;
+
+        return true;
     }
 
     updateEntities(dt) {
