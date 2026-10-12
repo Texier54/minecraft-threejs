@@ -6,6 +6,7 @@ import { AudioManager } from "./AudioManager.js"
 import {BoatEntity} from "./entity/BoatEntity.js";
 import { Health } from './player/health.js';
 import { useItemOnBlock } from "./player/interaction.js";
+import { findSpawnPosition } from './player/spawn.js';
 
 export class Player {
 
@@ -106,8 +107,9 @@ export class Player {
 
         this.socket = socket;
 
-        //this.player.position.set(0, 5, 0);
-        this.position.set(10, 60, 10);
+        this.position.set(10, 0, 10);
+        this.spawnPending = true;
+        this.spawnRetryTime = 0;
         scene.add(this.camera);
 
         this.scene = scene;
@@ -569,6 +571,41 @@ export class Player {
         this.velocity.add(dv);
     }
 
+    trySpawn(dt) {
+        if (!this.spawnPending) return true;
+        this.spawnRetryTime -= dt;
+        if (this.spawnRetryTime > 0) return false;
+        this.spawnRetryTime = 0.25;
+        const spawn = findSpawnPosition(this.world, this.position, {
+            height: this.height, radius: this.radius,
+            searchRadius: Math.min(32, Math.max(8, this.world.chunkSize.width * this.world.drawDistance - 2))
+        });
+        if (!spawn) return false;
+        this.position.set(spawn.x, spawn.y, spawn.z);
+        this.velocity.set(0, 0, 0);
+        this.externalVelocity.set(0, 0, 0);
+        this.fallDistance = 0;
+        this._wasOnGround = true;
+        this.onGround = true;
+        this.spawnPending = false;
+        return true;
+    }
+
+    applyExternalVelocity(dt) {
+        if (this.riding) {
+            this.externalVelocity.set(0, 0, 0);
+            return;
+        }
+        // Intégrer un recul amorti dans les axes du monde, pas ceux de la caméra.
+        const damping = 8;
+        const decay = Math.exp(-damping * dt);
+        this.position.addScaledVector(this.externalVelocity, (1 - decay) / damping);
+        this.externalVelocity.multiplyScalar(decay);
+        if (this.externalVelocity.lengthSq() < 0.0001) {
+            this.externalVelocity.set(0, 0, 0);
+        }
+    }
+
     applyInputs(dt) {
         if (!this.usePointerLock || this.controls.isLocked) {
             const currentBlock = this.world.getBlock(
@@ -584,9 +621,10 @@ export class Player {
                 this.velocity.x *= 0.4;
                 this.velocity.z *= 0.4;
             }
-            this.controls.moveRight((this.velocity.x + this.externalVelocity.x) * dt);
-            this.controls.moveForward((this.velocity.z + this.externalVelocity.z) * dt);
-            this.position.y += (this.velocity.y + + this.externalVelocity.y) * dt;
+            this.controls.moveRight(this.velocity.x * dt);
+            this.controls.moveForward(this.velocity.z * dt);
+            this.position.y += this.velocity.y * dt;
+            this.applyExternalVelocity(dt);
 
             let biome = this.world.getPlayerBiome(Math.floor(this.position.x), Math.floor(this.position.z));
             document.getElementById('player-position').innerHTML = this.toString() + ' - ' + biome;
@@ -674,6 +712,7 @@ export class Player {
             const retrievedData = await getData();
             //console.log('Données récupérées :', retrievedData);
             this.position.set(retrievedData.x, retrievedData.y, retrievedData.z);
+            this.spawnPending = false;
         })();
     }
 

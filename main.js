@@ -132,12 +132,15 @@ function animate() {
 
     let dt = (now - prevTimeNew)/1000;
 
-    physics.update(dt, player, world);
     world.update(player);
-    player.update(world);
+    const spawned = player.trySpawn(deltaTime);
+    if (spawned) {
+        physics.update(deltaTime, player, world);
+        player.update(world);
+    }
     inventory.update(dt);
     prevTimeNew = now;
-    world.updateEntities(dt);
+    if (spawned) world.updateEntities(deltaTime);
     //pig.movePig(deltaTime); // Déplacer le cochon
 
     const online = client.getSocket()?.connected;
@@ -161,7 +164,7 @@ function animate() {
     sun.update(deltaTime1);
 
     updateWater(now / 1000);
-    renderer.render(scene, player.camera);
+    if (spawned) renderer.render(scene, player.camera);
     requestAnimationFrame(animate);
 
 
