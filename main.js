@@ -49,7 +49,7 @@ const menu = new Menu(world, player, inventory, client, chat);
 const ui = new UI(player, inventory);
 const sun = new Sun(scene, player,0.20);
 
-const pig = new Pig(world, new THREE.Vector3(10,45,10));
+const pig = new Pig(world, new THREE.Vector3(12,36,10));
 pig.addToScene(scene);
 world.addEntity(pig);
 

@@ -68,10 +68,13 @@ export const soundGroups = {
         fall: 'slime_fall',
     },
     pig: {
-        hurt: 'pig_hurt'
+        hurt: 'pig_hurt',
+        death: 'pig_death'
     },
     cow: {
-        hurt: ['cow_hurt_1','cow_hurt_2','cow_hurt_3']
+        hurt: ['cow_hurt_1','cow_hurt_2','cow_hurt_3'],
+        // Réutiliser les sons de blessure en attendant un son de mort dédié.
+        death: ['cow_hurt_1','cow_hurt_2','cow_hurt_3']
     },
     player: {
         hurt: ['classic_hurt','classic_hurt2'],
@@ -102,6 +105,7 @@ const sources = {
     glass_place : 'audio/glass1.ogg',
     glass_break : 'audio/glass1.ogg',
     pig_hurt : 'audio/pig/pighurt1.ogg',
+    pig_death : 'audio/pig/pigdeath.ogg',
     cow_hurt_1 : 'audio/cow/cowhurt1.ogg',
     cow_hurt_2 : 'audio/cow/cowhurt2.ogg',
     cow_hurt_3 : 'audio/cow/cowhurt3.ogg',
