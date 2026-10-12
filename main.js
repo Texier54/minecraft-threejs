@@ -6,6 +6,7 @@ import { ClientWorld } from './world/ClientWorld.js';
 import {blocks, getBlockByIdFast} from "./block.js";
 import {Pig} from "./entity/Pig.js";
 import {Cow} from "./entity/Cow.js";
+import {Zombie} from "./entity/Zombie.js";
 import {Physics} from "./player/physics.js";
 import {Inventory} from "./player/inventory.js";
 import {Menu} from "./menu.js";
@@ -57,6 +58,10 @@ world.addEntity(pig);
 const cow = new Cow(world, new THREE.Vector3(10,36,10));
 cow.addToScene(scene);
 world.addEntity(cow);
+
+const zombie = new Zombie(world, new THREE.Vector3(18, 36, 10), player);
+zombie.addToScene(scene);
+world.addEntity(zombie);
 
 player.setInventory(inventory);
 player.setUI(ui);

@@ -76,6 +76,11 @@ export const soundGroups = {
         // Réutiliser les sons de blessure en attendant un son de mort dédié.
         death: ['cow_hurt_1','cow_hurt_2','cow_hurt_3']
     },
+    // Sons de dégâts existants en attendant des grognements dédiés.
+    zombie: {
+        hurt: ['zombie_hurt_1', 'zombie_hurt_2'],
+        death: 'zombie_hurt_3'
+    },
     player: {
         hurt: ['classic_hurt','classic_hurt2'],
         fall: ['fall_big', 'fall_small'],
@@ -104,6 +109,9 @@ const sources = {
     gravel_break : 'audio/gravel1.ogg',
     glass_place : 'audio/glass1.ogg',
     glass_break : 'audio/glass1.ogg',
+    zombie_hurt_1 : 'audio/damage/hurtflesh1.ogg',
+    zombie_hurt_2 : 'audio/damage/hurtflesh2.ogg',
+    zombie_hurt_3 : 'audio/damage/hurtflesh3.ogg',
     pig_hurt : 'audio/pig/pighurt1.ogg',
     pig_death : 'audio/pig/pigdeath.ogg',
     cow_hurt_1 : 'audio/cow/cowhurt1.ogg',
