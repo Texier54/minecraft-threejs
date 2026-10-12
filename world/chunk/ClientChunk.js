@@ -202,7 +202,7 @@ export class ClientChunk extends THREE.Group {
                 const mesh = new THREE.InstancedMesh(blockType.geometry, blockType.material, maxBlock);
                 mesh.name = blockType.id;
                 mesh.count = 0;
-                mesh.castShadow = true;
+                mesh.castShadow = blockType.id !== blocks.water.id;
                 mesh.receiveShadow = true;
                 meshes[blockType.id] = mesh;
             });
@@ -283,7 +283,7 @@ export class ClientChunk extends THREE.Group {
 
         //si c'est un block d'eau
         if (this.getBlock(x, y, z).id === 9) {
-            if (upBlock.id === 9)
+            if (upBlock?.id === 9)
                 return true;
         }
 

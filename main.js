@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { updateWater } from './world/waterMaterial.js';
 
 import { Player } from './player.js';
 import { ClientWorld } from './world/ClientWorld.js';
@@ -81,18 +82,22 @@ window.addEventListener('keydown', (event) => {
 });
 
 window.addEventListener('keydown', (event) => {
-    if (event.code === 'KeyF') {
-        world.entities.forEach(entity => {
-            const dist = player.position.distanceTo(entity.position);
-            if (dist < 5 && !player.riding) {
-                player.riding = entity;
-                entity.driver = player; // sera conditionnel dans la logique réelle
-            } else if (player.riding) {
-                player.riding.driver = null;
-                player.riding = null;
-            }
-        });
+    if (event.code !== 'KeyF' || event.repeat || !player.controls.isLocked) return;
+    if (player.riding) {
+        player.riding.dismount?.(player);
+        return;
     }
+    let nearestBoat = null;
+    let nearestDistance = 5;
+    for (const entity of world.entities) {
+        if (!(entity instanceof BoatEntity) || entity.driver) continue;
+        const distance = player.position.distanceTo(entity.position);
+        if (distance < nearestDistance) {
+            nearestBoat = entity;
+            nearestDistance = distance;
+        }
+    }
+    nearestBoat?.mount(player);
 });
 
 // couleur du ciel
@@ -150,6 +155,7 @@ function animate() {
     lastTime = currentTime;
     sun.update(deltaTime1);
 
+    updateWater(now / 1000);
     renderer.render(scene, player.camera);
     requestAnimationFrame(animate);
 

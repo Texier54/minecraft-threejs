@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { waterSurfaceMaterial } from './world/waterMaterial.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
 const textureLoader = new THREE.TextureLoader();
@@ -199,12 +200,7 @@ export const blocks = {
             [
                 new THREE.MeshBasicMaterial({transparent: true, opacity: 0}), // right
                 new THREE.MeshBasicMaterial({transparent: true, opacity: 0}), // left
-                new THREE.MeshLambertMaterial(new THREE.MeshLambertMaterial({
-                    color: 0x9090e0,
-                    transparent: true,
-                    opacity: 0.5,
-                    side: THREE.DoubleSide
-                })), // top
+                waterSurfaceMaterial, // top
                 new THREE.MeshBasicMaterial({transparent: true, opacity: 0}), // bottom
                 new THREE.MeshBasicMaterial({transparent: true, opacity: 0}), // front
                 new THREE.MeshBasicMaterial({transparent: true, opacity: 0})  // back
