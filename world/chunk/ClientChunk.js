@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { writeTorchMatrix } from '../torchTransform.js';
 import { BaseChunk } from './BaseChunk.js';
 import {blocks, getBlockByIdFast} from "../../block.js";
 import pako from "pako";
@@ -7,7 +8,7 @@ import {RNG} from "../rng.js";
 export class ClientChunk extends THREE.Group {
 
     meshs;
-    activeLights = [];
+    disposed = false;
 
     // Reusable transformation objects for addBlockInstance to reduce allocations
     static _addBlockInstanceMatrix = new THREE.Matrix4();
@@ -71,14 +72,7 @@ export class ClientChunk extends THREE.Group {
             this.setBlockId(x, y, z, blocks.empty.id);
             //this.dataStore.set(this.position.x, this.position.z, x, y, z, blocks.empty.id);
             this.dataStore.set(this.position.x, this.position.z, this.data);
-            //suprimme lumière
-            this.activeLights = this.activeLights.filter(l => {
-                if (Math.abs(l.position.x - x) < 1 && Math.abs(l.position.y - y) < 1 && Math.abs(l.position.z - z) < 1) {
-                    this.remove(l);
-                    return false;
-                }
-                return true;
-            });
+            this.torchLights?.remove(this, `${x},${y},${z}`);
         }
     }
 
@@ -104,10 +98,10 @@ export class ClientChunk extends THREE.Group {
         mesh.getMatrixAt(mesh.count - 1, lastMatrix);
 
         // Updating the instance id of the block in the last position to its new instance id
-        const v = new THREE.Vector3();
-        v.applyMatrix4(lastMatrix);
-        //this.setBlockInstanceId(v.x, v.y, v.z, instanceId); PROBLEME TORCH
-        this.setBlockInstanceId(v.x, Math.round(v.y), v.z, instanceId);
+        const lastPosition = mesh.userData.blockPositions[mesh.count - 1];
+        this.setBlockInstanceId(...lastPosition, instanceId);
+        mesh.userData.blockPositions[instanceId] = lastPosition;
+        mesh.userData.blockPositions.pop();
 
         // Swapping the transformation matrices
         mesh.setMatrixAt(instanceId, lastMatrix);
@@ -185,6 +179,8 @@ export class ClientChunk extends THREE.Group {
     }
 
     generateMesh() {
+        if (this.disposed) return;
+        this.disposeInstances(false);
         const maxBlock = this.chunkSize * this.chunkSize * 40;
 
         // Creating a lookup table where the key is the block id
@@ -202,6 +198,7 @@ export class ClientChunk extends THREE.Group {
                 const mesh = new THREE.InstancedMesh(blockType.geometry, blockType.material, maxBlock);
                 mesh.name = blockType.id;
                 mesh.count = 0;
+                mesh.userData.blockPositions = [];
                 mesh.castShadow = blockType.id !== blocks.water.id;
                 mesh.receiveShadow = true;
                 meshes[blockType.id] = mesh;
@@ -217,9 +214,10 @@ export class ClientChunk extends THREE.Group {
                         let geometry = getBlockByIdFast(block.id).geometry;
                         geometry.boundingBox.getSize(size);//boundingBox.getSize(size) récupère la taille réelle de l’objet.
 
+                        matrix.identity();
                         if (block.direction) {
                             // Transformation matrix pour positionner et tourner le bloc
-                            direction.set(block.direction.x, block.direction.y, block.direction.z);
+                            direction.set(block.direction?.x ?? 0, block.direction?.y ?? 0, block.direction?.z ?? 0);
                             const quaternion = ClientChunk.getQuaternionFromDirection(direction);
 
                             matrix.compose(
@@ -230,7 +228,8 @@ export class ClientChunk extends THREE.Group {
                         }
 
                         const offsetHeight = (1-(size.y))/2;
-                        matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
+                        matrix.setPosition(x, y - offsetHeight, z);
+                        if (block.id === blocks.torch.id) writeTorchMatrix(matrix, x, y, z, block.direction);
 
                         // Choose the correct instanced mesh for lamps depending on powered state
                         let meshId = block.id;
@@ -241,6 +240,7 @@ export class ClientChunk extends THREE.Group {
                         meshes[meshId].setMatrixAt(meshes[meshId].count, matrix);
                         const mesh = meshes[meshId];
                         const instanceId = mesh.count;
+                        mesh.userData.blockPositions[instanceId] = [x, y, z];
                         this.setBlockInstanceId(x, y, z, instanceId);
                         mesh.count++;
 
@@ -256,7 +256,9 @@ export class ClientChunk extends THREE.Group {
         this.updateBoundingSpheres();
     }
 
-    disposeInstances() {
+    disposeInstances(unloading = true) {
+        this.disposed = unloading;
+        this.torchLights?.removeOwner(this);
         //parcour tous les enfants du chunk, instanceMesh
         this.traverse((obj) => {
             // si ils ont la methode dispose on l'appel
@@ -343,9 +345,8 @@ export class ClientChunk extends THREE.Group {
         }
         const mesh = this.meshs[meshId];
 
-        console.log(mesh);
-
         const instanceId = mesh.count++;
+        mesh.userData.blockPositions[instanceId] = [x, y, z];
         this.setBlockInstanceId(x, y, z, instanceId);
 
         // Transformation matrix pour positionner et tourner le bloc
@@ -353,7 +354,7 @@ export class ClientChunk extends THREE.Group {
         const matrix = ClientChunk._addBlockInstanceMatrix;
         const direction = ClientChunk._addBlockInstanceDirection;
         const size = ClientChunk._addBlockInstanceSize;
-        direction.set(block.direction.x, block.direction.y, block.direction.z);
+        direction.set(block.direction?.x ?? 0, block.direction?.y ?? 0, block.direction?.z ?? 0);
 
         const quaternion = ClientChunk.getQuaternionFromDirection(direction);
 
@@ -369,7 +370,8 @@ export class ClientChunk extends THREE.Group {
 
         const offsetHeight = (1-(size.y))/2;
 
-        matrix.setPosition(x, y - offsetHeight, z); // Décalage de la moitié de la hauteur
+        matrix.setPosition(x, y - offsetHeight, z);
+        if (block.id === blocks.torch.id) writeTorchMatrix(matrix, x, y, z, block.direction);
         mesh.setMatrixAt(instanceId, matrix);
         mesh.instanceMatrix.needsUpdate = true;
         mesh.computeBoundingSphere();
@@ -380,16 +382,10 @@ export class ClientChunk extends THREE.Group {
     }
 
     addLight(x, y, z) {
-        if (!this.activeLights) this.activeLights = [];
-
-        if (this.activeLights.length >= 8) return; // max reached
-
-        const light = new THREE.PointLight(0xfffee0, 2, 14, 0.1);
-        light.position.set(x, y + 0.1, z);
-        light.castShadow = false;
-
-        this.add(light);
-        this.activeLights.push(light);
+        if (this.disposed || !this.torchLights) return;
+        const matrix = writeTorchMatrix(new THREE.Matrix4(), x, y, z, this.getBlock(x, y, z)?.direction);
+        const flame = new THREE.Vector3(0, 0.37, 0).applyMatrix4(matrix).add(this.position);
+        this.torchLights.register(this, `${x},${y},${z}`, flame);
     }
 
     static getQuaternionFromDirection(direction) {

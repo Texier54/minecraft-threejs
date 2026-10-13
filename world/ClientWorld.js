@@ -37,6 +37,7 @@ export class ClientWorld extends THREE.Group {
     }
 
     generate() {
+        for (const chunk of this.children) chunk.disposeInstances();
         this.clear();
         this.dataStore.clear();
         for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
@@ -48,6 +49,7 @@ export class ClientWorld extends THREE.Group {
 
     generateChunk(x, z) {
         const chunk = new ClientChunk(this.chunkSize, this.params, this.dataStore);
+        chunk.torchLights = this.torchLights;
         chunk.position.set(
             x * this.chunkSize.width,
             0,

@@ -391,7 +391,7 @@ export const blocks = {
         material: [
             new THREE.MeshLambertMaterial({ map: textures.torch }), // right
             new THREE.MeshLambertMaterial({ map: textures.torch }), // left
-            new THREE.MeshLambertMaterial({ map: textures.torch_top }), // top
+            new THREE.MeshLambertMaterial({ map: textures.torch_top, emissive: 0xffb347, emissiveMap: textures.torch_top, emissiveIntensity: 0.8 }), // top
             new THREE.MeshLambertMaterial({ map: textures.torch }), // bottom
             new THREE.MeshLambertMaterial({ map: textures.torch }), // front
             new THREE.MeshLambertMaterial({ map: textures.torch })  // back

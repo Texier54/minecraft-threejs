@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { updateWater } from './world/waterMaterial.js';
+import { TorchLightManager } from './world/TorchLightManager.js';
 
 import { Player } from './player.js';
 import { ClientWorld } from './world/ClientWorld.js';
@@ -21,6 +22,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 const scene = new THREE.Scene();
 
 const world = new ClientWorld();
+world.torchLights = new TorchLightManager(scene);
 world.generate();
 //world.load();
 scene.add(world)
@@ -49,7 +51,7 @@ const physics = new Physics(scene);
 const inventory = new Inventory(player, world, client);
 const menu = new Menu(world, player, inventory, client, chat);
 const ui = new UI(player, inventory);
-const sun = new Sun(scene, player,0.20);
+const sun = new Sun(scene, player,0.35);
 
 const pig = new Pig(world, new THREE.Vector3(12,36,10));
 pig.addToScene(scene);
@@ -164,6 +166,7 @@ function animate() {
     sun.update(deltaTime1);
 
     updateWater(now / 1000);
+    world.torchLights.update(player.position, now / 1000);
     if (spawned) renderer.render(scene, player.camera);
     requestAnimationFrame(animate);
 

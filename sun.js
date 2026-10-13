@@ -1,112 +1,150 @@
-import * as THREE from "three";
+import * as THREE from 'three';
 
 export class Sun {
-
-
-    constructor(scene, player, time) {
+    constructor(scene, player, time = 0.35) {
         this.scene = scene;
-        this.sun = new THREE.DirectionalLight();
+        this.player = player;
         this.time = time;
+        this.dayDuration = 20 * 60 * 1000;
+        this.elapsed = 0;
+        this.dayCount = 0;
+        this.direction = new THREE.Vector3();
+        this.dayHorizon = new THREE.Color(0xb5d5f5);
+        this.dayZenith = new THREE.Color(0x6b9fe8);
+        this.nightHorizon = new THREE.Color(0x111b35);
+        this.nightZenith = new THREE.Color(0x030714);
+        this.sunset = new THREE.Color(0xec9d72);
+        this.airFog = scene.fog;
+        this.setupSky();
         this.setupLights();
-        this.player = player
-        this.dayDuration = 1200 * 1000; // Durée d'un cycle complet (60 secondes par exemple)
+        this.update(0);
+    }
 
-        /*
-        const sunGeometry = new THREE.BoxGeometry(5, 5, 5);
-        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Couleur jaune éclatante
-        sunMaterial.fog = false;
-        this.sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
-        //this.sunMesh.rotation.set(2, 0, 0);
-        this.sunMesh.position.set(50, 100, 50); // Même position que la DirectionalLight
-        scene.add(this.sunMesh);
-        */
+    setupSky() {
+        this.skyMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                horizon: { value: new THREE.Color() },
+                zenith: { value: new THREE.Color() }
+            },
+            vertexShader: `
+                varying vec3 skyDirection;
+                void main() {
+                    skyDirection = position;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 horizon;
+                uniform vec3 zenith;
+                varying vec3 skyDirection;
+                void main() {
+                    float height = max(normalize(skyDirection).y, 0.0);
+                    gl_FragColor = vec4(mix(horizon, zenith, smoothstep(0.0, 0.8, height)), 1.0);
+                    #include <tonemapping_fragment>
+                    #include <colorspace_fragment>
+                }
+            `,
+            side: THREE.BackSide,
+            depthWrite: false,
+            fog: false
+        });
+        this.sky = new THREE.Mesh(new THREE.SphereGeometry(80, 24, 16), this.skyMaterial);
+        this.sky.renderOrder = -1000;
+        this.sky.frustumCulled = false;
+        this.scene.add(this.sky);
 
+        const load = path => {
+            const texture = new THREE.TextureLoader().load(path);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.magFilter = texture.minFilter = THREE.NearestFilter;
+            texture.generateMipmaps = false;
+            return texture;
+        };
+        const sprite = texture => {
+            const object = new THREE.Sprite(new THREE.SpriteMaterial({
+                map: texture, transparent: true, blending: THREE.AdditiveBlending,
+                depthWrite: false, fog: false, toneMapped: false
+            }));
+            object.scale.set(28, 28, 1);
+            this.scene.add(object);
+            return object;
+        };
+        this.sunMesh = sprite(load('images/environment/sun.png'));
+        this.moonTexture = load('images/environment/moon_phases.png');
+        this.moonTexture.repeat.set(0.25, 0.5);
+        this.moonTexture.offset.set(0, 0.5);
+        this.moonMesh = sprite(this.moonTexture);
 
-        const tex = new THREE.TextureLoader().load('images/environment/sun_light.png');
-        tex.magFilter = tex.minFilter = THREE.NearestFilter;
-        tex.generateMipmaps = false;
-        this.sunMesh  = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, fog: false}));
-        this.sunMesh.position.set(0, 100, 0);      // dans le champ
-        this.sunMesh.scale.set(8, 8, 1);          // carré 16×16 « pixel art »
-        scene.add(this.sunMesh);
+        // Répartition déterministe sur une sphère, sans texture supplémentaire.
+        const vertices = [];
+        for (let i = 0; i < 450; i++) {
+            const y = 1 - 2 * (i + 0.5) / 450;
+            const angle = i * Math.PI * (3 - Math.sqrt(5));
+            const radius = Math.sqrt(1 - y * y);
+            vertices.push(Math.cos(angle) * radius * 65, y * 65, Math.sin(angle) * radius * 65);
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        this.stars = new THREE.Points(geometry, new THREE.PointsMaterial({
+            color: 0xdce7ff, size: 0.18, transparent: true, opacity: 0,
+            depthWrite: false, fog: false, toneMapped: false
+        }));
+        this.scene.add(this.stars);
     }
 
     setupLights() {
-        this.sun.intensity = 1.5;
-        this.sun.position.set(50, 120, -10);
+        this.sun = new THREE.DirectionalLight(0xffffff, 1.5);
         this.sun.castShadow = true;
-
-        // Set the size of the sun's shadow box
-        this.sun.shadow.camera.left = -40;
-        this.sun.shadow.camera.right = 40;
-        this.sun.shadow.camera.top = 40;
-        this.sun.shadow.camera.bottom = -40;
-        this.sun.shadow.camera.near = 0.1;
-        this.sun.shadow.camera.far = 200;
+        Object.assign(this.sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 0.1, far: 200 });
         this.sun.shadow.bias = -0.0001;
-        this.sun.shadow.mapSize = new THREE.Vector2(2048, 2048);
-        this.scene.add(this.sun);
-        this.scene.add(this.sun.target);
-
-        //helper pour la position du sun
-        const shadownHelper = new THREE.CameraHelper(this.sun.shadow.camera)
-        //this.scene.add(shadownHelper);
-
-        const ambient = new THREE.AmbientLight();
-        ambient.intensity = 0.1;
-        this.scene.add(ambient);
+        this.sun.shadow.mapSize.set(2048, 2048);
+        this.ambient = new THREE.HemisphereLight(0xc5dfff, 0x6d6853, 0.6);
+        this.moonLight = new THREE.DirectionalLight(0x809acb, 0.1);
+        this.scene.add(this.sun, this.sun.target, this.ambient, this.moonLight, this.moonLight.target);
     }
 
     update(deltaTime) {
-        // Position the sun relative to the player. Need to adjust both the
-        // position and target of the sun to keep the same sun angle
-        //this.sun.position.copy(this.player.camera.position);
-        //this.sun.position.sub(new THREE.Vector3(-50, -80, -50));
-        //this.sun.target.position.copy(this.player.camera.position);
-        this.updateDayNightCycle(deltaTime);
-    }
+        const advanced = this.time + deltaTime / this.dayDuration;
+        this.dayCount += Math.floor(advanced);
+        this.time = ((advanced % 1) + 1) % 1;
+        this.elapsed += deltaTime / 1000;
+        const angle = (this.time - 0.25) * Math.PI * 2;
+        this.direction.set(Math.cos(angle), Math.sin(angle), 0).normalize();
+        const daylight = THREE.MathUtils.smoothstep(this.direction.y, -0.12, 0.18);
+        const twilight = (1 - THREE.MathUtils.smoothstep(Math.abs(this.direction.y), 0.02, 0.25)) * 0.6;
+        const horizon = this.skyMaterial.uniforms.horizon.value;
+        const zenith = this.skyMaterial.uniforms.zenith.value;
+        horizon.lerpColors(this.nightHorizon, this.dayHorizon, daylight).lerp(this.sunset, twilight);
+        zenith.lerpColors(this.nightZenith, this.dayZenith, daylight);
+        if (this.scene.background?.isColor) this.scene.background.copy(horizon);
+        // Modifier uniquement le brouillard de l'air, même lorsque le joueur plonge.
+        this.airFog?.color.copy(horizon);
 
+        const center = this.player.camera.position;
+        this.sky.position.copy(center);
+        this.stars.position.copy(center);
+        this.stars.rotation.z = angle;
+        this.stars.material.opacity = (1 - daylight) * 0.8;
+        this.sunMesh.position.copy(center).addScaledVector(this.direction, 55);
+        this.moonMesh.position.copy(center).addScaledVector(this.direction, -55);
+        this.sunMesh.material.opacity = THREE.MathUtils.smoothstep(this.direction.y, -0.08, 0.05);
+        this.moonMesh.material.opacity = 1 - daylight;
+        this.sunMesh.material.rotation = this.moonMesh.material.rotation = -this.player.camera.rotation.z;
+        const phase = this.dayCount % 8;
+        this.moonTexture.offset.set((phase % 4) / 4, phase < 4 ? 0.5 : 0);
 
-    updateDayNightCycle(deltaTime) {
-        this.time += deltaTime / this.dayDuration;
-        if (this.time > 1) this.time = 0; // Recommence un nouveau cycle
-
-        // Calculer l'angle du soleil
-        const angle = this.time * Math.PI * 2; // De 0 à 360°
-
-        this.sun.position.copy(this.player.camera.position);
-        this.sun.position.sub(new THREE.Vector3(-Math.cos(angle) * 50, -(Math.sin(angle) * 50), -10));
-
-        this.sunMesh.position.copy(this.player.camera.position);
-        this.sunMesh.position.sub(new THREE.Vector3(-Math.cos(angle) * 50, -(Math.sin(angle) * 50), -10));
-
-        //this.sun.position.set(Math.cos(angle) * 50, Math.sin(angle) * 50+60, -10);
-
-
-        // Modifier l'intensité en fonction de la hauteur du soleil
-        //this.sunLight.intensity = Math.max(0, Math.sin(angle)); // Plus bas = plus sombre
-
-        this.sunMesh.material.rotation = -this.player.camera.rotation.z;
-
-        this.sun.target.position.copy(this.player.camera.position);
-        /*
-        // Modifier la couleur du ciel
-        const skyColor = new THREE.Color().lerpColors(
-            new THREE.Color(0x80a0e0), // Bleu ciel (jour)
-            new THREE.Color(0x000011), // Nuit noire
-            Math.max(0, 1 - Math.sin(angle))
-        );
-        scene.background = skyColor;
-
-         */
+        this.sun.position.copy(center).addScaledVector(this.direction, 70);
+        this.sun.target.position.copy(center);
+        this.sun.intensity = 1.5 * THREE.MathUtils.smoothstep(this.direction.y, -0.02, 0.3);
+        this.sun.color.set(0xffffff).lerp(this.sunset, twilight);
+        this.ambient.intensity = 0.12 + daylight * 0.58;
+        this.moonLight.position.copy(center).addScaledVector(this.direction, -70);
+        this.moonLight.target.position.copy(center);
+        this.moonLight.intensity = (1 - daylight) * 0.14;
     }
 
     getTime() {
-        let total_minutes = this.time * 24 * 60
-        let hours = parseInt(total_minutes / 60)
-        let minutes = parseInt(total_minutes % 60)
-        return hours+'H'+minutes;
+        const totalMinutes = Math.floor(this.time * 24 * 60);
+        return `${Math.floor(totalMinutes / 60)}H${String(totalMinutes % 60).padStart(2, '0')}`;
     }
-
-
 }

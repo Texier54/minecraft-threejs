@@ -179,7 +179,16 @@ export class Player {
         this.underwaterFog = new THREE.Fog(0x3399ff, 0.1, 10);
     }
 
-    getPlacementDirection(faceNormal) {
+    getPlacementDirection(faceNormal, blockId) {
+        // Une torche s'attache à la face cliquée, indépendamment de la caméra.
+        if (blockId === blocks.torch.id && faceNormal) {
+            const x = Math.abs(faceNormal.x);
+            const y = Math.abs(faceNormal.y);
+            const z = Math.abs(faceNormal.z);
+            if (y >= x && y >= z) return { x: 0, y: Math.sign(faceNormal.y), z: 0 };
+            if (x >= z) return { x: Math.sign(faceNormal.x), y: 0, z: 0 };
+            return { x: 0, y: 0, z: Math.sign(faceNormal.z) };
+        }
 
         let direction = new THREE.Vector3();
         this.camera.getWorldDirection(direction); // Récupère la direction de la caméra
@@ -231,7 +240,7 @@ export class Player {
         const item = this.inventory.getSelectedItem();
         if (!item) return;
 
-        const direction = this.getPlacementDirection(this.selectedNormal);
+        const direction = this.getPlacementDirection(this.selectedNormal, item.block);
 
         const used = useItemOnBlock(
             this.world,
@@ -833,7 +842,6 @@ async function getData() {
         };
     });
 }
-
 
 
 
