@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { Entity } from "./Entity.js";
-import { AudioManager } from "../AudioManager.js"
 import {blocks, getBlockByIdFast} from "../block.js";
 
 const DEG90 = Math.PI / 2;
@@ -32,7 +31,6 @@ export class DoorEntity extends Entity {
 
     const { facing = 0, hinge = "left", open = false } = opts;
 
-    this.audioManager = new AudioManager();
 
     this.facing = facing;
     this.hinge = hinge;
@@ -43,15 +41,17 @@ export class DoorEntity extends Entity {
 
     // On centre la porte dans le bloc (Minecraft: centre X/Z, bas sur Y)
     // NOTE: si ton moteur place déjà les blocks au centre, enlève les +0.5
-    this.mesh.position.set(position.x, position.y, position.z - 0.4);
+    this.mesh.position.copy(position);
+    this.destroyed = false;
     this.mesh.rotation.y = facingToYaw(facing);
 
     // Pivot (charnière) local
     this.pivot = new THREE.Group();
 
 
-    const materialBottom = getBlockByIdFast(64).material;
-    const materialTop = getBlockByIdFast(1064).material;
+    const materialBottom = getBlockByIdFast(64).material.clone();
+    const materialTop = getBlockByIdFast(1064).material.clone();
+    materialBottom.alphaTest = materialTop.alphaTest = 0.5;
 
     // Géométries : 1 bloc de haut chacune
     const geometryHalf = new THREE.BoxGeometry(1.0, 1.0, 0.2);
@@ -74,7 +74,7 @@ export class DoorEntity extends Entity {
 
     // Position du pivot sur un bord de la porte
     const hingeX = hinge === "left" ? -0.5 : 0.5;
-    this.pivot.position.set(hingeX, 0, 0);
+    this.pivot.position.set(hingeX, 0, -0.4);
 
     // On replace le groupe (2 demi-portes) par rapport au pivot
     // Le groupe est centré en X sur le bloc, donc on le décale selon la charnière
@@ -100,6 +100,7 @@ export class DoorEntity extends Entity {
   }
 
   setOpen(open, { instant = false } = {}) {
+    if (this.destroyed || this.open === open) return;
     this.open = open;
     if (this.open)
       this.audioManager.playBlockSound('wood', 'open_door');
@@ -114,6 +115,7 @@ export class DoorEntity extends Entity {
   }
 
   update(dt) {
+    if (this.destroyed) return;
     // animation smooth vers targetAngle
     const speed = 10; // rad/s
     const a = this.pivot.rotation.y;
@@ -125,7 +127,7 @@ export class DoorEntity extends Entity {
       return;
     }
 
-    this.pivot.rotation.y = a + diff * Math.min(1, dt * speed);
+    this.pivot.rotation.y = a + diff * (1 - Math.exp(-dt * speed));
   }
 
   /**
@@ -139,21 +141,67 @@ export class DoorEntity extends Entity {
   /**
    * Optionnel: appelé quand la porte est touchée/visée.
    */
-  hit() {
-    // debug
-    // console.log("hit door");
+  hit(player) {
+    if (this.destroyed) return;
+    player?.inventory?.addBlock(blocks.oak_door.id);
+    this.audioManager.playBlockSound('wood', 'break');
+    this.destroy();
+  }
+
+  resolvePlayerCollision(player) {
+    if (this.destroyed || this.position.distanceToSquared(player.position) > 25) return;
+    this.mesh.updateMatrixWorld(true);
+    const inverse = this.doorGroup.matrixWorld.clone().invert();
+    const center = player.position.clone();
+    center.y -= player.height / 2;
+    center.applyMatrix4(inverse);
+    if (center.y + player.height / 2 <= -0.5 || center.y - player.height / 2 >= 1.5) return;
+    const closestX = THREE.MathUtils.clamp(center.x, -0.5, 0.5);
+    const closestZ = THREE.MathUtils.clamp(center.z, -0.1, 0.1);
+    const normal = new THREE.Vector3(center.x - closestX, 0, center.z - closestZ);
+    const distance = normal.length();
+    let overlap = player.radius - distance;
+    if (overlap <= 0) return;
+    if (distance > 1e-8) normal.divideScalar(distance);
+    else {
+      // Le centre est dans le panneau : sortir par le bord le plus proche.
+      const toX = 0.5 - Math.abs(center.x);
+      const toZ = 0.1 - Math.abs(center.z);
+      if (toX < toZ) normal.set(center.x < 0 ? -1 : 1, 0, 0);
+      else normal.set(0, 0, center.z < 0 ? -1 : 1);
+      overlap += Math.min(toX, toZ);
+    }
+    normal.transformDirection(this.doorGroup.matrixWorld);
+    player.position.addScaledVector(normal, overlap + 0.0001);
+    const inward = player.worldVelocity.dot(normal);
+    if (inward < 0) player.applyWorldDeltaVelocity(normal.clone().multiplyScalar(-inward));
+    const externalInward = player.externalVelocity.dot(normal);
+    if (externalInward < 0) player.externalVelocity.addScaledVector(normal, -externalInward);
+  }
+
+  static facingFromDirection(direction) {
+    if (direction.x > 0) return 1;
+    if (direction.x < 0) return 3;
+    return direction.z > 0 ? 2 : 0;
+  }
+
+  static canPlace(world, position) {
+    const { x, y, z } = position;
+    const support = world.getBlock(x, y - 1, z);
+    const definition = support && getBlockByIdFast(support.id);
+    if (!definition || definition.type !== 'block' || definition.transparent || support.id === 0) return false;
+    if (world.getBlock(x, y, z)?.id !== 0 || world.getBlock(x, y + 1, z)?.id !== 0) return false;
+    return !(world.entities || []).some(entity => entity instanceof DoorEntity && !entity.destroyed &&
+      entity.position.x === x && entity.position.z === z && Math.abs(entity.position.y - y) < 2);
   }
 
   destroy() {
-    // Si Entity a déjà un destroy, garde-le. Sinon, on nettoie proprement.
-    if (this.mesh?.parent) this.mesh.parent.remove(this.mesh);
-
-    this.mesh.traverse((o) => {
-      if (o.geometry) o.geometry.dispose?.();
-      if (o.material) {
-        if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose?.());
-        else o.material.dispose?.();
-      }
-    });
+    if (this.destroyed) return;
+    this.destroyed = true;
+    this.world.removeEntity(this);
+    this.mesh.removeFromParent();
+    this.doorBottomMesh.geometry.dispose();
+    this.doorBottomMesh.material.dispose();
+    this.doorTopMesh.material.dispose();
   }
 }

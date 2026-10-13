@@ -28,13 +28,18 @@ export function useItemOnBlock(world, player, itemId, x, y, z, direction, scene,
         }
     }
 
-    // PORTE
-    if (itemDef.id == 64) {
-        audioManager.playBlockSound(itemDef.soundGroup, 'place');
-        const door = new DoorEntity(world, new THREE.Vector3(x, y + 1, z));
+    // PORTE : deux cases libres au-dessus d'un support solide.
+    if (itemDef.id === blocks.oak_door.id) {
+        const position = player.selectedCoordsNormal?.clone() ?? new THREE.Vector3(x, y + 1, z);
+        position.round();
+        if (!DoorEntity.canPlace(world, position)) return true;
+        const door = new DoorEntity(world, position, {
+            facing: DoorEntity.facingFromDirection(direction)
+        });
         door.addToScene(scene);
         world.addEntity(door);
         inventory.removeBlock(itemDef.id);
+        audioManager.playBlockSound(itemDef.soundGroup, 'place');
         return true;
     }
 

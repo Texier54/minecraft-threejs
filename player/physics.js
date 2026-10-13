@@ -201,6 +201,11 @@ export class Physics {
         if (collisions.length > 0 && !player.riding) {
             this.resolveCollisions(collisions, player);
         }
+        if (!player.riding) {
+            for (const entity of world.entities || []) {
+                entity.resolvePlayerCollision?.(player);
+            }
+        }
     }
 
     /**
